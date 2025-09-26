@@ -2480,9 +2480,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8429e45d538b40488ee35920fa5333f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  weaponType: 2
+  ammoGive: 10
   text: {fileID: 1258994257}
   isInArea: 0
-  isPickup: 0
 --- !u!54 &1400172153
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3559,6 +3560,10 @@ PrefabInstance:
       propertyPath: crosshairUI
       value: 
       objectReference: {fileID: 1329178969}
+    - target: {fileID: 7951790065377689066, guid: 3f5fe8d1e58d84643b663649e0a40d3b, type: 3}
+      propertyPath: weaponStat.weaponName
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
