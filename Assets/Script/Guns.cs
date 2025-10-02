@@ -24,6 +24,14 @@ public class Guns : MonoBehaviour
         public float aimTime;       // เวลาในการหด spread ให้แคบลง
         public GameObject bulletPrefab;
         public Transform firePoint;    // จุดที่กระสุนถูกยิงออกมา
+        public ParticleSystem muzzleFlash;
+
+        [Header("SoundSetting")]
+        public SoundSO aimingSO;
+        public SoundSO nonAimSO;
+        public SoundSO shootSO;
+        public SoundSO reloadSO;
+        public SoundSO emptyMagSO;
     }
 
     public enum WeaponType
@@ -39,7 +47,7 @@ public class Guns : MonoBehaviour
     public WeaponStat weaponStat;
 
     public PlayerController playerController;
-    private bool isReloading;
+    public bool isReloading;
 
     private Vector2 currentRecoil;
     private CinemachineRotationComposer camRotationComposer;
@@ -86,6 +94,11 @@ public class Guns : MonoBehaviour
 
             // ค่อยๆ ลด spread จาก baseSpread → minSpread
             currentSpread = Mathf.Lerp(weaponStat.baseSpread, weaponStat.minSpread, t);
+            if(Input.GetMouseButtonDown(1))
+            {
+                SoundManager.PlaySound(weaponStat.aimingSO, 1);
+            }
+
         }
         else
         {
@@ -105,7 +118,7 @@ public class Guns : MonoBehaviour
             if (Input.GetMouseButtonDown(0))
             {
                 weaponStat.currentAmmo--;
-
+                weaponStat.muzzleFlash.Play();
                
                 FireBullet();
 
@@ -114,10 +127,12 @@ public class Guns : MonoBehaviour
                 currentSpread = weaponStat.baseSpread;
 
                 Recoil();
+                SoundManager.PlaySound(weaponStat.shootSO, 1);
             }
         }
-        else if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && weaponStat.currentAmmo <= 0)
         {
+            SoundManager.PlaySound(weaponStat.emptyMagSO, 1);
             Debug.Log("Ammo running out");
         }
     }
@@ -186,9 +201,17 @@ public class Guns : MonoBehaviour
 
     IEnumerator Reload(float duration)
     {
-        isReloading = true;
-        yield return new WaitForSeconds(duration);
+       Animator animator = playerController.gameObject.GetComponent<Animator>();
+        int reloadingLayerIndex;
 
+        reloadingLayerIndex = animator.GetLayerIndex("Reloading");
+        animator.SetLayerWeight(reloadingLayerIndex, 1f);
+
+        isReloading = true;
+        SoundManager.PlaySound(weaponStat.reloadSO, 1);
+
+        yield return new WaitForSeconds(duration);
+        animator.SetLayerWeight(reloadingLayerIndex, 0f);
         int ammoNeeded = weaponStat.magazineSize - weaponStat.currentAmmo;
         int ammoToReload = Mathf.Min(ammoNeeded, weaponStat.ammoReserve);
 

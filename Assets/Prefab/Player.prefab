@@ -375,7 +375,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Guns
   weaponStat:
-    weaponName: 2
+    weaponName: 0
     damage: 0
     fireRate: 0
     recoil: 0
@@ -390,7 +390,13 @@ MonoBehaviour:
     aimTime: 1
     bulletPrefab: {fileID: 4345984671954175390, guid: 04d031dd50d46184d8df97aba4226428, type: 3}
     firePoint: {fileID: 8308405741871902542}
+    aimingSO: {fileID: 0}
+    nonAimSO: {fileID: 0}
+    shootSO: {fileID: 0}
+    reloadSO: {fileID: 0}
+    emptyMagSO: {fileID: 0}
   playerController: {fileID: 5899883115134964478}
+  isReloading: 0
   crosshairUI: {fileID: 0}
 --- !u!1 &3365450401193807849
 GameObject:
@@ -1169,6 +1175,22 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5899883115134964478}
     - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: weaponStat.shootSO
+      value: 
+      objectReference: {fileID: 11400000, guid: f09157348066b3443a96062e07bcc623, type: 2}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: weaponStat.aimingSO
+      value: 
+      objectReference: {fileID: 11400000, guid: 25b4ce5f9ed88354cbe60df4d4d5cc21, type: 2}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: weaponStat.reloadSO
+      value: 
+      objectReference: {fileID: 11400000, guid: 3ce585cb955d9eb45b2e31e624035e38, type: 2}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: weaponStat.emptyMagSO
+      value: 
+      objectReference: {fileID: 11400000, guid: cfd1dc653ebe3b249867540eb336df86, type: 2}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
       propertyPath: weaponStat.bulletPrefab
       value: 
       objectReference: {fileID: 4345984671954175390, guid: 04d031dd50d46184d8df97aba4226428, type: 3}
@@ -1617,8 +1639,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9436cf45a762404a82916fe941beeb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  moveSpeed: 1
-  sprintBonus: 2
+  moveSpeed: 2
+  sprintBonus: 3
   cineCamera: {fileID: 490403707931120603}
   weaponType: 0
   weapons:
@@ -1626,6 +1648,8 @@ MonoBehaviour:
   - {fileID: 3094156065019257931}
   - {fileID: 5477466855647885322}
   - {fileID: 3094156065019257931}
+  footstepWalkSO: {fileID: 11400000, guid: 2600f23020e368b44b45d345085a5394, type: 2}
+  footstepRunSO: {fileID: 11400000, guid: 88ba820194b61054e9c0d44fb455f0f0, type: 2}
   isAiming: 0
   rigBuilder: {fileID: 5419312646296631660}
 --- !u!114 &8940514183323403394

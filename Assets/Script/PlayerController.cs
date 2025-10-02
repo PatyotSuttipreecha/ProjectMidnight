@@ -21,6 +21,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject[] weapons;
     private int currentweaponIndex = 4;
 
+    [Header("Footstep Sound")]
+    public SoundSO footstepWalkSO;
+    public SoundSO footstepRunSO;
+    private float lastStepTime = 0f;
+
     private CharacterController controller;
     private Animator animator;
     private int aimingLayerIndex;
@@ -118,28 +123,40 @@ public class PlayerController : MonoBehaviour
 
         bool isAiming = Input.GetMouseButton(1);
 
-        float target = isAiming ? targetFOV : normalFOV;
-        cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, target, Time.deltaTime * zoomSpeed);
+        //float target = isAiming ? targetFOV : normalFOV;
+       
 
         // เปิด/ปิด Aiming Layer
         animator.SetLayerWeight(aimingLayerIndex, isAiming ? 1f : 0f);
 
         // กำหนดประเภทอาวุธไปยัง Blend Tree
-        if (isAiming)
+        Guns gun = FindAnyObjectByType<Guns>();
+        if (isAiming && !gun.isReloading)
         {
+            cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, targetFOV, Time.deltaTime * zoomSpeed);
             cameraOffset.Offset.y = 1.5f;
             cameraOffset.Offset.x = 0.4f;
             switch (weaponType)
             {
-                case 0: animator.SetFloat("AimType", 0.2f, 0.3f, Time.deltaTime); rigBuilder.weight = 0f; break;     // NoWeapon
-                case 1: animator.SetFloat("AimType", 0.4f, 0.3f, Time.deltaTime); rigBuilder.weight += 3f * Time.deltaTime; break;   // Knife
-                case 2: animator.SetFloat("AimType", 0.6f, 0.3f, Time.deltaTime); rigBuilder.weight += 3f * Time.deltaTime; break;   // Pistol
-                case 3: animator.SetFloat("AimType", 1f, 0.3f, Time.deltaTime); rigBuilder.weight += 3f * Time.deltaTime; break;     // Shotgun
+                case 0: animator.SetFloat("AimType", 0.2f, 0.3f, Time.deltaTime);
+                    rigBuilder.weight = 0f;                   
+                    break;     // NoWeapon
+                case 1: animator.SetFloat("AimType", 0.4f, 0.3f, Time.deltaTime); 
+                    rigBuilder.weight += 3f * Time.deltaTime;                  
+                    break;   // Knife
+                case 2: animator.SetFloat("AimType", 0.6f, 0.3f, Time.deltaTime); 
+                    rigBuilder.weight += 3f * Time.deltaTime;
+                    break;   // Pistol
+                case 3: animator.SetFloat("AimType", 1f, 0.3f, Time.deltaTime); 
+                    rigBuilder.weight += 3f * Time.deltaTime;
+                    break;     // Shotgun
             }
             
         }
         else
         {
+            isAiming = false;
+            cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, normalFOV, Time.deltaTime * zoomSpeed);
             animator.SetFloat("AimType", 0f, 0.3f, Time.deltaTime);
             switch (weaponType)
             {
@@ -251,4 +268,16 @@ public class PlayerController : MonoBehaviour
             return ;
         }
     }
+    public void Footstep()
+    {
+        if (Time.time - lastStepTime < 0.3f) return; // กันเสียงซ้อนจาก Layer/Frame
+        lastStepTime = Time.time;
+
+        float speed = animator.GetFloat("Speed");
+        if (speed >= 0.9f)
+            SoundManager.PlaySound(footstepRunSO, 0.1f);
+        else
+            SoundManager.PlaySound(footstepWalkSO, 0.07f);
+    }
 }
+

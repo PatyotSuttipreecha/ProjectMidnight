@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c13ee59551871814ca27b746829a71a6, type: 3}
+  m_Name: pistolReloadSO
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSO
+  soundName: pistolShootSO
+  clips:
+  - {fileID: 8300000, guid: ddfbd772b866454468382e9e916638d7, type: 3}
+  - {fileID: 8300000, guid: 17219871e4f74034b970818817851b7d, type: 3}
+  - {fileID: 8300000, guid: f2d9411815094364bb83f2f6e857956d, type: 3}
+  - {fileID: 8300000, guid: 6ab0c5e698118c54187e5265f619a534, type: 3}
+  - {fileID: 8300000, guid: 93ab4122c5f52fb459ab137f73cc2aba, type: 3}
+  - {fileID: 8300000, guid: cda149a6b1a8e3045ab8966ac9c6d50d, type: 3}
+  - {fileID: 8300000, guid: cd47aaddc0dab4d4aab86e6e644e024e, type: 3}
+  - {fileID: 8300000, guid: 809362475d525a7458053168abceef76, type: 3}
