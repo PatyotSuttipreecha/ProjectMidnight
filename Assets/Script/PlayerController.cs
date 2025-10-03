@@ -134,7 +134,7 @@ public class PlayerController : MonoBehaviour
         if (isAiming && !gun.isReloading)
         {
             cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, targetFOV, Time.deltaTime * zoomSpeed);
-            cameraOffset.Offset.y = 1.5f;
+            cameraOffset.Offset.y = 1.7f;
             cameraOffset.Offset.x = 0.4f;
             switch (weaponType)
             {
@@ -217,27 +217,44 @@ public class PlayerController : MonoBehaviour
     }
     void WeaponSwitcher()
     {
+        Guns weapon = FindAnyObjectByType<Guns>();
         //Check Input 1-4 
         if (Input.GetKeyDown(KeyCode.Alpha1)) 
         { 
             WeaponSwitcherIndex(2);
             weaponType = 2;
+            if (weapon != null)
+            {
+                weapon.crosshairUI.gameObject.SetActive(true);
+            }
 
         }
         if (Input.GetKeyDown(KeyCode.Alpha2)) 
         { 
             WeaponSwitcherIndex(3); 
             weaponType = 3;
+            if (weapon != null)
+            {
+                weapon.crosshairUI.gameObject.SetActive(true);
+            }
         }
         if (Input.GetKeyDown(KeyCode.Alpha3)) 
         { 
             WeaponSwitcherIndex(1);
             weaponType=1;
+            if (weapon != null)
+            {
+                weapon.crosshairUI.gameObject.SetActive(true);
+            }
         }
-        if (Input.GetKeyDown(KeyCode.Alpha4)) 
-        { 
-            WeaponSwitcherIndex(0); 
-            weaponType=0;
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            WeaponSwitcherIndex(0);
+            weaponType = 0;
+            if (weapon != null)
+            {
+                weapon.crosshairUI.gameObject.SetActive(false);
+            }
         }
        
     }
@@ -275,9 +292,9 @@ public class PlayerController : MonoBehaviour
 
         float speed = animator.GetFloat("Speed");
         if (speed >= 0.9f)
-            SoundManager.PlaySound(footstepRunSO, 0.1f);
+            SoundManager.PlaySound(footstepRunSO, Random.Range(0.03f,0.05f));
         else
-            SoundManager.PlaySound(footstepWalkSO, 0.07f);
+            SoundManager.PlaySound(footstepWalkSO, Random.Range(0.03f, 0.06f));
     }
 }
 

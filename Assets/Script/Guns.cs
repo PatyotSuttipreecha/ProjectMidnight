@@ -96,7 +96,7 @@ public class Guns : MonoBehaviour
             currentSpread = Mathf.Lerp(weaponStat.baseSpread, weaponStat.minSpread, t);
             if(Input.GetMouseButtonDown(1))
             {
-                SoundManager.PlaySound(weaponStat.aimingSO, 1);
+                SoundManager.PlaySound(weaponStat.aimingSO, Random.Range(0.1f,0.3f));
             }
 
         }
@@ -208,7 +208,7 @@ public class Guns : MonoBehaviour
         animator.SetLayerWeight(reloadingLayerIndex, 1f);
 
         isReloading = true;
-        SoundManager.PlaySound(weaponStat.reloadSO, 1);
+        SoundManager.PlaySound(weaponStat.reloadSO, 0.4f);
 
         yield return new WaitForSeconds(duration);
         animator.SetLayerWeight(reloadingLayerIndex, 0f);
