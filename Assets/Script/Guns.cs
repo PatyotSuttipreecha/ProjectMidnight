@@ -159,21 +159,18 @@ public class Guns : MonoBehaviour
         // 3. ใส่ Spread เพิ่มเข้าไป (เพื่อให้ไม่ตรง 100% เวลาไม่เล็ง)
         float spreadX = Random.Range(-currentSpread, currentSpread);
         float spreadY = Random.Range(-currentSpread, currentSpread);
-        shootDirection = Quaternion.Euler(spreadY, spreadX, 0) * shootDirection;
+        shootDirection = Quaternion.Euler(-spreadY, spreadX, 0) * shootDirection;
 
         // 4. สร้างกระสุน
         GameObject bullet = Instantiate(weaponStat.bulletPrefab, weaponStat.firePoint.position, Quaternion.LookRotation(shootDirection));
 
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.linearVelocity = shootDirection * weaponStat.bulletSpeed;
-        }
 
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         if (bulletScript != null)
         {
             bulletScript.SetDamage(weaponStat.damage);
+            bulletScript.SetDirection(shootDirection);
         }
 
         // Debug ray
