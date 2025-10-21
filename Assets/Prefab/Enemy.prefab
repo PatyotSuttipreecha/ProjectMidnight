@@ -2011,7 +2011,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.43392
+      value: -0.82716
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2019,7 +2019,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.88868
+      value: 3.07518
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2530,12 +2530,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96e477f1851aee345899a83b7db2cf65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  enemyData: {fileID: 11400000, guid: 1c71956df440e5b4ba288f0c43b8e696, type: 2}
   player: {fileID: 0}
-  detectionRadius: 8
-  fieldOfView: 67
-  obstacleMask:
-    serializedVersion: 2
-    m_Bits: 0
+  patrolPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  isAlert: 0
 --- !u!114 &4005269441650440685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2559,7 +2561,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.3
-  m_Speed: 0.2
+  m_Speed: 0.5
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120

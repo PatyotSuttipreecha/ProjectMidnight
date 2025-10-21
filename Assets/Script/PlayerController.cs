@@ -26,6 +26,12 @@ public class PlayerController : MonoBehaviour
     public SoundSO footstepRunSO;
     private float lastStepTime = 0f;
 
+    [Header("Health Setting")]
+    public float maxHealth = 100f;
+    public float currentHealth;
+    private bool isDeath;
+
+    private EnemyController enemy;
     private CharacterController controller;
     private Animator animator;
     private int aimingLayerIndex;
@@ -49,6 +55,8 @@ public class PlayerController : MonoBehaviour
         // หา Layer Index ของ Aiming
         aimingLayerIndex = animator.GetLayerIndex("Aiming");
         GunHoldingLayerIndex = animator.GetLayerIndex("GunHolding");
+
+        currentHealth = maxHealth;
     }
 
     void Update()
@@ -295,6 +303,18 @@ public class PlayerController : MonoBehaviour
             SoundManager.PlaySound(footstepRunSO, Random.Range(0.03f,0.05f));
         else
             SoundManager.PlaySound(footstepWalkSO, Random.Range(0.03f, 0.06f));
+    }
+    public void TakeDamage(float damage)
+    {   
+        currentHealth -= damage;
+        currentHealth = Mathf.Max(0, currentHealth);
+    }
+    private void Die()
+    {
+        if (currentHealth <= 0)
+        {
+            Destroy(this.gameObject);
+        }
     }
 }
 
