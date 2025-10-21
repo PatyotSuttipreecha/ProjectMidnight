@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: d760e7719a48ffa4f99c345cba704fd5
+timeCreated: 1513186380
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 107259
+  packageName: Health Pack
+  packageVersion: 1.0
+  assetPath: Assets/Health Pack/Prefabs/Bottles_04.prefab
+  uploadId: 218624

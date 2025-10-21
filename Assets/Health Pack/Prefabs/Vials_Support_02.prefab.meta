@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: a25712fa2ff01d44a9554dd454510bb3
+timeCreated: 1513262782
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 107259
+  packageName: Health Pack
+  packageVersion: 1.0
+  assetPath: Assets/Health Pack/Prefabs/Vials_Support_02.prefab
+  uploadId: 218624

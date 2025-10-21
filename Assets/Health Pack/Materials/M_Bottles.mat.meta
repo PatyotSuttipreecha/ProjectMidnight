@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: ce6ae769ef188754e8997094b375ac77
+timeCreated: 1513184986
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 107259
+  packageName: Health Pack
+  packageVersion: 1.0
+  assetPath: Assets/Health Pack/Materials/M_Bottles.mat
+  uploadId: 218624

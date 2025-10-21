@@ -5,7 +5,7 @@ public class AmmoBox : MonoBehaviour
 {
     [Header("AmmoSetting")]
     public Guns.WeaponType weaponType;
-    public int ammoGive;
+    [HideInInspector]public int ammoGive;
     [Header("InteractionText")]
     [SerializeField] private TMP_Text text;
 

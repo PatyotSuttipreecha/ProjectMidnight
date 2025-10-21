@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: abe4f2ea701234944b947ff4cf8048f9
+timeCreated: 1513260276
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 107259
+  packageName: Health Pack
+  packageVersion: 1.0
+  assetPath: Assets/Health Pack/Materials/M_Case_04_B.mat
+  uploadId: 218624
