@@ -2,7 +2,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
-public class Item : MonoBehaviour
+public class PickupItem : MonoBehaviour
 {
     [Header("Item Data")]
     public ItemSO itemData;
@@ -48,26 +48,30 @@ public class Item : MonoBehaviour
         var player = FindAnyObjectByType<PlayerController>();
         if (player == null) return;
 
+        // ✅ ถ้าเป็นของทั่วไป ให้เข้า Inventory
+        if (itemData.itemType == ItemType.Health || itemData.itemType == ItemType.Weapon)
+        {
+            bool added = InventoryManager.Instance.AddItem(itemData);
+            if (added)
+            {
+                Debug.Log($"✅ {itemData.itemName} added to inventory.");
+                Destroy(gameObject);
+            }
+            else
+            {
+                Debug.Log("❌ Inventory full!");
+            }
+            return;
+        }
+
+        // ของพิเศษอื่น ๆ เช่น Ammo, Key
         switch (itemData.itemType)
         {
             case ItemType.Ammo:
                 AddAmmo();
-                break;
-
-            case ItemType.Health:
-                AddHealToInventory();
-                break;
-
-            case ItemType.Weapon:
-                AddWeaponToInventory();
-                break;
-
-            default:
-                Debug.Log($"{itemData.itemName} collected!");
+                Destroy(gameObject);
                 break;
         }
-
-        Destroy(gameObject);
     }
 
     private void AddAmmo()
@@ -83,17 +87,5 @@ public class Item : MonoBehaviour
                 return;
             }
         }
-    }
-
-    private void AddHealToInventory()
-    {
-        Debug.Log($"🗡️ Picked up Heal: {itemData.itemName}");
-        // TODO: Add to InventoryGrid here later
-    }
-
-    private void AddWeaponToInventory()
-    {
-        Debug.Log($"🗡️ Picked up weapon: {itemData.itemName}");
-        // TODO: Add to InventoryGrid here later
     }
 }

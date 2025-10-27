@@ -18,15 +18,11 @@ public class ItemSO : ScriptableObject
     public int ammoAmount;
 
     [Header("Heal Data")]
+    public HealType healType;
     public int healAmount;
 }
 public enum ItemType
-{
-    Health,
-    Weapon,
-    Ammo,
-    Key,
-    Collection,
-    Resources,
-    Amulets,
-}
+{ Health,Weapon,Ammo,Key,Collection,Resources,Amulets }
+public enum HealType
+{ Bandage,PainKiller,FirstAid }
+

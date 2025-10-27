@@ -1,26 +1,33 @@
 using UnityEngine;
 
-public class InventoryGrid : MonoBehaviour
+[System.Serializable]
+public class InventoryGrid
 {
-    public int gridWidth = 8;
-    public int gridHeight = 8;
-    private ItemSO[,] gridItems;
+    public int width;
+    public int height;
+    public ItemSO[,] grid;
 
-    private void Awake()
+    public InventoryGrid(int width, int height)
     {
-        gridItems = new ItemSO[gridWidth, gridHeight];
+        this.width = width;
+        this.height = height;
+        grid = new ItemSO[width, height];
     }
 
     public bool CanPlaceItem(ItemSO item, int x, int y)
     {
+        if (x + item.width > width || y + item.height > height)
+            return false;
+
         for (int i = 0; i < item.width; i++)
         {
             for (int j = 0; j < item.height; j++)
             {
-                if (x + i >= gridWidth || y + j >= gridHeight || gridItems[x + i, y + j] != null)
+                if (grid[x + i, y + j] != null)
                     return false;
             }
         }
+
         return true;
     }
 
@@ -30,19 +37,7 @@ public class InventoryGrid : MonoBehaviour
         {
             for (int j = 0; j < item.height; j++)
             {
-                gridItems[x + i, y + j] = item;
-            }
-        }
-    }
-
-    public void RemoveItem(ItemSO item)
-    {
-        for (int i = 0; i < gridWidth; i++)
-        {
-            for (int j = 0; j < gridHeight; j++)
-            {
-                if (gridItems[i, j] == item)
-                    gridItems[i, j] = null;
+                grid[x + i, y + j] = item;
             }
         }
     }

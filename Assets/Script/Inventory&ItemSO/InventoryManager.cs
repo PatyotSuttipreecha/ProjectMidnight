@@ -1,33 +1,46 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
-    public InventorySlot[] slots;
+    public static InventoryManager Instance;
+    public InventoryGrid inventoryGrid;
 
-    public bool AddItem(ItemSO newItem)
+    private void Awake()
     {
-        foreach (var slot in slots)
+        if (Instance == null)
         {
-            if (!slot.isOccupied)
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else Destroy(gameObject);
+
+        inventoryGrid = new InventoryGrid(4, 4); // 8x6 grid
+    }
+
+    public bool AddItem(ItemSO item)
+    {
+        for (int x = 0; x < inventoryGrid.width; x++)
+        {
+            for (int y = 0; y < inventoryGrid.height; y++)
             {
-                slot.AddItem(newItem);
-                return true;
+                if (inventoryGrid.CanPlaceItem(item, x, y))
+                {
+                    inventoryGrid.PlaceItem(item, x, y);
+                    Debug.Log($"üß© Added {item.itemName} at ({x},{y})");
+
+                    // ‚úÖ ‡∏≠‡∏±‡∏õ‡πÄ‡∏î‡∏ï UI ‡∏ó‡∏±‡∏ô‡∏ó‡∏µ
+                    var ui = FindAnyObjectByType<InventoryUI>();
+                    if (ui != null)
+                        ui.RefreshUI();
+
+                    return true;
+                }
             }
         }
-        Debug.Log("Inventory Full!");
+
+        Debug.Log("‚ùå No space to add item!");
         return false;
     }
 
-    public void RemoveItem(ItemSO itemToRemove)
-    {
-        foreach (var slot in slots)
-        {
-            // ∂È“™ËÕßπ’È§◊Õ™ËÕß∑’Ë¡’‰Õ‡∑Á¡π’È
-            if (slot.isOccupied && slot.name == itemToRemove.name)
-            {
-                slot.ClearSlot();
-                return;
-            }
-        }
-    }
+
 }
