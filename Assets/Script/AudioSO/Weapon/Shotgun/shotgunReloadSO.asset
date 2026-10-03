@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c13ee59551871814ca27b746829a71a6, type: 3}
+  m_Name: shotgunReloadSO
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSO
+  soundName: shotgunReloadSO
+  clips:
+  - {fileID: 8300000, guid: 51599a18c974ab149ab30b2f077fb05f, type: 3}
+  - {fileID: 8300000, guid: 543f803201e90dc4ebf6f0c4ce55e8f3, type: 3}
+  - {fileID: 8300000, guid: 18c604af8d054674b95dd2d91c02a775, type: 3}
+  - {fileID: 8300000, guid: 77880e2ee7898494799e90f0e9385960, type: 3}
+  - {fileID: 8300000, guid: dca53b7a6b238ff4fa03f62aeeb15295, type: 3}
+  volume: 1

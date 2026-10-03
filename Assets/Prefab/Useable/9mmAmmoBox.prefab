@@ -130,6 +130,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3ab3e6968e3f9b64dab024fe1751b5d0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Item
+  m_EditorClassIdentifier: Assembly-CSharp::PickupItem
   itemData: {fileID: 11400000, guid: ffaf87b41f42df1498734e61a36c1b4c, type: 2}
   text: {fileID: 0}

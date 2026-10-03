@@ -1,16 +1,23 @@
 ﻿using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.Animations.Rigging;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
+    #region Variable
+    public static PlayerController instance;
+
     [Header("Movement Settings")]
     public float moveSpeed = 2f;
     public float sprintBonus = 2f;
+    public Rig rigBuilder;
 
     [Header("Cinemachine")]
+    [Tooltip("Main character camera that used cinemachine")]
     [SerializeField] private CinemachineCamera cineCamera; // Cinemachine 3.x
+    public CinemachineCamera AimCamera => cineCamera;
 
     [Header("Weapon Settings")]
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
@@ -20,6 +27,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
     [SerializeField] private GameObject[] weapons;
     private int currentweaponIndex = 4;
+    public Guns EquippedGun => weapons != null && currentweaponIndex >= 0 && currentweaponIndex < weapons.Length
+        && weapons[currentweaponIndex] != null && weapons[currentweaponIndex].activeInHierarchy
+        ? weapons[currentweaponIndex].GetComponentInChildren<Guns>() : null;
 
     [Header("Footstep Sound")]
     public SoundSO footstepWalkSO;
@@ -31,13 +41,24 @@ public class PlayerController : MonoBehaviour
     public float currentHealth;
     private bool isDeath;
 
+    [Header("InventorySetting")]
+    [Tooltip("Used inventory Laout grid in UI canvas")]
+    [SerializeField] private GameObject inventoryLayout;
+
     private EnemyController enemy;
     private CharacterController controller;
     private Animator animator;
     private int aimingLayerIndex;
     private int GunHoldingLayerIndex;
-    public bool isAiming;
-    public Rig rigBuilder;
+    [HideInInspector]public bool isAiming;
+    [HideInInspector]public bool isCheckInventory;
+
+    #endregion
+
+    private void Awake()
+    {
+        instance = this;
+    }
     void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -61,6 +82,12 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        CheckInventory();
+        if(isCheckInventory)
+        {
+            animator.SetFloat("Speed", 0f);
+            return;
+        }
         isAiming = Input.GetMouseButton(1); // เล็งอยู่หรือไม่
 
         HandleMovement();
@@ -72,7 +99,7 @@ public class PlayerController : MonoBehaviour
 
     void HandleMovement()
     {
-        if (cineCamera == null) return;
+        if (cineCamera == null || isCheckInventory) return;
 
         Transform camTransform = cineCamera.transform;
 
@@ -108,6 +135,7 @@ public class PlayerController : MonoBehaviour
             speedPercent = 0.5f;   // Animator: Walk
         }
 
+
         if (Input.GetKey(KeyCode.S) && Input.GetMouseButton(1)) // ถอยหลังช้า
             currentSpeed -= 0.2f;
 
@@ -139,7 +167,7 @@ public class PlayerController : MonoBehaviour
 
         // กำหนดประเภทอาวุธไปยัง Blend Tree
         Guns gun = FindAnyObjectByType<Guns>();
-        if (isAiming && !gun.isReloading)
+        if (isAiming && !gun.isReloading && !isCheckInventory)
         {
             cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, targetFOV, Time.deltaTime * zoomSpeed);
             cameraOffset.Offset.y = 1.7f;
@@ -316,5 +344,74 @@ public class PlayerController : MonoBehaviour
             Destroy(this.gameObject);
         }
     }
+
+    private void CheckInventory()
+    {
+        float inventoryFOV = 30f;
+        float normalFOV = 60f;
+        Vector3 inventoryOffset = new Vector3(0.4f, 0.5f, 0f);
+        Vector3 normalOffset = new Vector3(0.6f, 1.2f, 1.2f);
+        float transitionDuration = 0.5f; // ครึ่งวินาที
+
+        CinemachineCameraOffset cameraOffset = FindFirstObjectByType<CinemachineCameraOffset>();
+
+        if (Input.GetKeyDown(KeyCode.I) && !isCheckInventory)
+        {
+            if(inventoryLayout == null)
+            {
+                inventoryLayout = GameObject.Find("InventoryLayout");
+            }
+
+            if (inventoryLayout != null)
+            {
+                inventoryLayout.SetActive(true);
+                isCheckInventory = true;
+                animator.Play("SeatInventory");
+
+                if (cineCamera != null && cameraOffset != null) StartCoroutine(SmoothCameraTransition(inventoryFOV, inventoryOffset, transitionDuration));
+
+                // 🖱️ ปลดล็อกเมาส์เพื่อให้จัดของในช่องได้
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+
+        }
+        else if(Input.GetKeyDown(KeyCode.I) && isCheckInventory)
+        {
+            isCheckInventory = false;
+            animator.Play("UnseatInventory");
+
+            inventoryLayout.SetActive(false);
+            if (cineCamera != null && cameraOffset != null) StartCoroutine(SmoothCameraTransition(normalFOV, normalOffset, transitionDuration));
+
+            // 🔒 ล็อกเมาส์กลับ
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+    }
+
+   private IEnumerator SmoothCameraTransition(float targetFOV, Vector3 targetOffset, float duration)
+    {
+        CinemachineCameraOffset cameraOffset = FindFirstObjectByType<CinemachineCameraOffset>();
+        float startFOV = cineCamera.Lens.FieldOfView;
+        Vector3 startOffset = cameraOffset.Offset;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            cineCamera.Lens.FieldOfView = Mathf.Lerp(startFOV, targetFOV, t);
+            cameraOffset.Offset = Vector3.Lerp(startOffset, targetOffset, t);
+
+            yield return null;
+        }
+
+        cineCamera.Lens.FieldOfView = targetFOV;
+        cameraOffset.Offset = targetOffset;
+    }
+
 }
 

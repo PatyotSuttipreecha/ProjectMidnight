@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c13ee59551871814ca27b746829a71a6, type: 3}
+  m_Name: shotgunShootShellCasingSO
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSO
+  soundName: shotgunShootShellCasingSO
+  clips:
+  - {fileID: 8300000, guid: afbd9ce4aeb7c034494aec61225f79e1, type: 3}
+  - {fileID: 8300000, guid: f65a643745b7b4c4eac2ab943bf623fb, type: 3}
+  - {fileID: 8300000, guid: 1f2010a6bb4d2b84aad307762373c7e9, type: 3}
+  - {fileID: 8300000, guid: 83b3b0107176ded428f6057985b1b2d1, type: 3}
+  - {fileID: 8300000, guid: b6b2363a36830d2449ebb993ba53008d, type: 3}
+  volume: 1

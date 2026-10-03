@@ -2,69 +2,42 @@ using UnityEngine;
 
 public class HitBoxManager : MonoBehaviour
 {
-
     [Header("Enemy Settings")]
     public float health = 100f;
+    private bool isDead;
 
-    public void TakeDamage(HitBoxPart hitPart)
+    public void TakeDamage(HitBoxPart hitPart, float baseDamage = 0f, Transform source = null,
+        Collider hitCollider = null, Vector3 hitPoint = default, Vector3 hitDirection = default)
     {
-        EnemyController enemyController = GetComponent<EnemyController>();
-        float damage = 10f;
+        if (isDead) return;
+        float minDamage = 10f;
+        float maxDamage = 15f;
+        float multiplier = 0.5f;
         switch (hitPart)
         {
             case HitBoxPart.Head:
-                damage = Random.Range(30f,45f); //ยิง 3-4 นัดตาย
-                enemyController.isAlert = true;
+                minDamage = 30f; maxDamage = 45f; multiplier = 1.75f;
                 break;
             case HitBoxPart.Body:
-                damage = Random.Range(20f, 25f); //ยิง 4-5 นัดตาย
-                enemyController.isAlert = true;
+                minDamage = 20f; maxDamage = 25f; multiplier = 1f;
                 break;
             case HitBoxPart.Hip:
-                damage = Random.Range(15f, 20f); //ยิง 5-7 นัดตาย
-                enemyController.isAlert = true;
-                break;
             case HitBoxPart.UpperArm:
-                damage = Random.Range(15f, 20f); //ยิง 5-7 นัดตาย
-                enemyController.isAlert = true;
-                break;
-            case HitBoxPart.LowerArm:
-                damage = Random.Range(10f, 15f); //ยิง 5-7 นัดตาย
-                enemyController.isAlert = true;
-                break;
             case HitBoxPart.UpperLeg:
-                damage = Random.Range(15f, 20f); //ยิง 5-7 นัดตาย
-                enemyController.isAlert = true;
+                minDamage = 15f; maxDamage = 20f; multiplier = 0.75f;
                 break;
-            case HitBoxPart.LowerLeg:
-                damage = Random.Range(10f, 15f); //ยิง 7-10 นัดตาย
-                enemyController.isAlert = true;
-                break;
-            case HitBoxPart.Foot:
-                damage = Random.Range(10f, 15f); //ยิง 7-10 นัดตาย
-                enemyController.isAlert = true;
-                break;
-            case HitBoxPart.Hand:
-                damage = Random.Range(10f, 15f); //ยิง 7-10 นัดตาย
-                enemyController.isAlert = true;
-                break;
-
         }
-
-        health -= damage;
+        // Existing weapons have damage = 0. Preserve their old damage until configured.
+        float damage = baseDamage > 0f ? baseDamage * multiplier : Random.Range(minDamage, maxDamage);
+        health = Mathf.Max(0f, health - damage);
         Debug.Log($"{hitPart} hit! -{damage} HP (Remaining: {health})");
-
-        if (health <= 0)
+        if (TryGetComponent(out EnemyController enemy)) enemy.AlertTo(source);
+        if (health <= 0f)
         {
-            Die();
+            isDead = true;
+            if (enemy != null) enemy.BeginDeath();
+            else Destroy(gameObject);
         }
-    }
-
-    private void Die()
-    {
-        Debug.Log("Enemy Died!");
-        Destroy(this.gameObject);
+        if (enemy != null) enemy.ReceiveBulletImpact(hitCollider, hitPoint, hitDirection);
     }
 }
-
-

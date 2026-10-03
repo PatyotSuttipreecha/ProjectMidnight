@@ -1,0 +1,432 @@
+{
+  "triangles": 23136,
+  "meshParts": 35,
+  "approximateLengthMeters": 1.085,
+  "textures": {
+    "wood": 2048,
+    "steel": 1024,
+    "rubber": 512
+  },
+  "parts": [
+    {
+      "name": "Receiver",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 670,
+      "triangles": 1320
+    },
+    {
+      "name": "Stock",
+      "material": "StockWood",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 1217,
+      "triangles": 2400
+    },
+    {
+      "name": "RecoilPad",
+      "material": "Rubber",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 262,
+      "triangles": 512
+    },
+    {
+      "name": "StockSpacer",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 132,
+      "triangles": 256
+    },
+    {
+      "name": "Barrel",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 891,
+      "triangles": 1600
+    },
+    {
+      "name": "BoreBack",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 100,
+      "triangles": 192
+    },
+    {
+      "name": "MagazineTube",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 262,
+      "triangles": 512
+    },
+    {
+      "name": "MagazineCap",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 782,
+      "triangles": 1024
+    },
+    {
+      "name": "Forend",
+      "material": "PumpWood",
+      "parent": "Pump",
+      "position": [
+        0,
+        -0.01,
+        0.264
+      ],
+      "vertices": 6482,
+      "triangles": 12800
+    },
+    {
+      "name": "ActionBarLeft",
+      "material": "Steel",
+      "parent": "Pump",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "ActionBarRight",
+      "material": "Steel",
+      "parent": "Pump",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "PortInterior",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "BoltBody",
+      "material": "BoltSteel",
+      "parent": "Bolt",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "BoltExtractor",
+      "material": "Steel",
+      "parent": "Bolt",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "BoltSeam",
+      "material": "Bore",
+      "parent": "Bolt",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "LoadingWell",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "LoadingGate",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 24,
+      "triangles": 44
+    },
+    {
+      "name": "TriggerGuard",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 192,
+      "triangles": 384
+    },
+    {
+      "name": "Trigger",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 48,
+      "triangles": 92
+    },
+    {
+      "name": "TriggerAssemblyPlate",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "CrossBoltSafety",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 68,
+      "triangles": 128
+    },
+    {
+      "name": "RearReceiverPinLeft",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 68,
+      "triangles": 128
+    },
+    {
+      "name": "RearPinSlotLeft",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "RearReceiverPinRight",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 68,
+      "triangles": 128
+    },
+    {
+      "name": "RearPinSlotRight",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "FrontReceiverPinLeft",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 68,
+      "triangles": 128
+    },
+    {
+      "name": "FrontPinSlotLeft",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "FrontReceiverPinRight",
+      "material": "BoltSteel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 68,
+      "triangles": 128
+    },
+    {
+      "name": "FrontPinSlotRight",
+      "material": "Bore",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "BarrelLug",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "FrontSightRamp",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "FrontBead",
+      "material": "Brass",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 167,
+      "triangles": 320
+    },
+    {
+      "name": "StockSlingStud",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 16,
+      "triangles": 28
+    },
+    {
+      "name": "RearSlingLoop",
+      "material": "Steel",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 128,
+      "triangles": 256
+    },
+    {
+      "name": "PadGripRibs",
+      "material": "Rubber",
+      "parent": "Visual",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 208,
+      "triangles": 364
+    }
+  ]
+}

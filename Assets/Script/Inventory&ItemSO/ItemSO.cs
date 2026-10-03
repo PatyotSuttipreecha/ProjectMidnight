@@ -7,14 +7,15 @@ public class ItemSO : ScriptableObject
     public string itemName;
     public ItemType itemType;
     public Sprite icon;
+    [Tooltip("World pickup prefab for dropped items. Requires PickupItem and a trigger collider.")]
+    public PickupItem pickupPrefab;
 
-    [Header("Stack & Size")]
-    public int maxStack;
-    public int height;
-    public int width;
+    [Header("Inventory Size")]
+    [Range(1,4)]public int height;
+    [Range(1,4)]public int width;
 
     [Header("Gun Data")]
-    public Guns.WeaponType weaponType; // ถ้าเป็นกระสุน
+    public Guns.WeaponType weaponType;
     public int ammoAmount;
 
     [Header("Heal Data")]

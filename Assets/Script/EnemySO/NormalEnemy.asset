@@ -23,3 +23,41 @@ MonoBehaviour:
   maxAttack: 30
   attackRange: 2
   attackCooldown: 2
+  useSharedSettings: 1
+  startingHealth: 100
+  walkSpeed: 0.5
+  acceleration: 8
+  turnSpeed: 120
+  stoppingDistance: 1
+  eyeHeight: 1
+  playerTargetHeight: 1
+  attackWindup: 0.5
+  useRagdoll: 1
+  deathAnimation: zombie_dead2
+  deathAnimationLeadIn: 0.6
+  deathBlendDuration: 1.2
+  deathAnimationDrive: 25
+  hybridDeathPushScale: 0.35
+  corpseLifetime: 8
+  lootTable:
+  - prefab: {fileID: 1074235151302614719, guid: 667c475fafc9efd4f84fef50cb57eb5f, type: 3}
+    percent: 50
+  - prefab: {fileID: 3024398689783851813, guid: d13398a0dc3af914fbe476e43c2cbcc2, type: 3}
+    percent: 50
+  lootPrefab: {fileID: 1074235151302614719, guid: 667c475fafc9efd4f84fef50cb57eb5f, type: 3}
+  lootDropChance: 0.3
+  lootOffset: {x: 0, y: 0.2, z: 0}
+  ragdollGravityScale: 0.45
+  ragdollLinearDamping: 0.8
+  ragdollAngularDamping: 1.5
+  deathPushImpulse: 3
+  enableHitReaction: 1
+  hitPushImpulse: 0.8
+  hitPhysicsDuration: 0.12
+  hitRecoveryDuration: 0.2
+  hitReactionBlend: 0.75
+  hitAnimationSupport: 30
+  hitMaxAngle: 25
+  corpseSettleDelay: 0.75
+  physicsMassMultiplier: 1
+  boneMassOverrides: []

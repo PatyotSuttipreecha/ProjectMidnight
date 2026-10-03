@@ -4,27 +4,14 @@ public class HitBox : MonoBehaviour
 {
     [Header("HitBox")]
     public HitBoxPart hitBox;
-    private HitBoxManager hitBoxManager;
 
-   
-
-    private void Start()
+    private void OnTriggerEnter(Collider other)
     {
-        hitBoxManager = GetComponentInParent<HitBoxManager>(); // หาพ่อของมัน (Enemy)
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        
-
-        if (other.CompareTag("Bullet"))
-        {
-            Debug.Log($"Hit on {hitBox}");
-            hitBoxManager.TakeDamage(hitBox);
-          
-        }
+        Bullet bullet = other.GetComponentInParent<Bullet>();
+        if (bullet != null) bullet.TryHit(GetComponent<Collider>());
     }
 }
+
 public enum HitBoxPart
 {
     Head,

@@ -390,6 +390,7 @@ MonoBehaviour:
     aimTime: 1
     bulletPrefab: {fileID: 4345984671954175390, guid: 04d031dd50d46184d8df97aba4226428, type: 3}
     firePoint: {fileID: 8308405741871902542}
+    muzzleFlash: {fileID: 0}
     aimingSO: {fileID: 0}
     nonAimSO: {fileID: 0}
     shootSO: {fileID: 0}
@@ -398,6 +399,14 @@ MonoBehaviour:
   playerController: {fileID: 5899883115134964478}
   isReloading: 0
   crosshairUI: {fileID: 0}
+  aimPosition: {fileID: 0}
+  breathingAmplitude: {x: 0.0015, y: 0.002}
+  breathingFrequency: 0.25
+  swayBlendSpeed: 4
+  cameraBreathingAmplitude: {x: 0.08, y: 0.12}
+  movingSpreadFraction: 0.12
+  movementThreshold: 0.05
+  movementBlendSpeed: 8
 --- !u!1 &3365450401193807849
 GameObject:
   m_ObjectHideFlags: 0
@@ -1175,6 +1184,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5899883115134964478}
     - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: breathingFrequency
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
       propertyPath: weaponStat.shootSO
       value: 
       objectReference: {fileID: 11400000, guid: f09157348066b3443a96062e07bcc623, type: 2}
@@ -1187,9 +1200,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: 3ce585cb955d9eb45b2e31e624035e38, type: 2}
     - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: movingSpreadFraction
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
       propertyPath: weaponStat.emptyMagSO
       value: 
       objectReference: {fileID: 11400000, guid: cfd1dc653ebe3b249867540eb336df86, type: 2}
+    - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
+      propertyPath: weaponStat.bulletSpeed
+      value: 200
+      objectReference: {fileID: 0}
     - target: {fileID: 2336428879279694, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
       propertyPath: weaponStat.bulletPrefab
       value: 
@@ -1256,6 +1277,134 @@ Transform:
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8016523227302697804, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
   m_PrefabInstance: {fileID: 2541075221798298438}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &3299036458174361386
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5788793989436809060}
+    m_Modifications:
+    - target: {fileID: 1000, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_Name
+      value: Shotgun_M870_Realistic
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.079
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.218
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.012
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.5000025
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.4999927
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.50000054
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.50000423
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 1391, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.62
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1000, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 76805847900965747}
+  m_SourcePrefab: {fileID: 100100000, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+--- !u!4 &3299036458174360133 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1391, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+  m_PrefabInstance: {fileID: 3299036458174361386}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3299036458174360770 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1000, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+  m_PrefabInstance: {fileID: 3299036458174361386}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &76805847900965747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3299036458174360770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f70b8a32c5281b74ab7a7eb951801183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Guns
+  weaponStat:
+    weaponName: 3
+    damage: 0
+    fireRate: 0
+    recoil: 0.02
+    recoilRecovery: 3.2
+    currentAmmo: 5
+    magazineSize: 5
+    reloadTime: 7
+    ammoReserve: 20
+    bulletSpeed: 200
+    baseSpread: 15
+    minSpread: 1
+    aimTime: 2.3
+    bulletPrefab: {fileID: 4345984671954175390, guid: 04d031dd50d46184d8df97aba4226428, type: 3}
+    firePoint: {fileID: 3299036458174360133}
+    muzzleFlash: {fileID: 0}
+    aimingSO: {fileID: 11400000, guid: 9433c81bd2e34399ad853a8f7806e060, type: 2}
+    nonAimSO: {fileID: 11400000, guid: 1d1865c32a2c470e95cbbe66766b753f, type: 2}
+    shootSO: {fileID: 11400000, guid: 4d254894ade147c0aadf394309d79b55, type: 2}
+    reloadSO: {fileID: 11400000, guid: eb251b9b130c4b96ad86a31c128f2252, type: 2}
+    emptyMagSO: {fileID: 11400000, guid: 3e3db85ed5df4e93a463f2ee69a79898, type: 2}
+  playerController: {fileID: 5899883115134964478}
+  isReloading: 0
+  crosshairUI: {fileID: 0}
+  aimPosition: {fileID: 0}
+  breathingAmplitude: {x: 0.0015, y: 0.002}
+  breathingFrequency: 0.7
+  swayBlendSpeed: 4
+  cameraBreathingAmplitude: {x: 0.08, y: 0.12}
+  movingSpreadFraction: 0.3
+  movementThreshold: 0.05
+  movementBlendSpeed: 8
+--- !u!4 &3299036458174360771 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+  m_PrefabInstance: {fileID: 3299036458174361386}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5323327038535753900
 PrefabInstance:
@@ -1342,6 +1491,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1852576806548013000, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 71509097089511452}
+    - targetCorrespondingSourceObject: {fileID: 1852576806548013000, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3299036458174360771}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       insertIndex: -1
@@ -1641,6 +1793,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   moveSpeed: 2
   sprintBonus: 3
+  rigBuilder: {fileID: 5419312646296631660}
   cineCamera: {fileID: 490403707931120603}
   weaponType: 0
   weapons:
@@ -1650,8 +1803,11 @@ MonoBehaviour:
   - {fileID: 3094156065019257931}
   footstepWalkSO: {fileID: 11400000, guid: 2600f23020e368b44b45d345085a5394, type: 2}
   footstepRunSO: {fileID: 11400000, guid: 88ba820194b61054e9c0d44fb455f0f0, type: 2}
+  maxHealth: 100
+  currentHealth: 0
+  inventoryLayout: {fileID: 0}
   isAiming: 0
-  rigBuilder: {fileID: 5419312646296631660}
+  isCheckInventory: 0
 --- !u!114 &8940514183323403394
 MonoBehaviour:
   m_ObjectHideFlags: 0

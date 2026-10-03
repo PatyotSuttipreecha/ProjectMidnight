@@ -1,0 +1,26 @@
+{
+    "success": true,
+    "meshParts": 35,
+    "triangles": 23136,
+    "unityVersion": "6000.2.4f1",
+    "renderError": "",
+    "boundsSize": {
+        "x": 0.07199999690055847,
+        "y": 0.19300000369548798,
+        "z": 1.0857501029968262
+    },
+    "barrelCenter": {
+        "x": 0.0,
+        "y": 0.03199999779462814,
+        "z": 0.3500000238418579
+    },
+    "materials": [
+        "PumpWalnut",
+        "BluedSteel",
+        "BoltSteel",
+        "Interior",
+        "CheckeredWalnut",
+        "RecoilRubber",
+        "FrontBeadBrass"
+    ]
+}
