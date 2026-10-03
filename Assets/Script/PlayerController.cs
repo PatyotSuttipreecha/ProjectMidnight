@@ -166,8 +166,8 @@ public class PlayerController : MonoBehaviour
         animator.SetLayerWeight(aimingLayerIndex, isAiming ? 1f : 0f);
 
         // กำหนดประเภทอาวุธไปยัง Blend Tree
-        Guns gun = FindAnyObjectByType<Guns>();
-        if (isAiming && !gun.isReloading && !isCheckInventory)
+        Guns gun = EquippedGun;
+        if (isAiming && (gun == null || !gun.isReloading) && !isCheckInventory)
         {
             cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, targetFOV, Time.deltaTime * zoomSpeed);
             cameraOffset.Offset.y = 1.7f;
