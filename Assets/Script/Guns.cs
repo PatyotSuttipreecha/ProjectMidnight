@@ -20,6 +20,9 @@ public class Guns : MonoBehaviour
 
         [Header("Bullet Settings")]
         public float bulletSpeed;
+        [Min(1)] public int pelletCount;
+        [Tooltip("Shotgun pellet cone half-angle in degrees. Independent of aiming accuracy spread.")]
+        [Range(0f, 45f)] public float pelletSpreadAngle;
         public float baseSpread;       // spread ปกติ
         public float minSpread;     // spread ต่ำสุดเมื่อเล็งมั่นคง
         public float aimTime;       // เวลาในการหด spread ให้แคบลง
@@ -79,6 +82,9 @@ public class Guns : MonoBehaviour
     private float breathingWeight;
     private float breathingPhase;
     private Vector2 aimViewportOffset;
+    [Header("Spread Preview")]
+    [SerializeField] private bool showSpreadGizmos = true;
+    [SerializeField, Min(0.1f)] private float spreadPreviewDistance = 10f;
     private bool IsAiming => playerController != null && playerController.isAiming
         && !playerController.isCheckInventory && !isReloading;
 
@@ -209,7 +215,7 @@ public class Guns : MonoBehaviour
             if (Input.GetMouseButtonDown(0))
             {
                 weaponStat.currentAmmo--;
-                weaponStat.muzzleFlash.Play();
+                if (weaponStat.muzzleFlash != null) weaponStat.muzzleFlash.Play();
                
                 FireBullet();
 
@@ -220,6 +226,7 @@ public class Guns : MonoBehaviour
 
                 Recoil();
                 SoundManager.PlaySound(weaponStat.shootSO, 1);
+                return;
             }
         }
         if (Input.GetMouseButtonDown(0) && weaponStat.currentAmmo <= 0)
@@ -260,20 +267,69 @@ public class Guns : MonoBehaviour
             (Quaternion.Euler(-spreadY, spreadX, 0) * Vector3.forward);
 
         // 4. สร้างกระสุน
-        GameObject bullet = Instantiate(weaponStat.bulletPrefab, weaponStat.firePoint.position, Quaternion.LookRotation(shootDirection));
-
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
-
-        Bullet bulletScript = bullet.GetComponent<Bullet>();
-        if (bulletScript != null)
+        int count = weaponStat.weaponName == WeaponType.Shotgun ? Mathf.Clamp(weaponStat.pelletCount, 1, 128) : 1;
+        float pelletAngle = weaponStat.weaponName == WeaponType.Shotgun ? Mathf.Clamp(weaponStat.pelletSpreadAngle, 0f, 45f) : 0f;
+        for (int i = 0; i < count; i++)
         {
-            bulletScript.SetDamage(weaponStat.damage);
-            bulletScript.SetSource(playerController != null ? playerController.transform : null);
-            bulletScript.SetDirection(shootDirection);
+            Vector3 pelletDirection = SamplePelletDirection(shootDirection, pelletAngle);
+            GameObject bullet = Instantiate(weaponStat.bulletPrefab, weaponStat.firePoint.position, Quaternion.LookRotation(pelletDirection));
+            Bullet bulletScript = bullet.GetComponent<Bullet>();
+            if (bulletScript != null)
+            {
+                bulletScript.SetDamage(weaponStat.damage);
+                bulletScript.SetSource(playerController != null ? playerController.transform : null);
+                bulletScript.SetDirection(pelletDirection, weaponStat.bulletSpeed);
+            }
+            Debug.DrawRay(weaponStat.firePoint.position, pelletDirection * spreadPreviewDistance, Color.yellow, 1f);
         }
 
         // Debug ray
         Debug.DrawRay(weaponStat.firePoint.position, shootDirection * 10f, Color.red, 2f);
+    }
+
+    public static Vector3 SamplePelletDirection(Vector3 forward, float halfAngle)
+    {
+        if (forward.sqrMagnitude < 0.000001f) forward = Vector3.forward;
+        if (halfAngle <= 0f) return forward.normalized;
+        float cosine = Random.Range(Mathf.Cos(Mathf.Clamp(halfAngle, 0f, 45f) * Mathf.Deg2Rad), 1f);
+        float sine = Mathf.Sqrt(Mathf.Max(0f, 1f - cosine * cosine));
+        float azimuth = Random.Range(0f, Mathf.PI * 2f);
+        return Quaternion.LookRotation(forward) * new Vector3(sine * Mathf.Cos(azimuth), sine * Mathf.Sin(azimuth), cosine);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!showSpreadGizmos || weaponStat.firePoint == null) return;
+        Vector3 origin = weaponStat.firePoint.position;
+        Vector3 direction = weaponStat.firePoint.forward;
+        if (Application.isPlaying && aimPosition != null && (aimPosition.TargetPoint - origin).sqrMagnitude > 0.000001f)
+            direction = (aimPosition.TargetPoint - origin).normalized;
+        float angle = weaponStat.weaponName == WeaponType.Shotgun ? Mathf.Clamp(weaponStat.pelletSpreadAngle, 0f, 45f) : 0f;
+        DrawSpreadCone(origin, direction, angle, new Color(1f, 0.65f, 0.1f));
+        float accuracy = Mathf.Max(0f, Application.isPlaying ? currentSpread : weaponStat.baseSpread);
+        DrawSpreadCone(origin, direction, Mathf.Min(80f, angle + accuracy * 1.414214f), Color.cyan);
+#if UNITY_EDITOR
+        UnityEditor.Handles.Label(origin + direction * spreadPreviewDistance,
+            "Spread @ " + spreadPreviewDistance.ToString("0.#") + "m | orange: pellets, cyan: accuracy envelope");
+#endif
+    }
+    private void DrawSpreadCone(Vector3 origin, Vector3 forward, float halfAngle, Color color)
+    {
+        float distance = Mathf.Max(0.1f, spreadPreviewDistance);
+        float radius = Mathf.Tan(halfAngle * Mathf.Deg2Rad) * distance;
+        Quaternion axes = Quaternion.LookRotation(forward);
+        Vector3 centre = origin + forward * distance;
+        Gizmos.color = color;
+        Gizmos.DrawLine(origin, centre);
+        Vector3 previous = centre + axes * Vector3.right * radius;
+        for (int i = 1; i <= 32; i++)
+        {
+            float phase = i * Mathf.PI * 2f / 32f;
+            Vector3 point = centre + axes * new Vector3(Mathf.Cos(phase) * radius, Mathf.Sin(phase) * radius, 0f);
+            Gizmos.DrawLine(previous, point);
+            if (i % 8 == 0) Gizmos.DrawLine(origin, point);
+            previous = point;
+        }
     }
 
 

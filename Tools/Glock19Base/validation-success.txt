@@ -1,0 +1,1 @@
+Glock 19 Base: native mesh assets, materials, prefab and URP render verified in 6000.2.4f1

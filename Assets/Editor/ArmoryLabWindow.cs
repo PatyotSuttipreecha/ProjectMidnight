@@ -17,6 +17,7 @@ public class ArmoryLabWindow : EditorWindow
     private static readonly string[] TuningPaths =
     {
         "weaponStat.damage", "weaponStat.bulletSpeed", "weaponStat.baseSpread",
+        "weaponStat.pelletCount", "weaponStat.pelletSpreadAngle", "spreadPreviewDistance",
         "weaponStat.minSpread", "weaponStat.aimTime", "weaponStat.recoil",
         "weaponStat.recoilRecovery", "weaponStat.magazineSize", "weaponStat.reloadTime",
         "breathingAmplitude", "breathingFrequency", "swayBlendSpeed", "cameraBreathingAmplitude",
@@ -171,6 +172,16 @@ public class ArmoryLabWindow : EditorWindow
             Section("Weapon");
             Slider("weaponStat.damage", "Damage", 0f, 200f, "Base damage before body-part multipliers. Zero keeps the legacy random hitbox damage.");
             Slider("weaponStat.bulletSpeed", "Bullet speed (units/s)", 0f, 300f, "Projectile travel speed.");
+            if (weapon.weaponStat.weaponName == Guns.WeaponType.Shotgun)
+            {
+                Section("Shotgun Pellets");
+                SerializedProperty pellets = serializedWeapon.FindProperty("weaponStat.pelletCount");
+                pellets.intValue = EditorGUILayout.IntSlider("Pellets per shell", Mathf.Max(1, pellets.intValue), 1, 128);
+                Slider("weaponStat.pelletSpreadAngle", "Pellet spread half-angle (degrees)", 0f, 45f, "Cone half-angle. Full cone width is twice this angle. Zero sends all pellets along the same direction.");
+                EditorGUILayout.PropertyField(serializedWeapon.FindProperty("showSpreadGizmos"), new GUIContent("Show spread Gizmos when selected"));
+                Slider("spreadPreviewDistance", "Preview distance (metres)", 0.1f, 100f, "Orange cone shows pellet spread; cyan includes aiming accuracy. Select the gun or its parent in Scene View.");
+                EditorGUILayout.HelpBox("One click consumes one shell. Damage is per pellet, so multiple hits increase total damage. Aiming accuracy shifts the whole pellet cone; it does not remove the pellet spread.", MessageType.Info);
+            }
             SerializedProperty magazine = serializedWeapon.FindProperty("weaponStat.magazineSize");
             magazine.intValue = EditorGUILayout.IntSlider("Magazine capacity", magazine.intValue,
                 Mathf.Min(1, magazine.intValue), Mathf.Max(100, magazine.intValue));

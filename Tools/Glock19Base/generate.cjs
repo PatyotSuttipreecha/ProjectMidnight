@@ -1,0 +1,43 @@
+const fs=require('fs'),path=require('path');
+const g=require('../ShotgunM870Realistic/geometry.cjs');
+const root=path.resolve(__dirname,'../..'),parts=[];
+const part=(name,material,m,parent='Visual')=>parts.push({name,material,parent,vertices:m.v.map(([x,y,z])=>({x,y,z})),uv:m.uv.map(([x,y])=>({x,y})),indices:m.f.flat()});
+part('SlideBody','Slide',g.profile([[.012,-.079],[.034,-.079],[.038,-.075],[.038,.095],[.035,.099],[.014,.099],[.011,.095],[.011,-.075]],.026,.0012),'Slide');
+part('Frame','Polymer',g.profile([[-.005,-.079],[.007,-.078],[.008,.098],[-.004,.099],[-.011,.090],[-.013,.031],[-.016,.014],[-.013,-.031],[-.008,-.065]],.029,.0015));
+part('Grip','Polymer',g.profile([[-.010,-.025],[-.025,-.022],[-.036,-.026],[-.043,-.031],[-.049,-.029],[-.055,-.035],[-.065,-.035],[-.071,-.042],[-.077,-.040],[-.084,-.046],[-.093,-.047],[-.102,-.056],[-.102,-.099],[-.098,-.105],[-.091,-.107],[-.070,-.098],[-.048,-.089],[-.026,-.078],[-.011,-.073],[-.005,-.066]],.031,.002));
+function smoothLoop(points){const r=[];for(let i=0;i<points.length;i++)for(let j=0;j<6;j++){const t=j/6,a=points[(i+points.length-1)%points.length],b=points[i],c=points[(i+1)%points.length],d=points[(i+2)%points.length];r.push([0,1].map(k=>.5*((2*b[k])+(-a[k]+c[k])*t+(2*a[k]-5*b[k]+4*c[k]-d[k])*t*t+(-a[k]+3*b[k]-3*c[k]+d[k])*t*t*t)));}return r;}
+part('TriggerGuard','Polymer',g.loop(smoothLoop([[-.013,-.029],[-.013,.020],[-.018,.028],[-.040,.028],[-.047,.020],[-.047,-.017],[-.040,-.030],[-.025,-.032]]),.010,.004));
+part('Trigger','Slide',g.profile([[-.013,-.009],[-.022,-.005],[-.031,.002],[-.040,.010],[-.039,.014],[-.032,.008],[-.022,.005],[-.015,-.004]],.008,.0006));
+part('TriggerSafety','Dark',g.profile([[-.017,-.003],[-.028,.006],[-.039,.013],[-.040,.016],[-.028,.009],[-.017,0]],.002,.0003));
+part('MagazineFloorplate','Polymer',g.profile([[-.101,-.102],[-.104,-.106],[-.111,-.103],[-.112,-.056],[-.106,-.052]],.033,.001),'Magazine');
+part('MagazineBody','Dark',g.profile([[-.077,-.086],[-.077,-.053],[-.102,-.057],[-.103,-.096]],.023,.001),'Magazine');
+part('BarrelMuzzle','Slide',g.lathe([[.095,.0065],[.0995,.0065],[.100,.0059],[.100,.0045],[.0975,.0045]],.023,32,false),'Slide');
+part('BoreInterior','Dark',g.lathe([[.097,.0045],[.0975,.0045]],.023,24),'Slide');
+part('FrontSight','Slide',g.profile([[.037,.083],[.044,.085],[.044,.090],[.038,.093]],.005,.0004),'Slide');
+part('FrontSightDot','White',g.box(0,.041,.083,.0022,.0022,.0004),'Slide');
+part('RearSight','Slide',g.box(0,.0405,-.066,.020,.007,.006),'Slide');
+part('RearSightNotch','Dark',g.box(0,.043,-.0692,.005,.004,.0003),'Slide');
+for(const side of [-1,1]){
+ const label=side<0?'Left':'Right';
+ const panel=g.profile([[-.053,-.043],[-.091,-.057],[-.096,-.094],[-.091,-.098],[-.055,-.082],[-.046,-.077]],.0006,.00008);g.translate(panel,side*.0156,0,0);part('GripPanel'+label,'Panel',panel);
+ const serrations=g.mesh();for(let i=0;i<7;i++)g.append(serrations,g.box(side*.0131,.025,-.068+i*.005,.00035,.020,.001));part('RearSerrations'+label,'Dark',serrations,'Slide');
+ const pins=g.mesh();for(const z of [-.014,-.034]){const p=g.lathe([[-.0004,.0014],[.0004,.0014]],0,16);p.v=p.v.map(([x,y,zz])=>[zz+side*.0147,y-.006,-x+z]);g.append(pins,p);}part('FramePins'+label,'Slide',pins);
+ part('RailGroove'+label,'Dark',g.box(side*.0146,-.006,.061,.0003,.0015,.063));
+}
+part('SlideStop','Slide',g.box(-.0153,.002,-.038,.002,.004,.010));
+part('MagazineRelease','Slide',g.box(-.0161,-.048,-.036,.001,.008,.005));
+for(const p of parts)if(p.parent==='Slide')for(const v of p.vertices)v.y-=.002;
+const validationParts=parts.map(p=>({name:p.name,m:{v:p.vertices.map(v=>[v.x,v.y,v.z]),uv:p.uv.map(v=>[v.x,v.y]),f:Array.from({length:p.indices.length/3},(_,i)=>p.indices.slice(i*3,i*3+3))}}));
+g.validate(validationParts);
+const triangles=parts.reduce((n,p)=>n+p.indices.length/3,0);
+const data={name:'Glock19_Base',triangles,parts};
+fs.mkdirSync(path.join(root,'Assets/Prefab/Weapon/Glock19Base'),{recursive:true});
+fs.writeFileSync(path.join(root,'Assets/Prefab/Weapon/Glock19Base/Glock19_Source.json'),JSON.stringify(data));
+fs.writeFileSync(path.join(__dirname,'manifest.json'),JSON.stringify({meshParts:parts.length,triangles},null,2));
+const project=path.join(root,'Library/Glock19BaseValidation');
+fs.mkdirSync(path.join(project,'Assets/Editor'),{recursive:true});fs.mkdirSync(path.join(project,'Packages'),{recursive:true});fs.mkdirSync(path.join(project,'ProjectSettings'),{recursive:true});
+fs.cpSync(path.join(root,'Assets/Prefab/Weapon/Glock19Base'),path.join(project,'Assets/Prefab/Weapon/Glock19Base'),{recursive:true});
+fs.copyFileSync(path.join(root,'Assets/Editor/Glock19BaseBuilder.cs'),path.join(project,'Assets/Editor/Glock19BaseBuilder.cs'));
+fs.copyFileSync(path.join(root,'Library/M870AssetValidation/Packages/manifest.json'),path.join(project,'Packages/manifest.json'));
+fs.copyFileSync(path.join(root,'ProjectSettings/ProjectVersion.txt'),path.join(project,'ProjectSettings/ProjectVersion.txt'));
+console.log(`Prepared Glock19 Base: ${parts.length} parts, ${triangles} triangles.`);

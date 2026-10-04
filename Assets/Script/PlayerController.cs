@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.Animations.Rigging;
 using System.Collections;
@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour
     [Header("Weapon Settings")]
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
     public int weaponType = 0;
+    [Tooltip("Time to raise or lower the aiming animation layer. Weapon selection remains immediate.")]
+    [SerializeField, Min(0f)] private float aimBlendDuration = 0.2f;
 
     [Header("Weapon Switcher")]
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
@@ -50,6 +52,10 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private int aimingLayerIndex;
     private int GunHoldingLayerIndex;
+    private RigBuilder animationRigBuilder;
+    private RigLayer[] suspendedRigLayers;
+    private bool[] savedRigLayerActive;
+    private bool inventoryClosing;
     [HideInInspector]public bool isAiming;
     [HideInInspector]public bool isCheckInventory;
 
@@ -70,6 +76,7 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         animator = GetComponent<Animator>();
+        animationRigBuilder = GetComponent<RigBuilder>();
 
         WeaponSwitcherIndex(currentweaponIndex);
 
@@ -85,6 +92,8 @@ public class PlayerController : MonoBehaviour
         CheckInventory();
         if(isCheckInventory)
         {
+            isAiming = false;
+            SuppressWeaponPose();
             animator.SetFloat("Speed", 0f);
             return;
         }
@@ -149,73 +158,27 @@ public class PlayerController : MonoBehaviour
 
     void HandleAiming()
     {
-        if (cineCamera == null) return;
-
-        float normalFOV = 60f;
-        float targetFOV = 30f;
-        float zoomSpeed = 5f;
-        
-        CinemachineCameraOffset cameraOffset = FindFirstObjectByType<CinemachineCameraOffset>();
-
-        bool isAiming = Input.GetMouseButton(1);
-
-        //float target = isAiming ? targetFOV : normalFOV;
-       
-
-        // เปิด/ปิด Aiming Layer
-        animator.SetLayerWeight(aimingLayerIndex, isAiming ? 1f : 0f);
-
-        // กำหนดประเภทอาวุธไปยัง Blend Tree
+        if (animator == null) return;
         Guns gun = EquippedGun;
-        if (isAiming && (gun == null || !gun.isReloading) && !isCheckInventory)
+        bool aiming = Input.GetMouseButton(1) && (gun == null || !gun.isReloading) && !isCheckInventory;
+        float aimType = weaponType == 3 ? 1f : weaponType == 2 ? 0.6f : weaponType == 1 ? 0.4f : 0.2f;
+        float holdingType = weaponType == 2 ? 0.6f : 0.4f;
+        // Select the weapon immediately and keep the selected pose while its layer fades out.
+        animator.SetFloat("AimType", aimType);
+        animator.SetFloat("GunHolding", holdingType);
+        if (GunHoldingLayerIndex >= 0) animator.SetLayerWeight(GunHoldingLayerIndex, weaponType == 0 ? 0f : 1f);
+        float targetWeight = aiming ? 1f : 0f;
+        float currentWeight = aimingLayerIndex >= 0 ? animator.GetLayerWeight(aimingLayerIndex) : 0f;
+        float nextWeight = aimBlendDuration > 0f ? Mathf.MoveTowards(currentWeight, targetWeight, Time.deltaTime / aimBlendDuration) : targetWeight;
+        if (aimingLayerIndex >= 0) animator.SetLayerWeight(aimingLayerIndex, nextWeight);
+        if (rigBuilder != null) rigBuilder.weight = weaponType == 0 ? 0f : nextWeight;
+        if (cineCamera == null) return;
+        cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, aiming ? 30f : 60f, Time.deltaTime * 5f);
+        CinemachineCameraOffset cameraOffset = FindFirstObjectByType<CinemachineCameraOffset>();
+        if (cameraOffset != null)
         {
-            cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, targetFOV, Time.deltaTime * zoomSpeed);
-            cameraOffset.Offset.y = 1.7f;
-            cameraOffset.Offset.x = 0.4f;
-            switch (weaponType)
-            {
-                case 0: animator.SetFloat("AimType", 0.2f, 0.3f, Time.deltaTime);
-                    rigBuilder.weight = 0f;                   
-                    break;     // NoWeapon
-                case 1: animator.SetFloat("AimType", 0.4f, 0.3f, Time.deltaTime); 
-                    rigBuilder.weight += 3f * Time.deltaTime;                  
-                    break;   // Knife
-                case 2: animator.SetFloat("AimType", 0.6f, 0.3f, Time.deltaTime); 
-                    rigBuilder.weight += 3f * Time.deltaTime;
-                    break;   // Pistol
-                case 3: animator.SetFloat("AimType", 1f, 0.3f, Time.deltaTime); 
-                    rigBuilder.weight += 3f * Time.deltaTime;
-                    break;     // Shotgun
-            }
-            
-        }
-        else
-        {
-            isAiming = false;
-            cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView, normalFOV, Time.deltaTime * zoomSpeed);
-            animator.SetFloat("AimType", 0f, 0.3f, Time.deltaTime);
-            switch (weaponType)
-            {
-                case 0:
-                    animator.SetLayerWeight(GunHoldingLayerIndex, 0f);
-                    break;
-                case 1:
-                    animator.SetLayerWeight(GunHoldingLayerIndex, 1f);
-                    animator.SetFloat("GunHolding", 0.4f, 0.3f, Time.deltaTime);
-                    break;
-                case 2:
-                    animator.SetLayerWeight(GunHoldingLayerIndex, 1f);
-                    animator.SetFloat("GunHolding", 0.6f, 0.3f, Time.deltaTime);
-                    break;
-                case 3:
-                    animator.SetLayerWeight(GunHoldingLayerIndex, 1f);
-                    animator.SetFloat("GunHolding", 0.4f, 0.3f, Time.deltaTime);
-                    break;
-
-            }
-            rigBuilder.weight -= 3f * Time.deltaTime;
-            cameraOffset.Offset.y = 1.2f ;
-            cameraOffset.Offset.x = 0.6f;
+            cameraOffset.Offset.y = aiming ? 1.7f : 1.2f;
+            cameraOffset.Offset.x = aiming ? 0.4f : 0.6f;
         }
     }
 
@@ -355,6 +318,8 @@ public class PlayerController : MonoBehaviour
 
         CinemachineCameraOffset cameraOffset = FindFirstObjectByType<CinemachineCameraOffset>();
 
+        if (inventoryClosing) return;
+
         if (Input.GetKeyDown(KeyCode.I) && !isCheckInventory)
         {
             if(inventoryLayout == null)
@@ -366,7 +331,9 @@ public class PlayerController : MonoBehaviour
             {
                 inventoryLayout.SetActive(true);
                 isCheckInventory = true;
-                animator.Play("SeatInventory");
+                SuspendInventoryRigs();
+                SuppressWeaponPose();
+                animator.Play("SeatInventory", 0, 0f);
 
                 if (cineCamera != null && cameraOffset != null) StartCoroutine(SmoothCameraTransition(inventoryFOV, inventoryOffset, transitionDuration));
 
@@ -378,8 +345,9 @@ public class PlayerController : MonoBehaviour
         }
         else if(Input.GetKeyDown(KeyCode.I) && isCheckInventory)
         {
-            isCheckInventory = false;
-            animator.Play("UnseatInventory");
+            inventoryClosing = true;
+            animator.Play("UnseatInventory", 0, 0f);
+            StartCoroutine(FinishInventoryExit());
 
             inventoryLayout.SetActive(false);
             if (cineCamera != null && cameraOffset != null) StartCoroutine(SmoothCameraTransition(normalFOV, normalOffset, transitionDuration));
@@ -389,6 +357,51 @@ public class PlayerController : MonoBehaviour
             Cursor.visible = false;
         }
 
+    }
+
+    private void SuppressWeaponPose()
+    {
+        if (aimingLayerIndex >= 0) animator.SetLayerWeight(aimingLayerIndex, 0f);
+        if (GunHoldingLayerIndex >= 0) animator.SetLayerWeight(GunHoldingLayerIndex, 0f);
+        if (rigBuilder != null) rigBuilder.weight = 0f;
+    }
+
+    private void SuspendInventoryRigs()
+    {
+        if (animationRigBuilder == null) return;
+        suspendedRigLayers = animationRigBuilder.layers.ToArray();
+        savedRigLayerActive = new bool[suspendedRigLayers.Length];
+        for (int i = 0; i < suspendedRigLayers.Length; i++)
+        {
+            savedRigLayerActive[i] = suspendedRigLayers[i].active;
+            // Gate the rig layer: animation curves can overwrite Rig.weight.
+            suspendedRigLayers[i].active = false;
+        }
+        animationRigBuilder.SyncLayers();
+    }
+
+    private IEnumerator FinishInventoryExit()
+    {
+        // Animator.Play is evaluated after Update; inspect the state on the next frame.
+        yield return null;
+        while (animator != null)
+        {
+            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+            bool inInventoryState = state.IsName("UnseatInventory") || state.IsName("SeatInventory")
+                || state.IsName("SeatInventoryIdle");
+            if (!inInventoryState && !animator.IsInTransition(0)) break;
+            yield return null;
+        }
+        if (suspendedRigLayers != null)
+        {
+            for (int i = 0; i < suspendedRigLayers.Length; i++)
+                suspendedRigLayers[i].active = savedRigLayerActive[i];
+            suspendedRigLayers = null;
+            savedRigLayerActive = null;
+            if (animationRigBuilder != null) animationRigBuilder.SyncLayers();
+        }
+        isCheckInventory = false;
+        inventoryClosing = false;
     }
 
    private IEnumerator SmoothCameraTransition(float targetFOV, Vector3 targetOffset, float duration)
