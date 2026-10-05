@@ -11,11 +11,19 @@ public class ItemSO : ScriptableObject
     public PickupItem pickupPrefab;
 
     [Header("Inventory Size")]
-    [Range(1,4)]public int height;
-    [Range(1,4)]public int width;
+    [Range(1,4)]public int height = 1;
+    [Range(1,4)]public int width = 1;
+    public bool allowRotation = true;
+    [Tooltip("Units per grid item. Weapons always have a stack limit of one.")]
+    [Min(1)] public int maxStack = 1;
+    public int StackLimit => itemType == ItemType.Weapon ? 1 : Mathf.Max(1, maxStack);
 
     [Header("Gun Data")]
     public Guns.WeaponType weaponType;
+    [Tooltip("Visual source for world weapon pickups; only meshes and materials are copied, not firing scripts.")]
+    public GameObject weaponVisualPrefab;
+    [Min(0)] public int startingMagazineAmmo;
+    [Min(0)] public int startingReserveAmmo;
     public int ammoAmount;
 
     [Header("Heal Data")]

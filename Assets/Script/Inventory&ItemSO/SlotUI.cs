@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 /// <summary>
 /// Attach to slot prefab. Will call InventoryUI_Auto.OnSlotRightClick on right mouse button.
 /// </summary>
-public class SlotUI : MonoBehaviour, IPointerClickHandler
+public class SlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     public int x;
     public int y;
@@ -14,6 +14,10 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler
     {
         x = _x; y = _y; ui = _ui;
     }
+
+    public void OnBeginDrag(PointerEventData eventData) => ui.BeginDrag(x, y, eventData);
+    public void OnDrag(PointerEventData eventData) => ui.Drag(eventData);
+    public void OnEndDrag(PointerEventData eventData) => ui.EndDrag(eventData);
 
     public void OnPointerClick(PointerEventData eventData)
     {

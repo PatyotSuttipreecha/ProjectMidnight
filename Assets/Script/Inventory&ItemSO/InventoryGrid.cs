@@ -16,16 +16,21 @@ public class InventoryGrid
 
     public bool CanPlaceItem(InventoryItemData item, int startX, int startY)
     {
-        if (item == null || grid == null || item.Width <= 0 || item.Height <= 0) return false;
+        return item != null && CanPlaceFootprint(item.Width, item.Height, startX, startY);
+    }
+
+    public bool CanPlaceFootprint(int itemWidth, int itemHeight, int startX, int startY, InventoryItemData ignore = null)
+    {
+        if (grid == null || itemWidth <= 0 || itemHeight <= 0) return false;
 
         if (startX < 0 || startY < 0 ||
-            startX + item.Width > width ||
-            startY + item.Height > height)
+            startX + itemWidth > width ||
+            startY + itemHeight > height)
             return false;
 
-        for (int x = 0; x < item.Width; x++)
-            for (int y = 0; y < item.Height; y++)
-                if (grid[startX + x, startY + y] != null)
+        for (int x = 0; x < itemWidth; x++)
+            for (int y = 0; y < itemHeight; y++)
+                if (grid[startX + x, startY + y] != null && grid[startX + x, startY + y] != ignore)
                     return false;
 
         return true;

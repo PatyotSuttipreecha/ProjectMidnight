@@ -18,6 +18,8 @@ MonoBehaviour:
   icon: {fileID: 21300012, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
   height: 1
   width: 1
+  allowRotation: 1
+  maxStack: 6
   weaponType: 2
   ammoAmount: 10
   healType: 0

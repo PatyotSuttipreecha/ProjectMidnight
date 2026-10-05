@@ -10,6 +10,10 @@ public class InventoryItemData
     public int currentWidth;
     public int currentHeight;
     public bool isRotated;
+    [Min(1)] public int quantity = 1;
+    public bool hasWeaponAmmo;
+    public int magazineAmmo;
+    public int reserveAmmo;
 
     public InventoryItemData(ItemSO so)
     {
@@ -18,6 +22,12 @@ public class InventoryItemData
         currentWidth = so.width;
         currentHeight = so.height;
         isRotated = false;
+        if (so.itemType == ItemType.Weapon)
+        {
+            hasWeaponAmmo = true;
+            magazineAmmo = Mathf.Max(0, so.startingMagazineAmmo);
+            reserveAmmo = Mathf.Max(0, so.startingReserveAmmo);
+        }
     }
 
     public string ItemName => itemSO.itemName;

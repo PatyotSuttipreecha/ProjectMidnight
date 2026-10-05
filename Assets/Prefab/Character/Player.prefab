@@ -2696,6 +2696,11 @@ MonoBehaviour:
   - {fileID: 3094156065019257931}
   - {fileID: 5477466855647885322}
   - {fileID: 3299036458174360770}
+  weaponInventoryItems:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 76bfa15b47754c32b948fdf131fc2b93, type: 2}
+  - {fileID: 11400000, guid: 58785c28cf2445b29fdf70a523ff19da, type: 2}
   footstepWalkSO: {fileID: 11400000, guid: 2600f23020e368b44b45d345085a5394, type: 2}
   footstepRunSO: {fileID: 11400000, guid: 88ba820194b61054e9c0d44fb455f0f0, type: 2}
   maxHealth: 100

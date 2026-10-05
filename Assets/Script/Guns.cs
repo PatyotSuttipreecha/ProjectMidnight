@@ -52,6 +52,28 @@ public class Guns : MonoBehaviour
 
     public PlayerController playerController;
     public bool isReloading;
+    public InventoryItemData BoundInventoryItem { get; private set; }
+
+    public void BindInventoryItem(InventoryItemData item)
+    {
+        StoreInventoryAmmo();
+        BoundInventoryItem = item;
+        if (item == null) return;
+        if (item.hasWeaponAmmo)
+        {
+            weaponStat.currentAmmo = Mathf.Clamp(item.magazineAmmo, 0, weaponStat.magazineSize);
+            weaponStat.ammoReserve = Mathf.Max(0, item.reserveAmmo);
+        }
+        StoreInventoryAmmo();
+    }
+
+    public void StoreInventoryAmmo()
+    {
+        if (BoundInventoryItem == null) return;
+        BoundInventoryItem.hasWeaponAmmo = true;
+        BoundInventoryItem.magazineAmmo = weaponStat.currentAmmo;
+        BoundInventoryItem.reserveAmmo = weaponStat.ammoReserve;
+    }
 
     private Vector2 currentRecoil;
     private CinemachineRotationComposer camRotationComposer;
@@ -103,11 +125,13 @@ public class Guns : MonoBehaviour
         if (weaponStat.weaponName == WeaponType.None || weaponStat.weaponName == WeaponType.Knife) return;
         HandleAimingSpread();
         UpdateBreathingSway();
+        if (playerController != null && playerController.isCheckInventory) return;
         if (!isReloading)
         {
             Shooting();
         }
         Reload();
+        StoreInventoryAmmo();
     }
 
     private void LateUpdate()
@@ -194,6 +218,7 @@ public class Guns : MonoBehaviour
 
     private void OnDisable()
     {
+        StoreInventoryAmmo();
         if (weaponStat.weaponName == WeaponType.None || weaponStat.weaponName == WeaponType.Knife) return;
         breathingWeight = 0f;
         movementWeight = 0f;
@@ -345,7 +370,7 @@ public class Guns : MonoBehaviour
 
     void Reload()
     {
-        if (Input.GetKeyDown(KeyCode.R) && weaponStat.currentAmmo < weaponStat.magazineSize)
+        if (!isReloading && Input.GetKeyDown(KeyCode.R) && weaponStat.ammoReserve > 0 && weaponStat.currentAmmo < weaponStat.magazineSize)
         {
             StartCoroutine(Reload(weaponStat.reloadTime));
         }
@@ -371,10 +396,12 @@ public class Guns : MonoBehaviour
         weaponStat.ammoReserve -= ammoToReload;
 
         isReloading = false;
+        StoreInventoryAmmo();
     }
     public void AddAmmo(int amount)
     {
         weaponStat.ammoReserve += amount;
+        StoreInventoryAmmo();
         Debug.Log($"Ammo Reserve: {weaponStat.ammoReserve}");
     }
 }

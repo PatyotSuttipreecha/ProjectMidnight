@@ -11,6 +11,7 @@ public class InventoryManager : MonoBehaviour
     public int gridHeight = 4;
 
     public event Action OnInventoryChanged;
+    public void NotifyEquipmentChanged() => OnInventoryChanged?.Invoke();
 
     [HideInInspector] public InventoryGrid inventoryGrid;
 
@@ -34,28 +35,90 @@ public class InventoryManager : MonoBehaviour
     private void OnDestroy() { if (Instance == this) Instance = null; }
 
     // Try add ItemSO by creating InventoryItemData and auto place
-    public bool TryAddItemAutoPlace(ItemSO baseItem)
+    public bool TryAddItemAutoPlace(ItemSO baseItem, int quantity = 1)
     {
         if (baseItem == null || baseItem.width <= 0 || baseItem.height <= 0) return false;
 
-        InventoryItemData newItem = new InventoryItemData(baseItem);
+        InventoryItemData newItem = new InventoryItemData(baseItem) { quantity = quantity };
 
         return TryAddInstance(newItem);
     }
 
     public bool TryAddInstance(InventoryItemData newItem)
     {
-        if (newItem == null || newItem.itemSO == null || inventoryGrid == null || placedPositions.ContainsKey(newItem)) return false;
-        if (inventoryGrid.FindFirstAvailableSlot(newItem, out int x, out int y) && inventoryGrid.PlaceItem(newItem, x, y))
+        if (newItem == null || newItem.itemSO == null || newItem.quantity <= 0 || newItem.Width <= 0 || newItem.Height <= 0
+            || inventoryGrid == null || placedPositions.ContainsKey(newItem)) return false;
+        // Plan the entire pickup first. A failed pickup must not partially fill existing stacks.
+        int remaining = newItem.quantity;
+        int limit = newItem.itemSO.StackLimit;
+        var additions = new Dictionary<InventoryItemData, int>();
+        foreach (var existing in placedPositions.Keys)
         {
-            placedPositions[newItem] = new Vector2Int(x, y);
-
-            OnInventoryChanged?.Invoke(); // 🔥 สำคัญ
-            return true;
+            if (existing.itemSO != newItem.itemSO || limit == 1) continue;
+            int added = Mathf.Min(remaining, Mathf.Max(0, limit - existing.quantity));
+            if (added > 0) additions[existing] = added;
+            remaining -= added;
+            if (remaining == 0) break;
         }
+        var plannedGrid = new InventoryGrid(inventoryGrid.width, inventoryGrid.height);
+        Array.Copy(inventoryGrid.grid, plannedGrid.grid, inventoryGrid.grid.Length);
+        var placements = new Dictionary<InventoryItemData, Vector2Int>();
+        var counts = new Dictionary<InventoryItemData, int>();
+        while (remaining > 0)
+        {
+            InventoryItemData stack = placements.Count == 0 ? newItem : new InventoryItemData(newItem.itemSO)
+            { currentWidth = newItem.Width, currentHeight = newItem.Height, isRotated = newItem.isRotated,
+                hasWeaponAmmo = newItem.hasWeaponAmmo, magazineAmmo = newItem.magazineAmmo, reserveAmmo = newItem.reserveAmmo };
+            if (!plannedGrid.FindFirstAvailableSlot(stack, out int x, out int y)) return false;
+            plannedGrid.PlaceItem(stack, x, y);
+            placements[stack] = new Vector2Int(x, y);
+            counts[stack] = Mathf.Min(remaining, limit);
+            remaining -= counts[stack];
+        }
+        foreach (var pair in additions) pair.Key.quantity += pair.Value;
+        foreach (var pair in placements)
+        {
+            pair.Key.quantity = counts[pair.Key];
+            placedPositions[pair.Key] = pair.Value;
+        }
+        inventoryGrid = plannedGrid;
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
 
-        Debug.Log("Inventory Full - cannot place " + newItem.ItemName);
-        return false;
+    public bool CanMoveItem(InventoryItemData item, int x, int y, bool rotated)
+    {
+        if (item == null || item.itemSO == null || !placedPositions.ContainsKey(item)
+            || (rotated != item.isRotated && !item.itemSO.allowRotation)) return false;
+        int width = rotated ? item.itemSO.height : item.itemSO.width;
+        int height = rotated ? item.itemSO.width : item.itemSO.height;
+        return inventoryGrid.CanPlaceFootprint(width, height, x, y, item);
+    }
+
+    public bool TryMoveItem(InventoryItemData item, int x, int y, bool rotated)
+    {
+        if (!CanMoveItem(item, x, y, rotated)) return false;
+        inventoryGrid.ClearItem(item);
+        item.isRotated = rotated;
+        item.currentWidth = rotated ? item.itemSO.height : item.itemSO.width;
+        item.currentHeight = rotated ? item.itemSO.width : item.itemSO.height;
+        inventoryGrid.PlaceItem(item, x, y);
+        placedPositions[item] = new Vector2Int(x, y);
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    public bool TryMergeItems(InventoryItemData source, InventoryItemData target)
+    {
+        if (source == null || target == null || source == target || source.itemSO != target.itemSO
+            || !placedPositions.ContainsKey(source) || !placedPositions.ContainsKey(target)) return false;
+        int amount = Mathf.Min(source.quantity, source.itemSO.StackLimit - target.quantity);
+        if (amount <= 0) return false;
+        source.quantity -= amount;
+        target.quantity += amount;
+        if (source.quantity == 0) { inventoryGrid.ClearItem(source); placedPositions.Remove(source); }
+        OnInventoryChanged?.Invoke();
+        return true;
     }
 
 
@@ -85,7 +148,7 @@ public class InventoryManager : MonoBehaviour
                 player.currentHealth = Mathf.Clamp(player.currentHealth, 0, player.maxHealth);
                 break;
             case ItemType.Weapon:
-                Debug.Log("Weapon equipping is not implemented; the item stays in the inventory.");
+                if (PlayerController.instance != null) PlayerController.instance.TryEquipWeapon(item);
                 return;
             case ItemType.Ammo:
                 if (!TryApplyAmmo(item.itemSO, PlayerController.instance != null ? PlayerController.instance.transform : null)) return;
@@ -95,9 +158,13 @@ public class InventoryManager : MonoBehaviour
                 return;
         }
 
-        // remove from grid (clear all occupied cells)
-        inventoryGrid.ClearItem(item);
-        if (placedPositions.ContainsKey(item)) placedPositions.Remove(item);
+        // One use consumes one unit, not the entire stack.
+        item.quantity--;
+        if (item.quantity <= 0)
+        {
+            inventoryGrid.ClearItem(item);
+            placedPositions.Remove(item);
+        }
 
         OnInventoryChanged?.Invoke();
     }
@@ -109,6 +176,11 @@ public class InventoryManager : MonoBehaviour
         var item = inventoryGrid.grid[x, y];
         if (item == null) return;
         PlayerController player = PlayerController.instance;
+        if (player != null && player.EquippedInventoryItem == item && player.EquippedGun != null)
+        {
+            if (player.EquippedGun.isReloading) { Debug.LogWarning("Finish reloading before dropping this weapon."); return; }
+            player.EquippedGun.StoreInventoryAmmo();
+        }
         if (player == null || item.itemSO.pickupPrefab == null)
         { Debug.LogWarning("Cannot drop: assign a Pickup Prefab on the ItemSO and ensure a player exists."); return; }
         Vector3 position = player.transform.position + player.transform.forward * 1.2f + Vector3.up * 0.2f;
@@ -165,6 +237,8 @@ public class InventoryManager : MonoBehaviour
     public static bool TryApplyAmmo(ItemSO item, Transform owner)
     {
         if (item == null || item.itemType != ItemType.Ammo || item.ammoAmount <= 0 || owner == null) return false;
+        PlayerController player = owner.GetComponent<PlayerController>();
+        if (player != null) return player.TryAddAmmoToOwnedWeapon(item);
         foreach (Guns gun in owner.GetComponentsInChildren<Guns>(true))
             if (gun.weaponStat.weaponName == item.weaponType && item.weaponType != Guns.WeaponType.None && item.weaponType != Guns.WeaponType.Knife)
             { gun.AddAmmo(item.ammoAmount); return true; }

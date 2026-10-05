@@ -28,7 +28,11 @@ public class PlayerController : MonoBehaviour
     [Header("Weapon Switcher")]
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
     [SerializeField] private GameObject[] weapons;
-    private int currentweaponIndex = 4;
+    [Tooltip("ItemSO for each matching Weapons slot. Assigned firearms are added to the bag at startup; leave unarmed slots empty.")]
+    [SerializeField] private ItemSO[] weaponInventoryItems;
+    private InventoryManager weaponInventory;
+    public InventoryItemData EquippedInventoryItem { get; private set; }
+    private int currentweaponIndex = 0;
     public Guns EquippedGun => weapons != null && currentweaponIndex >= 0 && currentweaponIndex < weapons.Length
         && weapons[currentweaponIndex] != null && weapons[currentweaponIndex].activeInHierarchy
         ? weapons[currentweaponIndex].GetComponentInChildren<Guns>() : null;
@@ -78,7 +82,8 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         animationRigBuilder = GetComponent<RigBuilder>();
 
-        WeaponSwitcherIndex(currentweaponIndex);
+        WeaponSwitcherIndex(0);
+        StartCoroutine(RegisterStartingWeapons());
 
         // หา Layer Index ของ Aiming
         aimingLayerIndex = animator.GetLayerIndex("Aiming");
@@ -216,54 +221,119 @@ public class PlayerController : MonoBehaviour
     }
     void WeaponSwitcher()
     {
-        Guns weapon = FindAnyObjectByType<Guns>();
-        //Check Input 1-4 
-        if (Input.GetKeyDown(KeyCode.Alpha1)) 
-        { 
-            WeaponSwitcherIndex(2);
-            weaponType = 2;
-            if (weapon != null)
-            {
-                weapon.crosshairUI.gameObject.SetActive(true);
-            }
-
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha2)) 
-        { 
-            WeaponSwitcherIndex(3); 
-            weaponType = 3;
-            if (weapon != null)
-            {
-                weapon.crosshairUI.gameObject.SetActive(true);
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha3)) 
-        { 
-            WeaponSwitcherIndex(1);
-            weaponType=1;
-            if (weapon != null)
-            {
-                weapon.crosshairUI.gameObject.SetActive(true);
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha4))
+        if (Input.GetKeyDown(KeyCode.Alpha1)) EquipInventorySlot(2);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) EquipInventorySlot(3);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) EquipInventorySlot(1);
+        if (Input.GetKeyDown(KeyCode.Alpha4) && (EquippedGun == null || !EquippedGun.isReloading))
         {
+            EquippedInventoryItem = null;
             WeaponSwitcherIndex(0);
-            weaponType = 0;
-            if (weapon != null)
-            {
-                weapon.crosshairUI.gameObject.SetActive(false);
-            }
+            weaponInventory?.NotifyEquipmentChanged();
         }
-       
+    }
+
+    private IEnumerator RegisterStartingWeapons()
+    {
+        while (InventoryManager.Instance == null || InventoryManager.Instance.inventoryGrid == null) yield return null;
+        weaponInventory = InventoryManager.Instance;
+        weaponInventory.OnInventoryChanged += ValidateEquippedWeapon;
+        if (weapons == null || weaponInventoryItems == null) yield break;
+        for (int i = 0; i < Mathf.Min(weapons.Length, weaponInventoryItems.Length); i++)
+        {
+            ItemSO definition = weaponInventoryItems[i];
+            if (weapons[i] == null || definition == null || definition.itemType != ItemType.Weapon) continue;
+            if (FindOwnedWeapon(definition) != null) continue;
+            var item = new InventoryItemData(definition);
+            Guns gun = weapons[i].GetComponentInChildren<Guns>(true);
+            if (gun != null)
+            {
+                item.hasWeaponAmmo = true;
+                item.magazineAmmo = gun.weaponStat.currentAmmo;
+                item.reserveAmmo = gun.weaponStat.ammoReserve;
+            }
+            if (!weaponInventory.TryAddInstance(item))
+                Debug.LogWarning($"Starting weapon {definition.itemName} cannot fit in the bag and is unavailable.", this);
+        }
+    }
+
+    private InventoryItemData FindOwnedWeapon(ItemSO definition)
+    {
+        if (weaponInventory == null) return null;
+        foreach (var item in weaponInventory.placedPositions.Keys)
+            if (item.itemSO == definition) return item;
+        return null;
+    }
+
+    private void EquipInventorySlot(int index)
+    {
+        if (weaponInventoryItems == null || index < 0 || index >= weaponInventoryItems.Length) return;
+        TryEquipWeapon(FindOwnedWeapon(weaponInventoryItems[index]));
+    }
+
+    public bool TryEquipWeapon(InventoryItemData item)
+    {
+        if (item == null || item.itemSO == null || item.itemSO.itemType != ItemType.Weapon || weaponInventory == null
+            || !weaponInventory.placedPositions.ContainsKey(item) || weaponInventoryItems == null || weapons == null) return false;
+        // Switching while a reload coroutine is running would transfer its animation to another gun.
+        if (EquippedGun != null && EquippedGun.isReloading) return false;
+        for (int i = 0; i < Mathf.Min(weapons.Length, weaponInventoryItems.Length); i++)
+        {
+            if (weaponInventoryItems[i] != item.itemSO || weapons[i] == null) continue;
+            EquippedInventoryItem = item;
+            WeaponSwitcherIndex(i);
+            EquippedGun?.BindInventoryItem(item);
+            weaponInventory.NotifyEquipmentChanged();
+            return true;
+        }
+        return false;
+    }
+
+    private void ValidateEquippedWeapon()
+    {
+        if (EquippedInventoryItem == null || weaponInventory.placedPositions.ContainsKey(EquippedInventoryItem)) return;
+        EquippedInventoryItem = null;
+        WeaponSwitcherIndex(0);
+    }
+
+    public bool OwnsWeapon(Guns.WeaponType type)
+    {
+        if (weaponInventory == null) return false;
+        foreach (var item in weaponInventory.placedPositions.Keys)
+            if (item.itemSO.itemType == ItemType.Weapon && item.itemSO.weaponType == type) return true;
+        return false;
+    }
+
+    public bool TryAddAmmoToOwnedWeapon(ItemSO ammo)
+    {
+        if (ammo == null || ammo.itemType != ItemType.Ammo || ammo.ammoAmount <= 0 || weaponInventory == null
+            || ammo.weaponType == Guns.WeaponType.None || ammo.weaponType == Guns.WeaponType.Knife) return false;
+        InventoryItemData target = EquippedInventoryItem;
+        if (target == null || target.itemSO.weaponType != ammo.weaponType)
+        {
+            target = null;
+            foreach (var item in weaponInventory.placedPositions.Keys)
+                if (item.itemSO.itemType == ItemType.Weapon && item.itemSO.weaponType == ammo.weaponType)
+                { target = item; break; }
+        }
+        if (target == null) return false;
+        if (target == EquippedInventoryItem && EquippedGun != null) EquippedGun.AddAmmo(ammo.ammoAmount);
+        else { target.reserveAmmo += ammo.ammoAmount; target.hasWeaponAmmo = true; }
+        return true;
+    }
+
+    private void OnDestroy()
+    {
+        if (weaponInventory != null) weaponInventory.OnInventoryChanged -= ValidateEquippedWeapon;
+        if (instance == this) instance = null;
     }
     void WeaponSwitcherIndex(int index)
     {
         //Check Error
-        if (index < 0 || index >= weapons.Length)
+        if (weapons == null || index < 0 || index >= weapons.Length || weapons[index] == null)
         {
             return;
         }
+        EquippedGun?.BindInventoryItem(null);
         //set hide weapon
         for (int i = 0; i < weapons.Length; i++)
         {
@@ -277,6 +347,12 @@ public class PlayerController : MonoBehaviour
         {
             currentweaponIndex = index;
             weapons[index].SetActive(true);
+            weaponType = index;
+            foreach (GameObject weaponObject in weapons)
+            {
+                Guns gun = weaponObject != null ? weaponObject.GetComponentInChildren<Guns>(true) : null;
+                if (gun != null && gun.crosshairUI != null) gun.crosshairUI.gameObject.SetActive(index >= 2);
+            }
             
         }
         else
