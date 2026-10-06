@@ -76,13 +76,14 @@ namespace UnityEngine
     public class Transform { public Vector3 position, forward; public T GetComponent<T>() where T : class => null; public T[] GetComponentsInChildren<T>(bool all) => Array.Empty<T>(); }
     public class Sprite {}
     public struct Vector2Int { public int x,y; public Vector2Int(int x,int y) { this.x=x; this.y=y; } }
-    public struct Vector3 { public static Vector3 up; public static Vector3 operator +(Vector3 a,Vector3 b)=>a; public static Vector3 operator *(Vector3 a,float b)=>a; }
+    public struct Vector3 { public Vector3(float x,float y,float z) {} public static Vector3 up; public static Vector3 operator +(Vector3 a,Vector3 b)=>a; public static Vector3 operator *(Vector3 a,float b)=>a; }
     public struct Quaternion { public static Quaternion identity; }
     public static class Random { public static int Range(int min,int max)=>min; }
     public static class Mathf { public static int Max(int a,int b)=>Math.Max(a,b); public static int Min(int a,int b)=>Math.Min(a,b); public static float Clamp(float v,float a,float b)=>Math.Clamp(v,a,b); }
     public static class Debug { public static void Log(object value) {} public static void LogWarning(object value) {} }
     public class HeaderAttribute : Attribute { public HeaderAttribute(string x) {} }
     public class TooltipAttribute : Attribute { public TooltipAttribute(string x) {} }
+    public class TextAreaAttribute : Attribute { public TextAreaAttribute(int min, int max) {} }
     public class MinAttribute : Attribute { public MinAttribute(float x) {} }
     public class RangeAttribute : Attribute { public RangeAttribute(float a,float b) {} }
     public class HideInInspector : Attribute {}

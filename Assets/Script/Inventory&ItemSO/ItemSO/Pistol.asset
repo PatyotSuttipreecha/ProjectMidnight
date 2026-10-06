@@ -13,8 +13,12 @@ MonoBehaviour:
   m_Name: Pistol
   m_EditorClassIdentifier: Assembly-CSharp::ItemSO
   itemName: Pistol
+  description: A compact handgun for general combat. Uses 9mm ammunition and occupies
+    two inventory cells.
   itemType: 1
   icon: {fileID: 21300000, guid: 68328bc5a77e3eb40ac30e57056ed3d3, type: 3}
+  inspectionPrefab: {fileID: 0}
+  inspectionRotation: {x: 0, y: 25, z: 0}
   pickupPrefab: {fileID: 1140, guid: 3a32e40b72b54b9fa01e437105353d54, type: 3}
   height: 1
   width: 2
@@ -23,7 +27,7 @@ MonoBehaviour:
   weaponType: 2
   weaponVisualPrefab: {fileID: 8016523227302697804, guid: d9ef5fafecf03ff409f3c6391ff0ecc6, type: 3}
   startingMagazineAmmo: 12
-  startingReserveAmmo: 36
+  startingReserveAmmo: 12
   ammoAmount: 0
   healType: 0
   healAmount: 0

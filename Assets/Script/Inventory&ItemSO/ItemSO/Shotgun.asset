@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Shotgun
   m_EditorClassIdentifier: Assembly-CSharp::ItemSO
   itemName: Shotgun
+  description: A close-range shotgun that fires multiple pellets per shell. Uses 12-gauge ammunition and occupies four inventory cells.
   itemType: 1
   icon: {fileID: 21300000, guid: 89325dd4b9daa134c9ce1e81282c4d24, type: 3}
   pickupPrefab: {fileID: 1140, guid: abf8bf19e7364ca793c5802cce1d27a2, type: 3}

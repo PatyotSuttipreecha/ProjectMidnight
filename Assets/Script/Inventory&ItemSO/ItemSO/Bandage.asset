@@ -13,14 +13,21 @@ MonoBehaviour:
   m_Name: Bandage
   m_EditorClassIdentifier: Assembly-CSharp::ItemSO
   itemName: Bandage
-  pickupPrefab: {fileID: 6339534814907828806, guid: d13398a0dc3af914fbe476e43c2cbcc2, type: 3}
+  description: A medical dressing. Use one bandage to restore health. It cannot be
+    used at full health.
   itemType: 0
   icon: {fileID: -724805922, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}
+  inspectionPrefab: {fileID: 0}
+  inspectionRotation: {x: 0, y: 25, z: 0}
+  pickupPrefab: {fileID: 6339534814907828806, guid: d13398a0dc3af914fbe476e43c2cbcc2, type: 3}
   height: 1
   width: 1
   allowRotation: 1
   maxStack: 5
   weaponType: 0
+  weaponVisualPrefab: {fileID: 0}
+  startingMagazineAmmo: 0
+  startingReserveAmmo: 0
   ammoAmount: 0
   healType: 0
   healAmount: 10

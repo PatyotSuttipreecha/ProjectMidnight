@@ -23,7 +23,7 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     {
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            ui.OnSlotRightClick(x, y);
+            ui.OnSlotRightClick(x, y, eventData.position, eventData.pressEventCamera);
         }
     }
 }

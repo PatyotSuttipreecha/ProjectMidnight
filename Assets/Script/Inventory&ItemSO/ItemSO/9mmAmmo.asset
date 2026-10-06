@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 9mmAmmo
   m_EditorClassIdentifier: Assembly-CSharp::ItemSO
   itemName: 9mmAmmo
+  description: A pack of 9mm handgun ammunition. Use it to add rounds to a compatible weapon you own.
   pickupPrefab: {fileID: 4701093327070105443, guid: 667c475fafc9efd4f84fef50cb57eb5f, type: 3}
   itemType: 2
   icon: {fileID: 21300012, guid: 215687feeab0b7445b4a1cd86c82c2e1, type: 3}

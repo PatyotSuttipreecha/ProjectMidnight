@@ -1,5 +1,9 @@
 # Inventory grid
 
+## อาวุธตอนเริ่มเกม
+
+Player prefab เริ่มด้วย Pistol อย่างเดียว ปรับรายการที่ PlayerController > Starting Loadout > Starting Weapon Items ได้ ส่วน Weapon Inventory Items เป็นรายการจับคู่โมเดลกับ SO ที่ระบบรองรับ จึงต้องคง Shotgun ไว้เพื่อให้เก็บและ Equip ภายหลังได้ การใส่ SO ในรายการจับคู่จะไม่มอบปืนนั้นตอนเริ่มเกมอีกต่อไป
+
 The existing Playground InventoryManager and InventoryUI are used directly. The bag is 4×4; no new runtime auto-created Canvas is required.
 
 ## Controls
@@ -9,8 +13,8 @@ The existing Playground InventoryManager and InventoryUI are used directly. The 
 - R while dragging: rotate 90 degrees, when Allow Rotation is enabled on the ItemSO.
 - Escape while dragging: cancel. Invalid placement also returns the item to its original position.
 - Drag onto the same ItemSO: transfer units into the other stack up to its limit; excess stays in the source stack.
-- Right click: use one unit. Medicine heals; an ammo unit transfers Ammo Amount rounds into a compatible owned gun's reserve.
-- Shift + right click: drop the entire stack when a Pickup Prefab is assigned.
+- Right click: open the context menu. Choose Equip/Use, Examine, Drop or Close. Medicine/ammo Use consumes one unit. Examine never consumes an item.
+- Drop opens confirmation before dropping the entire stack. Escape or clicking outside closes the menu. Shift + right click now also opens the menu rather than dropping immediately.
 
 ## Item settings
 

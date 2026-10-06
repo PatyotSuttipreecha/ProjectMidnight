@@ -18,6 +18,10 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Main character camera that used cinemachine")]
     [SerializeField] private CinemachineCamera cineCamera; // Cinemachine 3.x
     public CinemachineCamera AimCamera => cineCamera;
+    [Tooltip("Camera look input controllers to suspend while the inventory is open. Empty uses the assigned camera hierarchy.")]
+    [SerializeField] private CinemachineInputAxisController[] cameraInputControllers;
+    private CinemachineInputAxisController[] suspendedCameraInputs;
+    private bool[] savedCameraInputEnabled;
 
     [Header("Weapon Settings")]
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
@@ -28,8 +32,11 @@ public class PlayerController : MonoBehaviour
     [Header("Weapon Switcher")]
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
     [SerializeField] private GameObject[] weapons;
-    [Tooltip("ItemSO for each matching Weapons slot. Assigned firearms are added to the bag at startup; leave unarmed slots empty.")]
+    [Tooltip("ItemSO for each matching Weapons slot. Supported models, not starting possessions; leave unarmed slots empty.")]
     [SerializeField] private ItemSO[] weaponInventoryItems;
+    [Header("Starting Loadout")]
+    [Tooltip("Only these weapons are granted at startup. Other supported weapons can be collected later.")]
+    [SerializeField] private ItemSO[] startingWeaponItems = new ItemSO[0];
     private InventoryManager weaponInventory;
     public InventoryItemData EquippedInventoryItem { get; private set; }
     private int currentweaponIndex = 0;
@@ -78,6 +85,9 @@ public class PlayerController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        FindInventoryPanel();
+        if (inventoryLayout != null) inventoryLayout.SetActive(false);
 
         animator = GetComponent<Animator>();
         animationRigBuilder = GetComponent<RigBuilder>();
@@ -242,6 +252,7 @@ public class PlayerController : MonoBehaviour
         {
             ItemSO definition = weaponInventoryItems[i];
             if (weapons[i] == null || definition == null || definition.itemType != ItemType.Weapon) continue;
+            if (startingWeaponItems == null || System.Array.IndexOf(startingWeaponItems, definition) < 0) continue;
             if (FindOwnedWeapon(definition) != null) continue;
             var item = new InventoryItemData(definition);
             Guns gun = weapons[i].GetComponentInChildren<Guns>(true);
@@ -285,6 +296,14 @@ public class PlayerController : MonoBehaviour
             weaponInventory.NotifyEquipmentChanged();
             return true;
         }
+        return false;
+    }
+
+    public bool SupportsWeapon(ItemSO definition)
+    {
+        if (definition == null || weapons == null || weaponInventoryItems == null) return false;
+        for (int i = 0; i < Mathf.Min(weapons.Length, weaponInventoryItems.Length); i++)
+            if (weaponInventoryItems[i] == definition && weapons[i] != null) return true;
         return false;
     }
 
@@ -384,6 +403,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void FindInventoryPanel()
+    {
+        if (inventoryLayout != null) return;
+        foreach (var ui in FindObjectsByType<InventoryUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (ui.enabled) { inventoryLayout = ui.gameObject; break; }
+    }
+
     private void CheckInventory()
     {
         float inventoryFOV = 30f;
@@ -400,13 +426,14 @@ public class PlayerController : MonoBehaviour
         {
             if(inventoryLayout == null)
             {
-                inventoryLayout = GameObject.Find("InventoryLayout");
+                FindInventoryPanel();
             }
 
             if (inventoryLayout != null)
             {
                 inventoryLayout.SetActive(true);
                 isCheckInventory = true;
+                SuspendCameraLook();
                 SuspendInventoryRigs();
                 SuppressWeaponPose();
                 animator.Play("SeatInventory", 0, 0f);
@@ -478,7 +505,55 @@ public class PlayerController : MonoBehaviour
         }
         isCheckInventory = false;
         inventoryClosing = false;
+        RestoreCameraLook();
     }
+
+    private void SuspendCameraLook()
+    {
+        if (suspendedCameraInputs != null) return;
+        var inputs = new System.Collections.Generic.HashSet<CinemachineInputAxisController>();
+        if (cameraInputControllers != null && cameraInputControllers.Length > 0)
+        {
+            foreach (var input in cameraInputControllers) if (input != null) inputs.Add(input);
+        }
+        else if (cineCamera != null)
+        {
+            foreach (var input in cineCamera.GetComponentsInChildren<CinemachineInputAxisController>(true)) inputs.Add(input);
+            foreach (var input in cineCamera.GetComponentsInParent<CinemachineInputAxisController>(true)) inputs.Add(input);
+        }
+        suspendedCameraInputs = new CinemachineInputAxisController[inputs.Count];
+        inputs.CopyTo(suspendedCameraInputs);
+        savedCameraInputEnabled = new bool[suspendedCameraInputs.Length];
+        for (int i = 0; i < suspendedCameraInputs.Length; i++)
+        {
+            var input = suspendedCameraInputs[i];
+            savedCameraInputEnabled[i] = input.enabled;
+            ClearLookMomentum(input);
+            input.enabled = false;
+        }
+    }
+    private static void ClearLookMomentum(CinemachineInputAxisController input)
+    {
+        foreach (var axis in input.Controllers)
+        {
+            axis.InputValue = 0;
+            axis.Driver = new DefaultInputAxisDriver { AccelTime = axis.Driver.AccelTime, DecelTime = axis.Driver.DecelTime };
+        }
+    }
+    private void RestoreCameraLook()
+    {
+        if (suspendedCameraInputs == null) return;
+        for (int i = 0; i < suspendedCameraInputs.Length; i++)
+        {
+            var input = suspendedCameraInputs[i];
+            if (input == null) continue;
+            ClearLookMomentum(input);
+            input.enabled = savedCameraInputEnabled[i];
+        }
+        suspendedCameraInputs = null;
+        savedCameraInputEnabled = null;
+    }
+    private void OnDisable() => RestoreCameraLook();
 
    private IEnumerator SmoothCameraTransition(float targetFOV, Vector3 targetOffset, float duration)
     {

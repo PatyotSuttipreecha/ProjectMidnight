@@ -563,6 +563,8 @@ MonoBehaviour:
     reloadTime: 0
     ammoReserve: 0
     bulletSpeed: 1
+    pelletCount: 0
+    pelletSpreadAngle: 0
     baseSpread: 1
     minSpread: 1
     aimTime: 1
@@ -585,6 +587,8 @@ MonoBehaviour:
   movingSpreadFraction: 0.12
   movementThreshold: 0.05
   movementBlendSpeed: 8
+  showSpreadGizmos: 1
+  spreadPreviewDistance: 10
 --- !u!1 &3365450401193807849
 GameObject:
   m_ObjectHideFlags: 0
@@ -1311,59 +1315,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6240392858549943002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6169906672751554506
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4459885952336402983}
-  - component: {fileID: 5600880569170849841}
-  m_Layer: 0
-  m_Name: Spine
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4459885952336402983
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6169906672751554506}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.025018452, y: 0.2213593, z: 0.034620095, w: 0.97425646}
-  m_LocalPosition: {x: 0.008632807, y: 1.0631012, z: -0.040630713}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3942408834003088223}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5600880569170849841
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6169906672751554506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf219326d2292de48a0c671da18d402b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.OverrideTransform
-  m_Weight: 1
-  m_Data:
-    m_ConstrainedObject: {fileID: 455518708620497984}
-    m_OverrideSource: {fileID: 4459885952336402983}
-    m_OverridePosition: {x: 0, y: 0, z: 0}
-    m_OverrideRotation: {x: 0, y: 0, z: 0}
-    m_PositionWeight: 1
-    m_RotationWeight: 1
-    m_Space: 2
 --- !u!1 &6411532110808930545
 GameObject:
   m_ObjectHideFlags: 0
@@ -1450,115 +1401,6 @@ MonoBehaviour:
       x: 1
       y: 1
       z: 1
---- !u!1 &6598703710389873852
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4636869220559379462}
-  - component: {fileID: 7548161571002779548}
-  m_Layer: 0
-  m_Name: LShoulder
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4636869220559379462
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6598703710389873852}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.5578931, y: 0.52816916, z: -0.5342059, w: -0.3527276}
-  m_LocalPosition: {x: -0.05186364, y: 1.366727, z: -0.035520434}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3942408834003088223}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7548161571002779548
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6598703710389873852}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf219326d2292de48a0c671da18d402b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.OverrideTransform
-  m_Weight: 1
-  m_Data:
-    m_ConstrainedObject: {fileID: 7527213633569185880}
-    m_OverrideSource: {fileID: 4636869220559379462}
-    m_OverridePosition: {x: 0, y: 0, z: 0}
-    m_OverrideRotation: {x: 0, y: 0, z: 0}
-    m_PositionWeight: 1
-    m_RotationWeight: 1
-    m_Space: 2
---- !u!1 &6778514496398725275
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3942408834003088223}
-  - component: {fileID: 1205106174686463338}
-  m_Layer: 0
-  m_Name: RigOverrides
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3942408834003088223
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6778514496398725275}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 4459885952336402983}
-  - {fileID: 4636869220559379462}
-  m_Father: {fileID: 5650602193483106119}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1205106174686463338
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6778514496398725275}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70b342d8ce5c2fd48b8fa3147d48d1d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.Rig
-  m_Weight: 1
-  m_Effectors:
-  - m_Transform: {fileID: 4636869220559379462}
-    m_Style:
-      shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
-      color: {r: 1, g: 0, b: 0, a: 0.5}
-      size: 0.2
-      position: {x: 0, y: 0, z: 0}
-      rotation: {x: 0, y: 0, z: 0}
-    m_Visible: 1
 --- !u!1 &7067062446970990154
 GameObject:
   m_ObjectHideFlags: 0
@@ -2208,7 +2050,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1000, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1001, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
       propertyPath: m_LocalScale.x
@@ -2266,6 +2108,14 @@ PrefabInstance:
       propertyPath: playerController
       value: 
       objectReference: {fileID: 5899883115134964478}
+    - target: {fileID: 5623225401330643387, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: weaponStat.aimTime
+      value: 2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5623225401330643387, guid: 4885f27c095dcd43d4f746fe70f102d8, type: 3}
+      propertyPath: weaponStat.pelletCount
+      value: 15
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2349,10 +2199,7 @@ PrefabInstance:
       propertyPath: m_WarningMessage
       value: "\nBinding warning: Some generic clip(s) animate transforms that are
         already bound by a Humanoid avatar. These transforms can only be changed
-        by Humanoid clips.\n\tTransform 'mixamorig:LeftFoot'\n\tTransform 'mixamorig:RightArm'\n\tTransform
-        'mixamorig:LeftLeg'\n\tTransform 'mixamorig:LeftShoulder'\n\tTransform 'mixamorig:RightFoot'\n\tTransform
-        'mixamorig:Head'\n\tTransform 'mixamorig:LeftUpLeg'\n\tTransform 'mixamorig:LeftArm'\n\tTransform
-        'mixamorig:RightHand'\n\tTransform 'mixamorig:Hips'\n\tand more ...\n\tFrom
+        by Humanoid clips.\n\tTransform 'mixamorig:RightHand'\n\tTransform 'mixamorig:RightForeArm'\n\tFrom
         animation clip 'Art_Animation_Shotgun_Idle'"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -2367,9 +2214,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3259599626500717205}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3942408834003088223}
     - targetCorrespondingSourceObject: {fileID: 1852576806548013000, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2497623601394398281}
@@ -2701,6 +2545,8 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 11400000, guid: 76bfa15b47754c32b948fdf131fc2b93, type: 2}
   - {fileID: 11400000, guid: 58785c28cf2445b29fdf70a523ff19da, type: 2}
+  startingWeaponItems:
+  - {fileID: 11400000, guid: 76bfa15b47754c32b948fdf131fc2b93, type: 2}
   footstepWalkSO: {fileID: 11400000, guid: 2600f23020e368b44b45d345085a5394, type: 2}
   footstepRunSO: {fileID: 11400000, guid: 88ba820194b61054e9c0d44fb455f0f0, type: 2}
   maxHealth: 100
@@ -2811,7 +2657,7 @@ MonoBehaviour:
     m_Active: 1
   - m_Rig: {fileID: 3414209250763927779}
     m_Active: 1
-  - m_Rig: {fileID: 1205106174686463338}
+  - m_Rig: {fileID: 0}
     m_Active: 1
   m_Effectors:
   - m_Transform: {fileID: 0}
@@ -2862,7 +2708,7 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0}
     m_Visible: 1
-  - m_Transform: {fileID: 4459885952336402983}
+  - m_Transform: {fileID: 0}
     m_Style:
       shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
       color: {r: 1, g: 0, b: 0, a: 0.5}
@@ -2870,7 +2716,7 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0}
     m_Visible: 1
-  - m_Transform: {fileID: 4459885952336402983}
+  - m_Transform: {fileID: 0}
     m_Style:
       shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
       color: {r: 1, g: 0, b: 0, a: 0.5}
@@ -2878,7 +2724,7 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0}
     m_Visible: 1
-  - m_Transform: {fileID: 4459885952336402983}
+  - m_Transform: {fileID: 0}
     m_Style:
       shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
       color: {r: 1, g: 0, b: 0, a: 0.5}
@@ -2886,7 +2732,7 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0}
     m_Visible: 1
-  - m_Transform: {fileID: 4459885952336402983}
+  - m_Transform: {fileID: 0}
     m_Style:
       shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
       color: {r: 1, g: 0, b: 0, a: 0.5}
@@ -2894,7 +2740,7 @@ MonoBehaviour:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0}
     m_Visible: 1
-  - m_Transform: {fileID: 4459885952336402983}
+  - m_Transform: {fileID: 0}
     m_Style:
       shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
       color: {r: 1, g: 0, b: 0, a: 0.5}

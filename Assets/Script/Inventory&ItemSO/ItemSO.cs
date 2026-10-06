@@ -5,8 +5,13 @@ public class ItemSO : ScriptableObject
 {
     [Header("Basic Information")]
     public string itemName;
+    [TextArea(3, 8)] public string description;
     public ItemType itemType;
     public Sprite icon;
+    [Header("3D Inspection")]
+    [Tooltip("Optional visual model for Examine. Falls back to Weapon Visual Prefab or Pickup Prefab.")]
+    public GameObject inspectionPrefab;
+    public Vector3 inspectionRotation = new Vector3(0, 25, 0);
     [Tooltip("World pickup prefab for dropped items. Requires PickupItem and a trigger collider.")]
     public PickupItem pickupPrefab;
 

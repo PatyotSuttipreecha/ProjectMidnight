@@ -25,11 +25,22 @@ public class InventoryUI : MonoBehaviour
     private Vector2Int grabOffset, candidate;
     private Vector2 pointer;
     private Camera eventCamera;
+    [Header("Editable UI Prefabs")]
+    public InventoryPopupView contextMenuPrefab;
+    public InventoryPopupView dropConfirmationPrefab;
+    public InventoryPopupView inspectionPrefab;
+    public TMP_FontAsset menuFont;
+    [Header("Inspection Controls")]
+    [Min(0f)] public float inspectionRotateSpeed = .35f;
+    [Min(0f)] public float inspectionZoomSpeed = .3f;
+    private GameObject popup;
+    private ItemInspectionPreview inspectionPreview;
 
     private void OnEnable() => BindManager();
     private void Start() => BindManager();
     private void Update()
     {
+        if (popup != null && Input.GetKeyDown(KeyCode.Escape)) ClosePopup();
         if (manager != InventoryManager.Instance || slots.Count == 0) BindManager();
         if (dragged != null && Input.GetKeyDown(KeyCode.Escape)) CancelDrag();
         if (dragged != null && Input.GetKeyDown(KeyCode.R) && dragged.itemSO.allowRotation)
@@ -37,6 +48,7 @@ public class InventoryUI : MonoBehaviour
     }
     private void OnDisable()
     {
+        ClosePopup();
         CancelDrag();
         if (manager != null) manager.OnInventoryChanged -= RefreshUI;
         manager = null;
@@ -96,6 +108,7 @@ public class InventoryUI : MonoBehaviour
     private Vector2 Size(int w, int h) => new Vector2(w * cellSize + (w - 1) * spacing, h * cellSize + (h - 1) * spacing);
     public void RefreshUI()
     {
+        ClosePopup();
         if (manager == null || gridParent == null || itemUIPrefab == null) return;
         CancelDrag();
         if (slots.Count == 0 || builtWidth != manager.inventoryGrid.width || builtHeight != manager.inventoryGrid.height) BuildGridVisuals();
@@ -137,6 +150,7 @@ public class InventoryUI : MonoBehaviour
     }
     public void BeginDrag(int x, int y, PointerEventData data)
     {
+        ClosePopup();
         if (manager == null || data.button != PointerEventData.InputButton.Left) return;
         var item = manager.inventoryGrid.grid[x, y]; if (item == null) return;
         CancelDrag(); dragged = item; rotated = item.isRotated;
@@ -195,11 +209,124 @@ public class InventoryUI : MonoBehaviour
         if (ghost != null) { ghost.gameObject.SetActive(false); Destroy(ghost.gameObject); }
         ghost = null; dragged = null; ResetColors();
     }
-    public void OnSlotRightClick(int x, int y)
+    public void OnSlotRightClick(int x, int y, Vector2 position, Camera camera)
     {
         if (manager == null || dragged != null) return;
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) manager.RemoveItemAt(x, y);
-        else manager.UseItemAt(x, y);
+        var grid = manager.inventoryGrid;
+        if (x < 0 || y < 0 || x >= grid.width || y >= grid.height) return;
+        var item = grid.grid[x, y];
+        if (item == null) { ClosePopup(); return; }
+        ShowContext(item, position, camera);
+    }
+
+    public void CloseItemMenu() => ClosePopup();
+    private void ClosePopup()
+    {
+        if (inspectionPreview != null) inspectionPreview.Dispose();
+        inspectionPreview = null;
+        if (popup != null) { popup.SetActive(false); Destroy(popup); }
+        popup = null;
+    }
+    private InventoryPopupView OpenPopup(InventoryPopupView prefab)
+    {
+        ClosePopup();
+        if (prefab == null) { Debug.LogError("Assign the inventory UI prefabs.", this); return null; }
+        Canvas canvas = gridParent.GetComponentInParent<Canvas>();
+        if (canvas == null) return null;
+        var view = Instantiate(prefab, canvas.rootCanvas.transform, false);
+        popup = view.gameObject;
+        popup.SetActive(true);
+        popup.transform.SetAsLastSibling();
+        Wire(view.close, ClosePopup);
+        Wire(view.backdrop, ClosePopup);
+        return view;
+    }
+    private static void Wire(Button button, System.Action action, bool enabled = true)
+    {
+        if (button == null) return;
+        button.onClick.RemoveAllListeners();
+        button.interactable = enabled;
+        button.onClick.AddListener(() => action());
+    }
+    private bool Locate(InventoryItemData item, out Vector2Int slot)
+    {
+        slot = default;
+        return manager != null && manager.placedPositions.TryGetValue(item, out slot);
+    }
+    private void ShowContext(InventoryItemData item, Vector2 position, Camera camera)
+    {
+        var view = OpenPopup(contextMenuPrefab); if (view == null) return;
+        Canvas.ForceUpdateCanvases();
+        var overlay = (RectTransform)view.transform;
+        var panel = view.panel;
+        Vector2 size = panel.rect.size;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(overlay, position, camera, out Vector2 local);
+        panel.anchoredPosition = new Vector2(Mathf.Clamp(local.x, overlay.rect.xMin, Mathf.Max(overlay.rect.xMin, overlay.rect.xMax - size.x)),
+            Mathf.Clamp(local.y, Mathf.Min(overlay.rect.yMax, overlay.rect.yMin + size.y), overlay.rect.yMax));
+        view.title.text = item.ItemName;
+        var player = PlayerController.instance;
+        bool weapon = item.itemSO.itemType == ItemType.Weapon;
+        bool reloading = player != null && player.EquippedGun != null && player.EquippedGun.isReloading;
+        bool equipped = player != null && player.EquippedInventoryItem == item;
+        bool canUse = false;
+        string useLabel = weapon ? "Equip" : "Use";
+        if (weapon)
+        {
+            canUse = player != null && player.SupportsWeapon(item.itemSO) && !equipped && !reloading;
+            if (equipped) useLabel = "Equipped";
+            else if (reloading) useLabel = "Equip (reloading)";
+            else if (!canUse) useLabel = "Equip (unavailable)";
+        }
+        else if (item.itemSO.itemType == ItemType.Health)
+        {
+            canUse = player != null && player.currentHealth > 0 && player.currentHealth < player.maxHealth && item.itemSO.healAmount > 0;
+            if (!canUse) useLabel = "Use (cannot heal)";
+        }
+        else if (item.itemSO.itemType == ItemType.Ammo)
+        {
+            canUse = player != null && player.OwnsWeapon(item.itemSO.weaponType) && item.itemSO.ammoAmount > 0;
+            useLabel = canUse ? "Use / Add ammo" : "Use (no compatible weapon)";
+        }
+        else useLabel = "Use (unavailable)";
+        view.useLabel.text = useLabel;
+        Wire(view.use, () =>
+        { ClosePopup(); if (Locate(item, out var slot)) manager.UseItemAt(slot.x, slot.y); }, canUse);
+        Wire(view.examine, () => ShowInspection(item));
+        bool canDrop = player != null && item.itemSO.pickupPrefab != null && !(equipped && reloading);
+        view.dropLabel.text = canDrop ? "Drop" : "Drop (unavailable)";
+        Wire(view.drop, () => ShowDropConfirmation(item), canDrop);
+
+    }
+    private void ShowDropConfirmation(InventoryItemData item)
+    {
+        var view = OpenPopup(dropConfirmationPrefab); if (view == null) return;
+        view.title.text = $"Drop {item.ItemName} ×{item.quantity}?";
+        Wire(view.drop, () =>
+        { ClosePopup(); if (Locate(item, out var slot)) manager.RemoveItemAt(slot.x, slot.y); });
+    }
+    private void ShowInspection(InventoryItemData item)
+    {
+        if (!Locate(item, out _)) { ClosePopup(); return; }
+        var view = OpenPopup(inspectionPrefab); if (view == null) return;
+        if (PlayerController.instance != null && PlayerController.instance.EquippedInventoryItem == item)
+            PlayerController.instance.EquippedGun?.StoreInventoryAmmo();
+        view.title.text = item.ItemName;
+        Canvas.ForceUpdateCanvases();
+        inspectionPreview = view.preview;
+        inspectionPreview.rotateSpeed = Mathf.Max(0, inspectionRotateSpeed);
+        inspectionPreview.zoomSpeed = Mathf.Max(0, inspectionZoomSpeed);
+        bool hasModel = inspectionPreview.Initialize(item.itemSO);
+        view.modelView.enabled = hasModel;
+        view.fallbackIcon.sprite = item.Icon;
+        view.fallbackIcon.gameObject.SetActive(!hasModel && item.Icon != null);
+        view.fallbackHint.gameObject.SetActive(!hasModel);
+        Wire(view.reset, () => inspectionPreview?.ResetView());
+        string details = $"Type: {item.itemSO.itemType}\nSize: {item.Width} × {item.Height}\nQuantity: {item.quantity} / {item.itemSO.StackLimit}";
+        if (item.itemSO.itemType == ItemType.Weapon) details += $"\nMagazine: {item.magazineAmmo}\nReserve: {item.reserveAmmo}";
+        if (item.itemSO.itemType == ItemType.Health) details += $"\nHealing per unit: {item.itemSO.healAmount}";
+        if (item.itemSO.itemType == ItemType.Ammo) details += $"\nAmmo per unit: {item.itemSO.ammoAmount}\nCompatible: {item.itemSO.weaponType}";
+        view.details.text = details.Replace("\n", "   |   ");
+        view.description.text = string.IsNullOrWhiteSpace(item.itemSO.description) ? "No description available." : item.itemSO.description;
     }
     public void RebuildAndRefresh() { BuildGridVisuals(); RefreshUI(); }
 }
