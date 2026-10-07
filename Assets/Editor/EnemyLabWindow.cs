@@ -373,6 +373,13 @@ public class EnemyLabWindow : EditorWindow
         Property(profile, "detectionRadius", "Detection radius");
         Property(profile, "fieldOfView", "Field of view (degrees)");
         Property(profile, "obstacleMask", "Sight-blocking layers");
+        Property(profile, "canHear", "Can hear movement / gunshots");
+        Property(profile, "hearingMultiplier", "Hearing radius multiplier");
+        Property(profile, "walkHearingRadius", "Walk hearing range (m)");
+        Property(profile, "runHearingRadius", "Run hearing range (m)");
+        Property(profile, "gunshotHearingRadius", "Gunshot hearing range (m)");
+        Property(profile, "noiseSearchDuration", "Search at sound location (seconds)");
+        Property(profile, "noiseTravelTimeout", "Sound investigation timeout (seconds)");
         Section("Patrol and Alert");
         Property(profile, "waitTimeAtPoint", "Wait at point (seconds)");
         Property(profile, "lostSightCooldown", "Lost sight timeout (seconds)");

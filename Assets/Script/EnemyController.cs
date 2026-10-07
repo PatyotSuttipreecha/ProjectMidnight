@@ -85,6 +85,43 @@ public class EnemyController : MonoBehaviour
     public bool isAlert;
     private bool playerDetected;
     private float lostSightTimer;
+    private bool investigatingNoise;
+    private float noiseSearchTimer, noiseTravelTimer;
+    private Vector3 noisePosition;
+    [Header("Hearing Gizmos")]
+    public bool showHearingGizmos = true;
+    [Tooltip("Player whose movement radii are shown. Empty finds the scene player.")]
+    public PlayerController hearingPreviewPlayer;
+    public Guns hearingPreviewGun;
+    private void OnDrawGizmosSelected()
+    {
+        if (!showHearingGizmos || enemyData == null || !enemyData.canHear) return;
+        var target = hearingPreviewPlayer != null ? hearingPreviewPlayer : FindFirstObjectByType<PlayerController>();
+        if (target == null) return;
+        GameplayNoise.DrawRadius(EyePosition, EffectiveHearingRadius(target.walkNoiseRadius, GameplayNoise.Kind.Walk), GameplayNoise.Kind.Walk, "Hears ");
+        GameplayNoise.DrawRadius(EyePosition, EffectiveHearingRadius(target.runNoiseRadius, GameplayNoise.Kind.Run), GameplayNoise.Kind.Run, "Hears ");
+        var gun = hearingPreviewGun != null ? hearingPreviewGun : target.EquippedGun;
+        if (gun != null) GameplayNoise.DrawRadius(EyePosition, EffectiveHearingRadius(gun.gunshotNoiseRadius, GameplayNoise.Kind.Gunshot), GameplayNoise.Kind.Gunshot, "Hears ");
+    }
+    private float EffectiveHearingRadius(float sourceRadius, GameplayNoise.Kind kind)
+    {
+        if (sourceRadius <= 0 || enemyData == null) return 0;
+        return Mathf.Min(sourceRadius * Mathf.Max(0, enemyData.hearingMultiplier), enemyData.HearingRadius(kind));
+    }
+    private void OnEnable() => GameplayNoise.Emitted += HearNoise;
+    private void HearNoise(Vector3 position, float radius, Transform source, GameplayNoise.Kind kind)
+    {
+        if (IsDead || enemyData == null || !enemyData.canHear || !AgentReady || source == null || source.GetComponent<PlayerController>() == null) return;
+        float hearingRadius = EffectiveHearingRadius(radius, kind);
+        if (hearingRadius <= 0 || Vector3.Distance(EyePosition, position) > hearingRadius) return;
+        // Sight/chase takes priority; hearing never reveals a moving player's live position.
+        if (isAlert || isAttacking) return;
+        if (!NavMesh.SamplePosition(position, out var hit, 2f, agent.areaMask)) return;
+        var path = new NavMeshPath();
+        if (!agent.CalculatePath(hit.position, path) || path.status != NavMeshPathStatus.PathComplete) return;
+        investigatingNoise = true; noisePosition = hit.position; noiseSearchTimer = noiseTravelTimer = 0;
+        agent.isStopped = false; agent.SetPath(path); CurrentState = EnemyState.Search;
+    }
     private float attackTimer;
     private Vector3 lastKnownPlayerPosition;
     private int animationState;
@@ -184,6 +221,7 @@ public class EnemyController : MonoBehaviour
         playerDetected = CanSeePlayer();
         if (playerDetected)
         {
+            investigatingNoise = false;
             isAlert = true;
             lostSightTimer = 0f;
             lastKnownPlayerPosition = player.position;
@@ -211,7 +249,17 @@ public class EnemyController : MonoBehaviour
         }
         else
         {
-            Patrol();
+            if (investigatingNoise)
+            {
+                CurrentState = EnemyState.Search;
+                noiseTravelTimer += Time.deltaTime;
+                bool arrived = !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + .1f;
+                if (arrived) noiseSearchTimer += Time.deltaTime;
+                PlayAnimation(arrived ? Idle : Walk);
+                if (noiseSearchTimer >= enemyData.noiseSearchDuration || noiseTravelTimer >= enemyData.noiseTravelTimeout)
+                { investigatingNoise = false; returningToPatrol = true; waitTimer = 0; Patrol(); }
+            }
+            else Patrol();
         }
     }
 
@@ -339,6 +387,8 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        GameplayNoise.Emitted -= HearNoise;
+        investigatingNoise = false;
         if (!IsDead && hitReaction != null) hitReaction.Cancel();
         StopAllCoroutines();
         isAttacking = false;
@@ -625,6 +675,14 @@ public class EnemyController : MonoBehaviour
             Gizmos.color = StateColor;
             Vector3[] corners = agent.path.corners;
             for (int i = 1; i < corners.Length; i++) DrawRoute(corners[i - 1], corners[i], true);
+        }
+        if (Application.isPlaying && investigatingNoise && !IsDead)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(noisePosition + Vector3.up * .3f, .45f);
+#if UNITY_EDITOR
+            UnityEditor.Handles.Label(noisePosition + Vector3.up, "Heard noise", LabelStyle(Gizmos.color));
+#endif
         }
         if (Application.isPlaying && isAlert && !IsDead)
         {

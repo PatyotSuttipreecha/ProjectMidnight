@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89eb6b8c5d1f4bc89febf0e41aed96c1, type: 3}
   m_Name: GuardNote
   m_EditorClassIdentifier: Assembly-CSharp::DocumentSO
-  documentId: bcc72ae0dcae4bf8ba014736f2fdd104
-  title: Guard's Last Note
+  documentId: cc2df02c25ce415ea110e4f005669f57
+  title: Document_02
   author: Night guard
   summary: A note left beside the old entrance.
   icon: {fileID: 0}

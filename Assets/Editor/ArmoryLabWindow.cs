@@ -21,7 +21,7 @@ public class ArmoryLabWindow : EditorWindow
         "weaponStat.minSpread", "weaponStat.aimTime", "weaponStat.recoil",
         "weaponStat.recoilRecovery", "weaponStat.magazineSize", "weaponStat.reloadTime",
         "breathingAmplitude", "breathingFrequency", "swayBlendSpeed", "cameraBreathingAmplitude",
-        "movingSpreadFraction", "movementThreshold", "movementBlendSpeed"
+        "movingSpreadFraction", "movementThreshold", "movementBlendSpeed", "gunshotNoiseRadius"
     };
 
     [Serializable]
@@ -170,6 +170,7 @@ public class ArmoryLabWindow : EditorWindow
             Slider("weaponStat.recoil", "Recoil strength", 0f, 10f, "Strength of the existing Cinemachine recoil effect.");
             Slider("weaponStat.recoilRecovery", "Recoil recovery", 0f, 30f, "How quickly recoil returns toward neutral.");
             Section("Weapon");
+            EditorGUILayout.PropertyField(serializedWeapon.FindProperty("gunshotNoiseRadius"), new GUIContent("Gunshot hearing radius"));
             Slider("weaponStat.damage", "Damage", 0f, 200f, "Base damage before body-part multipliers. Zero keeps the legacy random hitbox damage.");
             Slider("weaponStat.bulletSpeed", "Bullet speed (units/s)", 0f, 300f, "Projectile travel speed.");
             if (weapon.weaponStat.weaponName == Guns.WeaponType.Shotgun)

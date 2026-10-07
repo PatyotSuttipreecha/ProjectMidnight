@@ -34,6 +34,10 @@ public class ItemSO : ScriptableObject
     [Header("Heal Data")]
     public HealType healType;
     public int healAmount;
+    [Tooltip("0 heals immediately. Positive values spread Heal Amount over this many seconds.")]
+    [Min(0)] public float healDuration;
+    [Tooltip("Time between healing ticks; the final tick includes any remaining amount.")]
+    [Min(.05f)] public float healTickInterval = .5f;
 }
 public enum ItemType
 { Health,Weapon,Ammo,Key,Collection,Resources,Amulets }

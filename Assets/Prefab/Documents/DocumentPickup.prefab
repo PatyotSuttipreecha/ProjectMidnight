@@ -68,7 +68,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DocumentPickup
   document: {fileID: 11400000, guid: bcc72ae0dcae4bf8ba014736f2fdd104, type: 2}
-  collectKey: 101
+  collectKey: 102
 --- !u!1001 &5515522091109281563
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 307a8412b10fbe1439625b75dc6fe2e1, type: 3}
+  m_Name: Script_ItemSO_Heal_PainKiller
+  m_EditorClassIdentifier: Assembly-CSharp::ItemSO
+  itemName: Pain Killer
+  description: Restores 30 HP gradually over 5 seconds.
+  itemType: 0
+  icon: {fileID: 0}
+  inspectionPrefab: {fileID: 0}
+  inspectionRotation: {x: 0, y: 25, z: 0}
+  pickupPrefab: {fileID: 8684660314216663281, guid: e40289ef6f057874993bd9d562ef9953, type: 3}
+  height: 1
+  width: 1
+  allowRotation: 1
+  maxStack: 5
+  weaponType: 0
+  weaponVisualPrefab: {fileID: 0}
+  startingMagazineAmmo: 0
+  startingReserveAmmo: 0
+  ammoAmount: 0
+  healType: 1
+  healAmount: 30
+  healDuration: 5
+  healTickInterval: 0.5

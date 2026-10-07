@@ -1,0 +1,1 @@
+Unity 6000.2.4f1: prefab saved; 473 primitive mesh objects; no runtime scripts; forest ground support and central doorway/corridor clearance passed.

@@ -3,18 +3,14 @@ using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
-public class PickupItem : MonoBehaviour
+public class PickupItem : MonoBehaviour, IWorldInteractable
 {
     public ItemSO itemData;
     [Min(1)] public int quantity = 1;
     [SerializeField] private TMP_Text text;
-    private static readonly HashSet<PickupItem> available = new HashSet<PickupItem>();
-    private static int handledFrame = -1;
-    private readonly HashSet<Collider> overlaps = new HashSet<Collider>();
-    private Transform owner;
     private InventoryItemData storedItem;
     private bool collected;
-    private void OnEnable() { available.Add(this); }
+    private void OnEnable() => PlayerInteraction.Register(this);
     private void Start()
     {
         if (text != null) text.gameObject.SetActive(false);
@@ -62,61 +58,39 @@ public class PickupItem : MonoBehaviour
             CopyVisual(child, node);
         }
     }
-    private void OnGUI()
-    {
-        if (collected || itemData == null || itemData.itemType != ItemType.Weapon || overlaps.Count == 0 || owner == null || Camera.main == null) return;
-        var player = owner.GetComponent<PlayerController>();
-        if (player == null || player.isCheckInventory) return;
-        Vector3 point = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * .3f);
-        if (point.z > 0) GUI.Label(new Rect(point.x - 100f, Screen.height - point.y, 220f, 30f), "[F] Pick up " + itemData.itemName);
-    }
     private void OnDrawGizmosSelected()
     {
-        if (itemData == null || itemData.itemType != ItemType.Weapon) return;
+        if (itemData == null) return;
         Gizmos.color = new Color(.2f, .9f, .7f);
         if (TryGetComponent<SphereCollider>(out var sphere))
             Gizmos.DrawWireSphere(transform.TransformPoint(sphere.center), sphere.radius * transform.lossyScale.x);
     }
     private void OnDisable()
     {
-        available.Remove(this); overlaps.Clear(); owner = null;
+        PlayerInteraction.Unregister(this);
         if (text != null) text.gameObject.SetActive(false);
     }
     public void SetStoredItem(InventoryItemData item) { storedItem = item; itemData = item.itemSO; }
-    private void OnTriggerEnter(Collider other)
+    [Min(.1f)] public float interactionDistance = 2.5f;
+    public MonoBehaviour InteractionOwner => this;
+    public Vector3 InteractionPoint => transform.position + Vector3.up * .15f;
+    public float InteractionRange => interactionDistance;
+    public bool RequiresAim => false;
+    public bool InteractionAvailable => !collected && itemData != null;
+    public string InteractionPrompt => "Pick up " + (itemData != null ? itemData.itemName : "item");
+    public string Interact(PlayerController player)
     {
-        PlayerController player = other.GetComponentInParent<PlayerController>();
-        if (player == null) return;
-        owner = player.transform; overlaps.Add(other);
+        return TryPickup() ? "Collected " + itemData.itemName : "Cannot pick up: inventory unavailable or no space.";
     }
-    private void OnTriggerExit(Collider other) { overlaps.Remove(other); }
-    private void Update()
+    private bool TryPickup()
     {
-        overlaps.RemoveWhere(c => c == null || !c.enabled || !c.gameObject.activeInHierarchy);
-        bool nearby = !collected && overlaps.Count > 0 && owner != null;
-        if (text != null) text.gameObject.SetActive(nearby);
-        PlayerController player = owner != null ? owner.GetComponent<PlayerController>() : null;
-        if (!nearby || player == null || player.isCheckInventory || !Input.GetKeyDown(KeyCode.F) || handledFrame == Time.frameCount) return;
-        PickupItem nearest = null;
-        float distance = float.PositiveInfinity;
-        foreach (PickupItem pickup in available)
-        {
-            if (pickup == null || pickup.collected || pickup.itemData == null || pickup.owner != owner || pickup.overlaps.Count == 0) continue;
-            float candidate = (pickup.transform.position - owner.position).sqrMagnitude;
-            if (candidate < distance || (candidate == distance && nearest != null && pickup.GetInstanceID() < nearest.GetInstanceID()))
-            { nearest = pickup; distance = candidate; }
-        }
-        handledFrame = Time.frameCount;
-        if (nearest != null) nearest.TryPickup();
-    }
-    private void TryPickup()
-    {
-        if (collected || itemData == null) return;
+        if (collected || itemData == null) return false;
         bool added = false;
         if (InventoryManager.Instance != null)
             added = storedItem != null ? InventoryManager.Instance.TryAddInstance(storedItem) : InventoryManager.Instance.TryAddItemAutoPlace(itemData, quantity);
-        if (!added) { Debug.Log("Cannot pick up: no inventory space.", this); return; }
-        collected = true; available.Remove(this);
+        if (!added) return false;
+        collected = true; PlayerInteraction.Unregister(this);
         gameObject.SetActive(false); Destroy(gameObject);
+        return true;
     }
 }

@@ -17,6 +17,13 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 128
+  canHear: 1
+  hearingMultiplier: 1
+  walkHearingRadius: 3
+  runHearingRadius: 8
+  gunshotHearingRadius: 15
+  noiseSearchDuration: 3
+  noiseTravelTimeout: 15
   waitTimeAtPoint: 5
   lostSightCooldown: 5
   minAttack: 20

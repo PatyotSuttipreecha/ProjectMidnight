@@ -12,6 +12,11 @@ public class DocumentLibraryUI : MonoBehaviour
     private List<DocumentSO> documents = new List<DocumentSO>();
     private int documentIndex, pageIndex;
     private bool reading;
+    private DocumentSO pendingDocument;
+    private bool pendingRead;
+    private PlayerController modalPlayer;
+    private System.Action pickupComplete;
+    private bool temporaryHost;
     private DocumentSO Current => documents.Count > 0 ? documents[documentIndex] : null;
     private void OnEnable()
     {
@@ -21,7 +26,7 @@ public class DocumentLibraryUI : MonoBehaviour
     private void OnDisable()
     {
         if (openButton != null) openButton.onClick.RemoveListener(Open);
-        Close();
+        CloseInternal(false);
     }
     private void Update()
     {
@@ -36,6 +41,37 @@ public class DocumentLibraryUI : MonoBehaviour
         if (collection == null || canvas == null) return;
         GetComponentInParent<InventoryUI>()?.CloseItemMenu();
         documents = collection.GetCollected(); documentIndex = pageIndex = 0;
+        CreateView(canvas.rootCanvas);
+    }
+    public static bool OpenPickup(DocumentSO document, PlayerController player, DocumentLibraryView prefab, System.Action completed)
+    {
+        if (document == null || player == null || player.IsGameplayInputBlocked || DocumentCollection.Instance == null) return false;
+        Canvas canvas = null;
+        foreach (var library in FindObjectsByType<DocumentLibraryUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!library.gameObject.scene.IsValid()) continue;
+            var parent = library.GetComponentInParent<Canvas>();
+            if (parent == null || !parent.rootCanvas.gameObject.activeInHierarchy) continue;
+            if (prefab == null) prefab = library.viewPrefab;
+            if (prefab != null) { canvas = parent.rootCanvas; break; }
+        }
+        if (canvas == null && prefab != null)
+            foreach (var candidate in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                if (candidate.isRootCanvas) { canvas = candidate; break; }
+        if (prefab == null || canvas == null) return false;
+        // A separate active host is needed because the Inventory Documents button is inactive during gameplay.
+        var host = new GameObject("Document Pickup Preview", typeof(RectTransform), typeof(Button));
+        host.transform.SetParent(canvas.transform, false);
+        var ui = host.AddComponent<DocumentLibraryUI>();
+        ui.viewPrefab = prefab; ui.collection = DocumentCollection.Instance;
+        ui.documents = new List<DocumentSO> { document }; ui.documentIndex = ui.pageIndex = 0;
+        ui.pendingDocument = document; ui.modalPlayer = player; ui.pickupComplete = completed; ui.temporaryHost = true;
+        player.BeginDocumentModal();
+        ui.CreateView(canvas);
+        return true;
+    }
+    private void CreateView(Canvas canvas)
+    {
         view = Instantiate(viewPrefab, canvas.rootCanvas.transform, false);
         view.gameObject.SetActive(true); view.transform.SetAsLastSibling();
         Bind(view.close, Close); Bind(view.read, ShowReading); Bind(view.back, ShowModel);
@@ -75,11 +111,13 @@ public class DocumentLibraryUI : MonoBehaviour
     {
         if (Current == null || Current.pages == null || Current.pages.Length == 0) return;
         reading = true; view.preview.Dispose(); view.modelGroup.SetActive(false); view.readingGroup.SetActive(true);
-        collection.MarkRead(Current); UpdateStatus(); SelectPage(0);
+        if (pendingDocument != null) pendingRead = true;
+        else collection.MarkRead(Current);
+        UpdateStatus(); SelectPage(0);
     }
     private void UpdateStatus()
     {
-        view.status.text = Current == null ? "" : (collection.HasRead(Current) ? "Read" : "Unread") +
+        view.status.text = Current == null ? "" : (pendingDocument != null ? (pendingRead ? "Read | Close to collect" : "Close to collect") : collection.HasRead(Current) ? "Read" : "Unread") +
             (string.IsNullOrWhiteSpace(Current.author) ? "" : "  |  " + Current.author);
     }
     private void SelectPage(int step)
@@ -95,7 +133,23 @@ public class DocumentLibraryUI : MonoBehaviour
     }
     public void Close()
     {
-        if (view == null) return;
-        view.preview.Dispose(); view.gameObject.SetActive(false); Destroy(view.gameObject); view = null;
+        CloseInternal(true);
+    }
+    private void CloseInternal(bool collect)
+    {
+        if (view != null)
+        {
+            view.preview.Dispose(); view.gameObject.SetActive(false); Destroy(view.gameObject); view = null;
+        }
+        var document = pendingDocument; pendingDocument = null;
+        var callback = pickupComplete; pickupComplete = null;
+        if (collect && document != null && collection != null)
+        {
+            collection.Collect(document);
+            if (pendingRead) collection.MarkRead(document);
+            if (collection.Contains(document)) callback?.Invoke();
+        }
+        if (modalPlayer != null) { modalPlayer.EndDocumentModal(); modalPlayer = null; }
+        if (temporaryHost) { temporaryHost = false; Destroy(gameObject); }
     }
 }

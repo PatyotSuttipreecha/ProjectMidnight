@@ -5,6 +5,9 @@ using UnityEngine;
 [DefaultExecutionOrder(100)]
 public class Guns : MonoBehaviour
 {
+    [Header("Enemy Hearing")]
+    [Min(0)] public float gunshotNoiseRadius = 25f;
+    public bool showNoiseGizmos = true;
     [System.Serializable]
     public struct WeaponStat
     {
@@ -108,7 +111,7 @@ public class Guns : MonoBehaviour
     [SerializeField] private bool showSpreadGizmos = true;
     [SerializeField, Min(0.1f)] private float spreadPreviewDistance = 10f;
     private bool IsAiming => playerController != null && playerController.isAiming
-        && !playerController.isCheckInventory && !isReloading;
+        && !playerController.IsGameplayInputBlocked && !isReloading;
 
     private void Awake()
     {
@@ -125,7 +128,7 @@ public class Guns : MonoBehaviour
         if (weaponStat.weaponName == WeaponType.None || weaponStat.weaponName == WeaponType.Knife) return;
         HandleAimingSpread();
         UpdateBreathingSway();
-        if (playerController != null && playerController.isCheckInventory) return;
+        if (playerController != null && playerController.IsGameplayInputBlocked) return;
         if (!isReloading)
         {
             Shooting();
@@ -243,6 +246,10 @@ public class Guns : MonoBehaviour
                 if (weaponStat.muzzleFlash != null) weaponStat.muzzleFlash.Play();
                
                 FireBullet();
+                var noiseOwner = GetComponentInParent<PlayerController>();
+                if (noiseOwner != null)
+                    GameplayNoise.Emit(weaponStat.firePoint != null ? weaponStat.firePoint.position : transform.position,
+                        gunshotNoiseRadius, noiseOwner.transform, GameplayNoise.Kind.Gunshot);
 
                 // ยิงแล้วรีเซ็ต spread
                 aimTimer = 0f;
@@ -324,6 +331,8 @@ public class Guns : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (showNoiseGizmos) GameplayNoise.DrawRadius(weaponStat.firePoint != null ? weaponStat.firePoint.position : transform.position,
+            gunshotNoiseRadius, GameplayNoise.Kind.Gunshot);
         if (!showSpreadGizmos || weaponStat.firePoint == null) return;
         Vector3 origin = weaponStat.firePoint.position;
         Vector3 direction = weaponStat.firePoint.forward;

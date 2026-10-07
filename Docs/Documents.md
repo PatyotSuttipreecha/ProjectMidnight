@@ -63,3 +63,11 @@ DocumentCollection.Instance.RestoreState(loaded);
 - แท็บ **ฉาก / UI**: ค้นหาหรือเพิ่ม Document System, เพิ่มเอกสารเข้า Catalog, วาง Pickup ที่ Scene View pivot และเปิด UI / Pickup Prefab เพื่อออกแบบ
 - ปิด **ตาม Selection** หากต้องการคงเอกสารที่กำลังแก้ขณะเลือก Asset อื่น
 การวาง Pickup ใช้ภาพใน Pickup Prefab; หากต้องการให้ภาพในแมพตรงกับเอกสารแต่ละชนิด ให้ปรับโมเดลลูกของ Pickup ที่วางไว้ด้วย
+
+อัปเดต Interaction กลาง: ใช้ F ผ่าน PlayerInteraction แทนปุ่มรายวัตถุเดิม ดู Docs/Interaction.md สำหรับระยะ การเลือกเป้าหมาย และ UI prompt
+
+## เปิดเอกสารก่อนบันทึกการเก็บ
+กด F ที่เอกสารในแมพจะเปิด Examine ทันที หมุน/ซูมและกด Read ได้ เมื่อกด Close หรือ Esc จากหน้าโมเดล ระบบจึง Collect เอกสารและซ่อนจุดเก็บ ถ้าอ่านระหว่างพรีวิวจะบันทึก Read พร้อมกัน Esc จากหน้าอ่านกลับหน้าโมเดลก่อน
+ระหว่างเปิดพรีวิวหยุด input เดิน/กล้อง/ยิง/Interaction ของผู้เล่น แต่ไม่หยุดโลกหรือศัตรู; ใช้ UI Prefab ของ Documents เดิมผ่าน host ที่เปิดได้แม้ Inventory ปิด
+Document Pickup > Pickup View Prefab เป็น override แบบ optional หากเว้นจะหา viewPrefab จาก Documents UI ในฉาก ต้องมี Canvas ที่ active และ DocumentCollection หากขาดจะรายงานข้อผิดพลาดและไม่เก็บไอเทม
+การ Disable host โดยระบบเป็นการยกเลิก ไม่บันทึกการเก็บและคืน input ส่วน Catalog คือข้อมูลเอกสารที่รู้จัก ซึ่งแยกจาก collected/read state; Collect จะเพิ่มข้อมูลเข้า runtime catalog lookup เมื่อปิดพรีวิว

@@ -10,6 +10,15 @@ public static class Checks
     static InventoryManager Bag(int w = 4, int h = 4) => new InventoryManager { inventoryGrid = new InventoryGrid(w, h), gridWidth = w, gridHeight = h };
     public static void Main()
     {
+        var keyBag = Bag(); var key = Item(1, 1, 3); key.itemType = ItemType.Key;
+        var wrongKey = Item(1, 1); wrongKey.itemType = ItemType.Key;
+        Check(!keyBag.TryUseKey(key, true), "missing key rejected");
+        keyBag.TryAddItemAutoPlace(key, 2);
+        int keyNotifications = 0; keyBag.OnInventoryChanged += () => keyNotifications++;
+        Check(!keyBag.TryUseKey(wrongKey, true), "different key rejected");
+        Check(keyBag.TryUseKey(key, false) && keyBag.placedPositions.Keys.First().quantity == 2 && keyNotifications == 0, "reusable key preserved");
+        Check(keyBag.TryUseKey(key, true) && keyBag.placedPositions.Keys.First().quantity == 1 && keyNotifications == 1, "consume one key and notify UI");
+        Check(keyBag.TryUseKey(key, true) && keyBag.placedPositions.Count == 0 && keyBag.inventoryGrid.grid[0, 0] == null && keyNotifications == 2, "last key clears grid");
         var bag = Bag(); var pistol = new InventoryItemData(Item(2, 1)); var shotgun = new InventoryItemData(Item(4, 1));
         Check(bag.TryAddInstance(pistol) && bag.TryAddInstance(shotgun), "mixed footprints fit 4x4");
         Check(!bag.TryMoveItem(shotgun, 1, 2, false) && bag.placedPositions[shotgun].y == 1, "invalid bounds preserve position");
@@ -90,6 +99,6 @@ namespace UnityEngine
     public class CreateAssetMenuAttribute : Attribute { public string fileName, menuName; }
 }
 namespace UnityEngine.SceneManagement { public static class SceneManager { public static void MoveGameObjectToScene(UnityEngine.GameObject g,object s) {} } }
-public class PlayerController : UnityEngine.MonoBehaviour { public static PlayerController instance; public float currentHealth,maxHealth; public InventoryItemData lastEquipped; public InventoryItemData EquippedInventoryItem; public Guns EquippedGun; public bool TryEquipWeapon(InventoryItemData item) { lastEquipped = item; return true; } public bool OwnsWeapon(Guns.WeaponType type) => true; public bool TryAddAmmoToOwnedWeapon(ItemSO ammo) => true; }
+public class PlayerController : UnityEngine.MonoBehaviour { public static PlayerController instance; public float currentHealth,maxHealth; public InventoryItemData lastEquipped; public InventoryItemData EquippedInventoryItem; public Guns EquippedGun; public bool TryEquipWeapon(InventoryItemData item) { lastEquipped = item; return true; } public bool TryUseHealing(ItemSO item) { if (item.healAmount <= 0 || currentHealth <= 0 || currentHealth >= maxHealth) return false; currentHealth = UnityEngine.Mathf.Clamp(currentHealth + item.healAmount, 0, maxHealth); return true; } public bool OwnsWeapon(Guns.WeaponType type) => true; public bool TryAddAmmoToOwnedWeapon(ItemSO ammo) => true; }
 public class PickupItem : UnityEngine.MonoBehaviour { public bool enabled; public InventoryItemData stored; public void SetStoredItem(InventoryItemData item) { stored = item; } }
 public class Guns { public enum WeaponType { None,Knife,Pistol,Shotgun,Rifle } public struct Stat { public WeaponType weaponName; } public Stat weaponStat; public bool isReloading; public void StoreInventoryAmmo() {} public void AddAmmo(int quantity) {} }

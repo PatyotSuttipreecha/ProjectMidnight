@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 29b6df512f764a64ea499d08b0d2d231
+timeCreated: 1530949564
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 131169
+  packageName: Turbo Rename
+  packageVersion: 1.0f
+  assetPath: Assets/Rob Reijnen/TurboRename/Plugins/Editor/TurboRename.cs
+  uploadId: 701312

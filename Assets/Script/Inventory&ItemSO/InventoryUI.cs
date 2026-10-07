@@ -279,7 +279,7 @@ public class InventoryUI : MonoBehaviour
         }
         else if (item.itemSO.itemType == ItemType.Health)
         {
-            canUse = player != null && player.currentHealth > 0 && player.currentHealth < player.maxHealth && item.itemSO.healAmount > 0;
+            canUse = player != null && player.CanUseHealing(item.itemSO);
             if (!canUse) useLabel = "Use (cannot heal)";
         }
         else if (item.itemSO.itemType == ItemType.Ammo)
@@ -323,7 +323,9 @@ public class InventoryUI : MonoBehaviour
         Wire(view.reset, () => inspectionPreview?.ResetView());
         string details = $"Type: {item.itemSO.itemType}\nSize: {item.Width} × {item.Height}\nQuantity: {item.quantity} / {item.itemSO.StackLimit}";
         if (item.itemSO.itemType == ItemType.Weapon) details += $"\nMagazine: {item.magazineAmmo}\nReserve: {item.reserveAmmo}";
-        if (item.itemSO.itemType == ItemType.Health) details += $"\nHealing per unit: {item.itemSO.healAmount}";
+        if (item.itemSO.itemType == ItemType.Health) details += item.itemSO.healDuration > 0
+            ? $"\nHealing: {item.itemSO.healAmount} HP over {item.itemSO.healDuration:0.#} s (tick: {item.itemSO.healTickInterval:0.##} s)"
+            : $"\nHealing per unit: {item.itemSO.healAmount} (instant)";
         if (item.itemSO.itemType == ItemType.Ammo) details += $"\nAmmo per unit: {item.itemSO.ammoAmount}\nCompatible: {item.itemSO.weaponType}";
         view.details.text = details.Replace("\n", "   |   ");
         view.description.text = string.IsNullOrWhiteSpace(item.itemSO.description) ? "No description available." : item.itemSO.description;

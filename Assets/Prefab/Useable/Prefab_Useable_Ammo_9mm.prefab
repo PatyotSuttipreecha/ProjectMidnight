@@ -9,16 +9,28 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 100.00005
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 100.00004
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 100.00004
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.182
+      value: -1.9460584
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.028
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 7.096
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -50,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_Name
-      value: 9mmAmmoBox
+      value: Prefab_Useable_Ammo_9mm
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -90,7 +102,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.02, y: 0.02, z: 0.02}
+  m_Size: {x: 0.01, y: 0.02, z: 0.02}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &7956262741927895970
 Rigidbody:
@@ -132,4 +144,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PickupItem
   itemData: {fileID: 11400000, guid: ffaf87b41f42df1498734e61a36c1b4c, type: 2}
+  quantity: 1
   text: {fileID: 0}

@@ -22,15 +22,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.5
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.0279
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 4.0000234
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -70,7 +70,7 @@ PrefabInstance:
       objectReference: {fileID: 4300010, guid: 7af43f2a0c1aada47be6fdfcd64fc85e, type: 3}
     - target: {fileID: 919132149155446097, guid: 99448342354711445a3ab71846c8971a, type: 3}
       propertyPath: m_Name
-      value: Bandage
+      value: Prefab_Useable_Heal_Bandage
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -152,4 +152,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PickupItem
   itemData: {fileID: 11400000, guid: 0642a8e91f6305b40b884ca39241fafd, type: 2}
+  quantity: 1
   text: {fileID: 0}

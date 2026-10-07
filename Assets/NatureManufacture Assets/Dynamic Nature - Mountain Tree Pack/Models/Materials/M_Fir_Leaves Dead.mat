@@ -2,20 +2,28 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_Fir_Leaves Dead
   m_Shader: {fileID: 4800000, guid: adce0b63bca75a84e9f786201b7d7b0b, type: 3}
-  m_ShaderKeywords: _WINDVERTEXCOLORMAINRNOISEB_ON
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _ALPHATEST_ON
+  - _SPECULAR_SETUP
+  m_InvalidKeywords:
+  - _WINDVERTEXCOLORMAINRNOISEB_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
+  stringTagMap:
+    RenderType: TransparentCutout
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -107,11 +115,17 @@ Material:
     m_Floats:
     - _AORemapMax: 1
     - _AORemapMin: 0
+    - _AlphaClip: 1
     - _AlphaCutoff: 0.5
     - _AlphaDrag: 0
+    - _AlphaToMask: 1
     - _AmbientOcclusionPower: 1
+    - _Blend: 0
+    - _BlendModePreserveSpecular: 0
     - _BumpScale: 1
+    - _CastShadows: 1
     - _ColorNoiseSpread: 2
+    - _Cull: 0
     - _CullFarDistance: 20
     - _CullFarStart: 60
     - _Cutoff: 0.25
@@ -138,6 +152,7 @@ Material:
     - _Parallax: 0.02
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _ReceiveShadows: 1
     - _ShiverDirectionality: 0.5
     - _ShiverDrag: 0.02
     - _SmoothnessPower: 1
@@ -150,6 +165,7 @@ Material:
     - _SpecularPower: 0
     - _SrcBlend: 1
     - _Stiffness: 1
+    - _Surface: 0
     - _TransAmbient: 1
     - _TransDirect: 1
     - _TransNormalDistortion: 0
@@ -169,7 +185,10 @@ Material:
     - _WindPowerDirectionZ: 0.3
     - _WindPowerDirectionZ1: 0.31
     - _WindVertexColorMainRNoiseB: 1
+    - _WorkflowMode: 0
+    - _ZTest: 4
     - _ZWrite: 1
+    - _ZWriteControl: 0
     - __dirty: 0
     - _noise1: 1.66
     m_Colors:
@@ -185,3 +204,4 @@ Material:
     - _WindColorMultiply: {r: 2, g: 2, b: 2, a: 0}
     - _WindNoisetilling: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

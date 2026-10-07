@@ -12,6 +12,24 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     public float moveSpeed = 2f;
     public float sprintBonus = 2f;
+    [Tooltip("Gravity applied by the CharacterController movement system.")]
+    public float gravity = -20f;
+    [Header("Enemy Hearing: Movement Noise")]
+    [Min(0)] public float walkNoiseRadius = 3f;
+    [Min(0)] public float runNoiseRadius = 8f;
+    [Min(.1f)] public float walkNoiseInterval = .5f;
+    [Min(.1f)] public float runNoiseInterval = .3f;
+    private float nextMovementNoise;
+    public bool showNoiseGizmos = true;
+    private void OnDrawGizmosSelected()
+    {
+        if (!showNoiseGizmos) return;
+        GameplayNoise.DrawRadius(transform.position, walkNoiseRadius, GameplayNoise.Kind.Walk);
+        GameplayNoise.DrawRadius(transform.position, runNoiseRadius, GameplayNoise.Kind.Run);
+        if (Application.isPlaying && EquippedGun != null)
+            GameplayNoise.DrawRadius(transform.position, EquippedGun.gunshotNoiseRadius, GameplayNoise.Kind.Gunshot);
+    }
+    private float verticalSpeed;
     public Rig rigBuilder;
 
     [Header("Cinemachine")]
@@ -69,12 +87,40 @@ public class PlayerController : MonoBehaviour
     private bool inventoryClosing;
     [HideInInspector]public bool isAiming;
     [HideInInspector]public bool isCheckInventory;
+    private int modalDepth;
+    private CursorLockMode modalCursorLock;
+    private bool modalCursorVisible;
+    public bool IsGameplayInputBlocked => isCheckInventory || modalDepth > 0;
+    public void BeginDocumentModal()
+    {
+        if (modalDepth++ > 0) return;
+        modalCursorLock = Cursor.lockState; modalCursorVisible = Cursor.visible;
+        SuspendCameraLook(); Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
+    }
+    public void EndDocumentModal()
+    {
+        modalDepth = Mathf.Max(0, modalDepth - 1);
+        if (modalDepth > 0) return;
+        if (!isCheckInventory) RestoreCameraLook();
+        Cursor.lockState = modalCursorLock; Cursor.visible = modalCursorVisible;
+    }
 
     #endregion
 
     private void Awake()
     {
         instance = this;
+        if (GetComponent<PlayerInteraction>() == null) gameObject.AddComponent<PlayerInteraction>();
+        // CharacterController owns movement; a Rigidbody is only needed for trigger detection.
+        if (TryGetComponent<Rigidbody>(out var body))
+        {
+            body.isKinematic = true;
+            body.useGravity = false;
+            // Transform motion in Update must not be interpolated from physics ticks.
+            body.interpolation = RigidbodyInterpolation.None;
+        }
+        foreach (var capsule in GetComponents<CapsuleCollider>())
+            if (!capsule.isTrigger) capsule.enabled = false;
     }
     void Start()
     {
@@ -82,6 +128,12 @@ public class PlayerController : MonoBehaviour
 
         if (cineCamera == null)
             cineCamera = FindFirstObjectByType<CinemachineCamera>();
+
+        if (Camera.main != null && Camera.main.TryGetComponent<CinemachineBrain>(out var brain))
+        {
+            brain.UpdateMethod = CinemachineBrain.UpdateMethods.LateUpdate;
+            brain.BlendUpdateMethod = CinemachineBrain.BrainUpdateMethods.LateUpdate;
+        }
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -104,12 +156,18 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (modalDepth > 0)
+        {
+            isAiming = false; SuppressWeaponPose(); animator.SetFloat("Speed", 0f);
+            ApplyGravity(Vector3.zero); return;
+        }
         CheckInventory();
         if(isCheckInventory)
         {
             isAiming = false;
             SuppressWeaponPose();
             animator.SetFloat("Speed", 0f);
+            ApplyGravity(Vector3.zero);
             return;
         }
         isAiming = Input.GetMouseButton(1); // เล็งอยู่หรือไม่
@@ -163,7 +221,14 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.S) && Input.GetMouseButton(1)) // ถอยหลังช้า
             currentSpeed -= 0.2f;
 
-        controller.Move(move.normalized * currentSpeed * Time.deltaTime);
+        ApplyGravity(move.normalized * currentSpeed);
+        if (currentHealth > 0 && controller.isGrounded &&
+            Vector3.ProjectOnPlane(controller.velocity, Vector3.up).sqrMagnitude > .01f && Time.time >= nextMovementNoise)
+        {
+            nextMovementNoise = Time.time + Mathf.Max(.1f, isRunning ? runNoiseInterval : walkNoiseInterval);
+            GameplayNoise.Emit(transform.position, isRunning ? runNoiseRadius : walkNoiseRadius, transform,
+                isRunning ? GameplayNoise.Kind.Run : GameplayNoise.Kind.Walk);
+        }
 
         // ส่งค่าพารามิเตอร์ไปที่ Animator
         animator.SetFloat("Horizontal", moveX);
@@ -195,6 +260,14 @@ public class PlayerController : MonoBehaviour
             cameraOffset.Offset.y = aiming ? 1.7f : 1.2f;
             cameraOffset.Offset.x = aiming ? 0.4f : 0.6f;
         }
+    }
+
+    private void ApplyGravity(Vector3 horizontalVelocity)
+    {
+        if (controller == null || !controller.enabled) return;
+        if (controller.isGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
+        verticalSpeed = Mathf.Max(-50f, verticalSpeed + Mathf.Min(-.01f, gravity) * Time.deltaTime);
+        controller.Move((horizontalVelocity + Vector3.up * verticalSpeed) * Time.deltaTime);
     }
 
     void HandleCharacterRotation()
@@ -395,6 +468,37 @@ public class PlayerController : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
     }
+    private Coroutine healingRoutine;
+    public bool IsHealingOverTime { get; private set; }
+    public bool CanUseHealing(ItemSO item) => item != null && item.itemType == ItemType.Health && item.healAmount > 0
+        && isActiveAndEnabled && currentHealth > 0 && currentHealth < maxHealth && (item.healDuration <= 0 || !IsHealingOverTime);
+    public bool TryUseHealing(ItemSO item)
+    {
+        if (!CanUseHealing(item)) return false;
+        if (item.healDuration <= 0) currentHealth = Mathf.Min(maxHealth, currentHealth + item.healAmount);
+        else
+        {
+            IsHealingOverTime = true;
+            healingRoutine = StartCoroutine(HealOverTime(item.healAmount, item.healDuration, Mathf.Max(.05f, item.healTickInterval)));
+        }
+        return true;
+    }
+    private IEnumerator HealOverTime(float total, float duration, float interval)
+    {
+        float elapsed = 0, delivered = 0;
+        while (elapsed < duration && currentHealth > 0 && currentHealth < maxHealth)
+        {
+            float step = Mathf.Min(interval, duration - elapsed);
+            yield return new WaitForSeconds(step);
+            if (currentHealth <= 0) break;
+            elapsed += step;
+            float target = total * Mathf.Clamp01(elapsed / duration);
+            currentHealth = Mathf.Min(maxHealth, currentHealth + target - delivered);
+            delivered = target;
+        }
+        IsHealingOverTime = false;
+        healingRoutine = null;
+    }
     private void Die()
     {
         if (currentHealth <= 0)
@@ -553,7 +657,12 @@ public class PlayerController : MonoBehaviour
         suspendedCameraInputs = null;
         savedCameraInputEnabled = null;
     }
-    private void OnDisable() => RestoreCameraLook();
+    private void OnDisable()
+    {
+        RestoreCameraLook();
+        if (healingRoutine != null) StopCoroutine(healingRoutine);
+        healingRoutine = null; IsHealingOverTime = false;
+    }
 
    private IEnumerator SmoothCameraTransition(float targetFOV, Vector3 targetOffset, float duration)
     {

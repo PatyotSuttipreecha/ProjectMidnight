@@ -68,7 +68,7 @@ public class PlayerConfigurationWindow : EditorWindow
             EditorGUILayout.HelpBox("ค่าที่ปรับใน Play Mode เป็นค่าชั่วคราว อาวุธเริ่มต้นมีผลเมื่อเริ่มเกมใหม่", MessageType.Info);
         else if (!EditorUtility.IsPersistent(player) && PrefabUtility.IsPartOfPrefabInstance(player))
             EditorGUILayout.HelpBox("กำลังปรับ Player ในฉาก ค่าจะเป็น Prefab override หากต้องการใช้กับทุกฉาก ให้เปิดค่าของ Player Prefab", MessageType.Info);
-        tab = GUILayout.Toolbar(tab, new[] { "ผู้เล่น", "อาวุธเริ่มต้น", "กระเป๋า", "References" });
+        tab = GUILayout.Toolbar(tab, new[] { "ผู้เล่น", "อาวุธเริ่มต้น", "กระเป๋า", "References", "Interaction" });
         scroll = EditorGUILayout.BeginScrollView(scroll);
         if (settings == null || settings.targetObject != player) settings = new SerializedObject(player);
         settings.Update();
@@ -78,6 +78,21 @@ public class PlayerConfigurationWindow : EditorWindow
             case 1: DrawLoadout(); break;
             case 2: DrawInventory(); break;
             case 3: DrawReferences(); break;
+            case 4:
+                var interaction = player.GetComponent<PlayerInteraction>();
+                if (interaction == null)
+                {
+                    EditorGUILayout.HelpBox("PlayerInteraction will be added on startup. Add it now to configure it.", MessageType.Info);
+                    if (GUILayout.Button("Add Player Interaction")) Undo.AddComponent<PlayerInteraction>(player.gameObject);
+                }
+                else
+                {
+                    var interactionData = new SerializedObject(interaction); interactionData.Update();
+                    foreach (var field in new[] { "interactKey", "maxDistance", "interactionCamera", "interactionMask", "promptText", "showGizmos" })
+                        EditorGUILayout.PropertyField(interactionData.FindProperty(field));
+                    if (interactionData.ApplyModifiedProperties()) MarkChanged(interaction);
+                }
+                break;
         }
         if (settings.ApplyModifiedProperties()) MarkChanged(player);
         EditorGUILayout.EndScrollView();
@@ -98,6 +113,12 @@ public class PlayerConfigurationWindow : EditorWindow
         EditorGUILayout.LabelField("การเคลื่อนที่", EditorStyles.boldLabel);
         NonNegative("moveSpeed", "ความเร็วเดิน");
         NonNegative("sprintBonus", "ความเร็วเพิ่มตอนวิ่ง");
+        EditorGUILayout.LabelField("เสียงที่ศัตรูได้ยิน", EditorStyles.boldLabel);
+        NonNegative("walkNoiseRadius", "ระยะเสียงเดิน");
+        NonNegative("runNoiseRadius", "ระยะเสียงวิ่ง");
+        NonNegative("walkNoiseInterval", "ช่วงเสียงเดิน (วินาที)", .1f);
+        NonNegative("runNoiseInterval", "ช่วงเสียงวิ่ง (วินาที)", .1f);
+        Field("showNoiseGizmos", "แสดง Gizmos เสียง");
         EditorGUILayout.LabelField("ความเร็ววิ่งรวม", (settings.FindProperty("moveSpeed").floatValue + settings.FindProperty("sprintBonus").floatValue).ToString("0.##"));
         EditorGUILayout.Space();
         NonNegative("maxHealth", "พลังชีวิตสูงสุด", 1);

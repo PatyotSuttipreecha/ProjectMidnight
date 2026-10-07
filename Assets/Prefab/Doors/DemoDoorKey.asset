@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 307a8412b10fbe1439625b75dc6fe2e1, type: 3}
+  m_Name: DemoDoorKey
+  m_EditorClassIdentifier: Assembly-CSharp::ItemSO
+  itemName: Demo Door Key
+  description: Opens the demo locked door.
+  itemType: 3
+  icon: {fileID: 0}
+  inspectionPrefab: {fileID: 1099896130524800628, guid: f38fb8768f077ff408fbc4c87cc9e936, type: 3}
+  inspectionRotation: {x: 0, y: 25, z: 0}
+  pickupPrefab: {fileID: 7458611447525689877, guid: f38fb8768f077ff408fbc4c87cc9e936, type: 3}
+  height: 1
+  width: 1
+  allowRotation: 1
+  maxStack: 1
+  weaponType: 0
+  weaponVisualPrefab: {fileID: 0}
+  startingMagazineAmmo: 0
+  startingReserveAmmo: 0
+  ammoAmount: 0
+  healType: 0
+  healAmount: 0

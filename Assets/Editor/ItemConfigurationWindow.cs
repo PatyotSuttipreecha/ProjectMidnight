@@ -109,7 +109,11 @@ public class ItemConfigurationWindow : EditorWindow
         else if (type == ItemType.Ammo)
         { Section("กระสุน"); Field("weaponType", "ใช้กับปืนประเภท"); Integer("ammoAmount", "จำนวนกระสุนต่อแพ็ก", 1, int.MaxValue); }
         else if (type == ItemType.Health)
-        { Section("การรักษา"); Field("healType", "ประเภทของยา"); Integer("healAmount", "ค่ารักษาต่อชิ้น", 1, int.MaxValue); }
+        {
+            Section("Healing"); Field("healType", "Heal type"); Integer("healAmount", "Total healing (HP)", 1, int.MaxValue);
+            Field("healDuration", "Healing duration (s, 0 = instant)");
+            if (item.healDuration > 0) Field("healTickInterval", "Tick interval (s)");
+        }
         if (settings.ApplyModifiedProperties()) EditorUtility.SetDirty(item);
         if (item.pickupPrefab == null) EditorGUILayout.HelpBox("ยังทิ้งลงพื้นไม่ได้ เพราะไม่มี Pickup Prefab", MessageType.Warning);
         else if (item.pickupPrefab.itemData != item) EditorGUILayout.HelpBox("Pickup Prefab อ้างถึง ItemSO คนละตัว ตรวจให้ตรงกันก่อนวางของในฉาก", MessageType.Warning);

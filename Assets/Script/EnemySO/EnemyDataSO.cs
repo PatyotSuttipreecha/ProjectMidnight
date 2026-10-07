@@ -8,6 +8,19 @@ public class EnemyDataSO : ScriptableObject
     [Range(1f, 50f)] public float detectionRadius = 12f;
     [Range(0f, 180f)] public float fieldOfView = 90f;
     public LayerMask obstacleMask;
+    [Header("Hearing")]
+    public bool canHear = true;
+    [Min(0)] public float hearingMultiplier = 1f;
+    [Min(0)] public float walkHearingRadius = 3f;
+    [Min(0)] public float runHearingRadius = 8f;
+    [Min(0)] public float gunshotHearingRadius = 25f;
+    public float HearingRadius(GameplayNoise.Kind kind)
+    {
+        float radius = kind == GameplayNoise.Kind.Walk ? walkHearingRadius : kind == GameplayNoise.Kind.Run ? runHearingRadius : gunshotHearingRadius;
+        return canHear ? Mathf.Max(0, radius) * Mathf.Max(0, hearingMultiplier) : 0;
+    }
+    [Min(.1f)] public float noiseSearchDuration = 3f;
+    [Min(1)] public float noiseTravelTimeout = 15f;
 
     [Header("Patrol Settings")]
     [Range(0.5f, 10f)] public float waitTimeAtPoint = 2f;

@@ -13,6 +13,19 @@ public class InventoryManager : MonoBehaviour
     public event Action OnInventoryChanged;
     public void NotifyEquipmentChanged() => OnInventoryChanged?.Invoke();
 
+    public bool TryUseKey(ItemSO key, bool consume)
+    {
+        if (key == null || key.itemType != ItemType.Key || inventoryGrid == null) return false;
+        InventoryItemData found = null;
+        foreach (var item in placedPositions.Keys)
+            if (item.itemSO == key && item.quantity > 0) { found = item; break; }
+        if (found == null) return false;
+        if (!consume) return true;
+        if (--found.quantity == 0) { inventoryGrid.ClearItem(found); placedPositions.Remove(found); }
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
     [HideInInspector] public InventoryGrid inventoryGrid;
 
     // mapping for UI creation (inventoryUI uses this)
@@ -140,12 +153,7 @@ public class InventoryManager : MonoBehaviour
                 Debug.Log($"Use {item.ItemName} heal {item.itemSO.healAmount}");
 
                 PlayerController player = PlayerController.instance;
-                if (player == null || player.currentHealth <= 0f || player.currentHealth >= player.maxHealth || item.itemSO.healAmount <= 0) return;
-
-
-                player.currentHealth += item.itemSO.healAmount;
-
-                player.currentHealth = Mathf.Clamp(player.currentHealth, 0, player.maxHealth);
+                if (player == null || !player.TryUseHealing(item.itemSO)) return;
                 break;
             case ItemType.Weapon:
                 if (PlayerController.instance != null) PlayerController.instance.TryEquipWeapon(item);
