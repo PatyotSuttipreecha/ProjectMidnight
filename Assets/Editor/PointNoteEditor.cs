@@ -11,12 +11,11 @@ public class PointNoteEditor : Editor
         serializedObject.Update();
         using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
         {
-            DrawPropertiesExcluding(serializedObject, "m_Script", "missionId", "objectiveId", "objectiveType", "objectiveDescription", "requiredCount", "optionalObjective", "objectives", "showObjectiveLinks", "linksOnlyWhenSelected", "showLinkLabels", "maxVisibleLinks", "prerequisiteObjectives", "showPrerequisiteLinks");
+            DrawPropertiesExcluding(serializedObject, "m_Script", "missionId", "missionDescription", "objectiveId", "objectiveType", "objectiveDescription", "requiredCount", "optionalObjective", "objectives", "showObjectiveLinks", "linksOnlyWhenSelected", "showLinkLabels", "maxVisibleLinks", "prerequisiteObjectives", "showPrerequisiteLinks");
             var note = (PointNote)target;
             var type = (PointNote.PointType)serializedObject.FindProperty("pointType").enumValueIndex;
             if (HasMissionDesign(type))
-                foreach (var field in new[] { "missionId", "objectiveId", "objectiveType", "objectiveDescription", "requiredCount", "optionalObjective" })
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty(field), true);
+                DrawDesignFields(serializedObject, type);
             if (type == PointNote.PointType.Mission)
                 DrawMissionFields(serializedObject);
             if (type == PointNote.PointType.Objective)
@@ -29,6 +28,16 @@ public class PointNoteEditor : Editor
 
     public static bool HasMissionDesign(PointNote.PointType type) =>
         type == PointNote.PointType.Mission || type == PointNote.PointType.Objective || type == PointNote.PointType.Puzzle;
+
+    public static void DrawDesignFields(SerializedObject data, PointNote.PointType type)
+    {
+        EditorGUILayout.PropertyField(data.FindProperty("missionId"));
+        if (type == PointNote.PointType.Mission)
+            EditorGUILayout.PropertyField(data.FindProperty("missionDescription"), true);
+        else
+            foreach (var field in new[] { "objectiveId", "objectiveType", "objectiveDescription", "requiredCount", "optionalObjective" })
+                EditorGUILayout.PropertyField(data.FindProperty(field), true);
+    }
 
     public static void DrawPrerequisiteFields(SerializedObject data)
     {

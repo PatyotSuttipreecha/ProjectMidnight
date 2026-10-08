@@ -14,6 +14,7 @@ public class PointNote : MonoBehaviour
     [TextArea(4, 20)] public string note;
     [Header("Mission / Objective Design")]
     public string missionId;
+    [TextArea(3, 8)] public string missionDescription;
     public string objectiveId;
     public ObjectiveType objectiveType;
     [TextArea(2, 5)] public string objectiveDescription;
@@ -101,6 +102,12 @@ public class PointNote : MonoBehaviour
             bool selected = UnityEditor.Selection.Contains(gameObject);
             foreach (var prerequisite in prerequisiteObjectives)
                 if (prerequisite != null && UnityEditor.Selection.Contains(prerequisite.gameObject)) selected = true;
+            foreach (var selectedObject in UnityEditor.Selection.gameObjects)
+            {
+                var mission = selectedObject.GetComponent<PointNote>();
+                if (mission != null && mission.pointType == PointType.Mission && mission.gameObject.scene == gameObject.scene && mission.objectives != null && System.Array.IndexOf(mission.objectives, this) >= 0)
+                    selected = true;
+            }
             if (!selected) return;
         }
         int count = 0;

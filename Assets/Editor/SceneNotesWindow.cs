@@ -124,7 +124,7 @@ public class SceneNotesWindow : EditorWindow
                 {
                     if (entry.note == null || statusFilter > 0 && (int)entry.note.status != statusFilter - 1) continue;
                     if (typeFilter > 0 && (int)entry.note.pointType != typeFilter - 1) continue;
-                    string content = entry.note.title + " " + entry.note.note + " " + entry.location + " " + entry.hierarchy + " " + entry.note.pointType + " " + entry.note.missionId + " " + entry.note.objectiveId + " " + entry.note.objectiveDescription + " " + (entry.note.relatedItem != null ? entry.note.relatedItem.itemName : "") + " " + (entry.note.relatedDocument != null ? entry.note.relatedDocument.title : "");
+                    string content = entry.note.title + " " + entry.note.note + " " + entry.location + " " + entry.hierarchy + " " + entry.note.pointType + " " + entry.note.missionId + " " + entry.note.objectiveId + " " + entry.note.missionDescription + " " + entry.note.objectiveDescription + " " + (entry.note.relatedItem != null ? entry.note.relatedItem.itemName : "") + " " + (entry.note.relatedDocument != null ? entry.note.relatedDocument.title : "");
                     if (!string.IsNullOrWhiteSpace(search) && content.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     shown++;
                     entry.hierarchy = Path(entry.note.transform);
@@ -183,8 +183,7 @@ public class SceneNotesWindow : EditorWindow
             {
                 EditorGUILayout.LabelField("Mission / Objective Design", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox("Authoring metadata only. Status tracks design work, not mission progress in gameplay.", MessageType.Info);
-                foreach (var field in new[] { "missionId", "objectiveId", "objectiveType", "objectiveDescription", "requiredCount", "optionalObjective" })
-                    EditorGUILayout.PropertyField(data.FindProperty(field), true);
+                PointNoteEditor.DrawDesignFields(data, type);
                 if (type == PointNote.PointType.Mission) PointNoteEditor.DrawMissionFields(data);
                 if (type == PointNote.PointType.Objective) PointNoteEditor.DrawPrerequisiteFields(data);
             }
