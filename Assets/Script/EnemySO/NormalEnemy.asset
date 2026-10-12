@@ -24,6 +24,13 @@ MonoBehaviour:
   gunshotHearingRadius: 15
   noiseSearchDuration: 3
   noiseTravelTimeout: 15
+  spreadChaseTargets: 1
+  chaseApproachRadius: 2
+  chaseRepathInterval: 0.2
+  varyAvoidancePriority: 1
+  separateNearbyEnemies: 1
+  separationRadius: 2
+  separationSpeed: 0.75
   waitTimeAtPoint: 5
   lostSightCooldown: 5
   minAttack: 20

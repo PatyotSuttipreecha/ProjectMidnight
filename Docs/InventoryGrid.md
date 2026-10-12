@@ -18,7 +18,7 @@ The existing Playground InventoryManager and InventoryUI are used directly. The 
 
 ## Item settings
 
-Select an ItemSO under Assets/Script/Inventory&ItemSO/ItemSO. Width/Height determine the footprint; Max Stack limits units per footprint. Weapons always occupy separate footprints.
+Select an ItemSO under Assets/Data/Items. Width/Height determine the footprint; Max Stack limits units per footprint. Weapons always occupy separate footprints.
 
 Examples included: Pistol 2×1, Shotgun 4×1, Bandage 1×1 (five units per stack), 9mmAmmo 1×1 (six packs per stack, ten rounds per pack).
 

@@ -9,8 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4314722801467395732}
-  - component: {fileID: 5882573652642335454}
+  - component: {fileID: 6791845788947715121}
   - component: {fileID: 6791845788947715120}
+  - component: {fileID: 5882573652642335454}
   m_Layer: 0
   m_Name: DocumentPickup
   m_TagString: Untagged
@@ -34,6 +35,69 @@ Transform:
   - {fileID: 8454988639064910612}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6791845788947715121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3440327789864042531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66f7e6dc3fd448791bcb4d9feec5d9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PointNote
+  data: {fileID: 0}
+  legacy_pointType: 3
+  legacy_title: DocumentPickup
+  legacy_status: 0
+  legacy_note: 
+  legacy_missionId: 
+  legacy_missionDescription: 
+  legacy_objectiveId: 
+  legacy_objectiveType: 0
+  legacy_objectiveDescription: 
+  legacy_requiredCount: 1
+  legacy_optionalObjective: 0
+  legacy_prerequisiteObjectives: []
+  showPrerequisiteLinks: 1
+  autoNameInHierarchy: 0
+  legacy_objectives: []
+  showObjectiveLinks: 1
+  linksOnlyWhenSelected: 1
+  showLinkLabels: 0
+  maxVisibleLinks: 20
+  legacy_relatedItem: {fileID: 0}
+  legacy_relatedDocument: {fileID: 0}
+  legacy_relatedPrefab: {fileID: 0}
+  relatedObject: {fileID: 0}
+  showGizmos: 1
+  showLabel: 1
+  showRelatedNotes: 1
+  relatedNotesOnlyWhenSelected: 0
+  maxRelatedNoteLabels: 3
+  markerSize: 0.15
+  labelSize: 8
+  labelOffset: {x: 0, y: 0.3, z: 0}
+  overrideColors: 0
+  markerColor: {r: 0, g: 1, b: 1, a: 1}
+  labelBackground: {r: 0.08, g: 0.1, b: 0.12, a: 0.95}
+  labelTextColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &6791845788947715120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3440327789864042531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 961193f62b134164abd2a86a17db4de5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DocumentPickup
+  document: {fileID: 11400000, guid: bcc72ae0dcae4bf8ba014736f2fdd104, type: 2}
+  pickupViewPrefab: {fileID: 0}
+  interactionDistance: 2.5
 --- !u!135 &5882573652642335454
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -55,20 +119,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.3
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6791845788947715120
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3440327789864042531}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 961193f62b134164abd2a86a17db4de5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DocumentPickup
-  document: {fileID: 11400000, guid: bcc72ae0dcae4bf8ba014736f2fdd104, type: 2}
-  collectKey: 102
 --- !u!1001 &5515522091109281563
 PrefabInstance:
   m_ObjectHideFlags: 0

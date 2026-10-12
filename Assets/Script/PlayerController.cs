@@ -12,6 +12,14 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     public float moveSpeed = 2f;
     public float sprintBonus = 2f;
+    [System.NonSerialized] public float cheatSprintMultiplier = 1f;
+    [System.NonSerialized] public float cheatFlySpeed = 8f;
+    public bool CheatFlying { get; private set; }
+    public void SetCheatFlying(bool enabled)
+    {
+        CheatFlying = enabled && (Application.isEditor || Debug.isDebugBuild) && currentHealth > 0;
+        verticalSpeed = 0f;
+    }
     [Tooltip("Gravity applied by the CharacterController movement system.")]
     public float gravity = -20f;
     [Header("Enemy Hearing: Movement Noise")]
@@ -42,6 +50,8 @@ public class PlayerController : MonoBehaviour
     private bool[] savedCameraInputEnabled;
 
     [Header("Weapon Settings")]
+    [Tooltip("Optional shared weapon crosshair. Empty resolves the single Crosshair in this player's scene, including inactive UI.")]
+    public Crosshair weaponCrosshair;
     [Tooltip("0 = NoWeapon, 1 = Knife, 2 = Pistol, 3 = Shotgun")]
     public int weaponType = 0;
     [Tooltip("Time to raise or lower the aiming animation layer. Weapon selection remains immediate.")]
@@ -90,7 +100,21 @@ public class PlayerController : MonoBehaviour
     private int modalDepth;
     private CursorLockMode modalCursorLock;
     private bool modalCursorVisible;
-    public bool IsGameplayInputBlocked => isCheckInventory || modalDepth > 0;
+    private readonly System.Collections.Generic.HashSet<object> inputLockOwners = new System.Collections.Generic.HashSet<object>();
+    public bool IsGameplayInputBlocked => isCheckInventory || modalDepth > 0 || inputLockOwners.Count > 0;
+    public bool IsCutsceneInputLocked => inputLockOwners.Count > 0;
+    public void LockGameplayInput(object owner)
+    {
+        if (owner == null || !inputLockOwners.Add(owner)) return;
+        isAiming = false;
+        if (animator != null) animator.SetFloat("Speed", 0f);
+        SuspendCameraLook();
+    }
+    public void UnlockGameplayInput(object owner)
+    {
+        if (owner == null || !inputLockOwners.Remove(owner)) return;
+        if (inputLockOwners.Count == 0 && modalDepth == 0 && !isCheckInventory) RestoreCameraLook();
+    }
     public void BeginDocumentModal()
     {
         if (modalDepth++ > 0) return;
@@ -101,7 +125,7 @@ public class PlayerController : MonoBehaviour
     {
         modalDepth = Mathf.Max(0, modalDepth - 1);
         if (modalDepth > 0) return;
-        if (!isCheckInventory) RestoreCameraLook();
+        if (!isCheckInventory && inputLockOwners.Count == 0) RestoreCameraLook();
         Cursor.lockState = modalCursorLock; Cursor.visible = modalCursorVisible;
     }
 
@@ -110,6 +134,9 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         instance = this;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (GetComponent<CheatMenu>() == null) gameObject.AddComponent<CheatMenu>();
+#endif
         if (GetComponent<PlayerInteraction>() == null) gameObject.AddComponent<PlayerInteraction>();
         // CharacterController owns movement; a Rigidbody is only needed for trigger detection.
         if (TryGetComponent<Rigidbody>(out var body))
@@ -128,6 +155,7 @@ public class PlayerController : MonoBehaviour
 
         if (cineCamera == null)
             cineCamera = FindFirstObjectByType<CinemachineCamera>();
+        if (IsGameplayInputBlocked) { RestoreCameraLook(); SuspendCameraLook(); }
 
         if (Camera.main != null && Camera.main.TryGetComponent<CinemachineBrain>(out var brain))
         {
@@ -144,6 +172,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         animationRigBuilder = GetComponent<RigBuilder>();
 
+        ConfigureWeaponCrosshairs();
         WeaponSwitcherIndex(0);
         StartCoroutine(RegisterStartingWeapons());
 
@@ -156,6 +185,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // Timeline owns character pose/placement while a cutscene lock is held.
+        if (IsCutsceneInputLocked) { isAiming = false; return; }
         if (modalDepth > 0)
         {
             isAiming = false; SuppressWeaponPose(); animator.SetFloat("Speed", 0f);
@@ -187,6 +218,21 @@ public class PlayerController : MonoBehaviour
 
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
+        if (CheatFlying)
+        {
+            verticalSpeed = 0f;
+            float up = (Input.GetKey(KeyCode.Space) ? 1f : 0f) -
+                (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ? 1f : 0f);
+            Vector3 flight = Vector3.ClampMagnitude(camTransform.right * moveX + camTransform.forward * moveZ + Vector3.up * up, 1f);
+            float speed = Mathf.Clamp(cheatFlySpeed, 1f, 50f) * (Input.GetKey(KeyCode.LeftShift) ? 2f : 1f);
+            if (controller != null && controller.enabled) controller.Move(flight * speed * Time.deltaTime);
+            if (animator != null)
+            {
+                animator.SetFloat("Speed", 0f);
+                animator.SetFloat("Horizontal", 0f); animator.SetFloat("Vertical", 0f);
+            }
+            return;
+        }
 
         // เดินอิงจากมุมกล้อง
         Vector3 move = camTransform.right * moveX + camTransform.forward * moveZ;
@@ -210,6 +256,7 @@ public class PlayerController : MonoBehaviour
         else if (isRunning)
         {
             currentSpeed += sprintBonus;
+            currentSpeed *= Mathf.Clamp(cheatSprintMultiplier, 1f, 10f);
             speedPercent = 1f;     // Animator: Run
         }
         else if (isMoving)
@@ -265,6 +312,8 @@ public class PlayerController : MonoBehaviour
     private void ApplyGravity(Vector3 horizontalVelocity)
     {
         if (controller == null || !controller.enabled) return;
+        if (CheatFlying && currentHealth > 0) { verticalSpeed = 0f; return; }
+        if (CheatFlying) SetCheatFlying(false);
         if (controller.isGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
         verticalSpeed = Mathf.Max(-50f, verticalSpeed + Mathf.Min(-.01f, gravity) * Time.deltaTime);
         controller.Move((horizontalVelocity + Vector3.up * verticalSpeed) * Time.deltaTime);
@@ -417,6 +466,35 @@ public class PlayerController : MonoBehaviour
     {
         if (weaponInventory != null) weaponInventory.OnInventoryChanged -= ValidateEquippedWeapon;
         if (instance == this) instance = null;
+    }
+    private void ConfigureWeaponCrosshairs()
+    {
+        if (weapons == null) return;
+        if (weaponCrosshair == null)
+        {
+            var local = GetComponentsInChildren<Crosshair>(true);
+            if (local.Length == 1) weaponCrosshair = local[0];
+            else if (local.Length == 0)
+            {
+                foreach (var candidate in FindObjectsByType<Crosshair>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (candidate.gameObject.scene != gameObject.scene) continue;
+                    if (weaponCrosshair != null)
+                    {
+                        weaponCrosshair = null;
+                        Debug.LogWarning("Multiple Crosshair objects found. Assign Weapon Crosshair on PlayerController explicitly.", this);
+                        break;
+                    }
+                    weaponCrosshair = candidate;
+                }
+            }
+        }
+        foreach (var weapon in weapons)
+        {
+            if (weapon == null) continue;
+            foreach (var gun in weapon.GetComponentsInChildren<Guns>(true))
+                if (gun.crosshairUI == null) gun.crosshairUI = weaponCrosshair;
+        }
     }
     void WeaponSwitcherIndex(int index)
     {
@@ -609,7 +687,7 @@ public class PlayerController : MonoBehaviour
         }
         isCheckInventory = false;
         inventoryClosing = false;
-        RestoreCameraLook();
+        if (modalDepth == 0 && inputLockOwners.Count == 0) RestoreCameraLook();
     }
 
     private void SuspendCameraLook()
@@ -659,7 +737,7 @@ public class PlayerController : MonoBehaviour
     }
     private void OnDisable()
     {
-        RestoreCameraLook();
+        if (inputLockOwners.Count == 0) RestoreCameraLook();
         if (healingRoutine != null) StopCoroutine(healingRoutine);
         healingRoutine = null; IsHealingOverTime = false;
     }

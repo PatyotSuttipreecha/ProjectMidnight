@@ -10,6 +10,8 @@ public class EnemyController : MonoBehaviour
     public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction }
     public EnemyState CurrentState { get; private set; }
     public bool IsDead { get; private set; }
+    // Raised once after death setup, before the corpse is removed.
+    public event System.Action<EnemyController> Died;
     [Header("References")]
     public EnemyDataSO enemyData;
     [SerializeField] private Transform player;
@@ -17,6 +19,10 @@ public class EnemyController : MonoBehaviour
     private Animator animator;
 
     [Header("Patrol Settings")]
+    [Tooltip("Disable for cutscene actors. The enemy waits without patrol, sight or hearing reactions until StartPatrol is called.")]
+    public bool startPatrolOnStart = true;
+    [field: SerializeField, HideInInspector]
+    public bool IsPatrolRunning { get; private set; }
     [SerializeField, HideInInspector] private Transform[] patrolPoints;
     [SerializeField] private PatrolRoute patrolRoute;
     public PatrolRoute Route => patrolRoute;
@@ -24,6 +30,11 @@ public class EnemyController : MonoBehaviour
     private int patrolDirection = 1;
     private int lastPatrolIndex = -1;
     private float waitTimer;
+    private static int nextApproachSlot;
+    private Vector3 approachDirection;
+    private float nextChaseRepath;
+    private NavMeshPath approachPath;
+    private static readonly HashSet<EnemyController> activeEnemies = new HashSet<EnemyController>();
     private bool returningToPatrol;
     private readonly List<int> validPatrolIndices = new List<int>();
 
@@ -65,6 +76,9 @@ public class EnemyController : MonoBehaviour
     [SerializeField, HideInInspector, Min(0f)] private float hitAnimationSupport = 30f;
     [SerializeField, HideInInspector, Range(0f, 60f)] private float hitMaxAngle = 25f;
     private EnemyHitReaction hitReaction;
+    private Coroutine attackRoutine;
+    private float staggerRemaining, knockbackRemaining;
+    private Vector3 knockbackVelocity;
     private Rigidbody[] deathBodies;
     [SerializeField, HideInInspector, Min(0f)] private float corpseSettleDelay = 0.75f;
     private float corpseStillTime;
@@ -108,10 +122,49 @@ public class EnemyController : MonoBehaviour
         if (sourceRadius <= 0 || enemyData == null) return 0;
         return Mathf.Min(sourceRadius * Mathf.Max(0, enemyData.hearingMultiplier), enemyData.HearingRadius(kind));
     }
-    private void OnEnable() => GameplayNoise.Emitted += HearNoise;
+    private void OnEnable()
+    {
+        activeEnemies.Add(this);
+        GameplayNoise.Emitted += HearNoise;
+    }
+    private void LateUpdate() => ApplyCrowdSeparation(Time.deltaTime);
+    private void ApplyCrowdSeparation(float deltaTime)
+    {
+        if (IsDead || !IsPatrolRunning || isAttacking || !AgentReady || agent.isStopped ||
+            enemyData == null || !enemyData.separateNearbyEnemies || deltaTime <= 0f) return;
+        float radius = Mathf.Max(.1f, enemyData.separationRadius);
+        Vector3 push = Vector3.zero;
+        foreach (var other in activeEnemies)
+        {
+            if (other == null || other == this || other.IsDead || !other.AgentReady ||
+                other.gameObject.scene != gameObject.scene || Mathf.Abs(other.transform.position.y - transform.position.y) > .75f) continue;
+            Vector3 away = Vector3.ProjectOnPlane(transform.position - other.transform.position, Vector3.up);
+            float distance = away.magnitude;
+            if (distance >= radius) continue;
+            if (distance < .001f)
+            {
+                // Give overlapping pairs opposite directions, without fresh random jitter.
+                int mine = GetInstanceID(), theirs = other.GetInstanceID();
+                float angle = (Mathf.Min(mine, theirs) % 360) * Mathf.Deg2Rad;
+                away = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * (mine < theirs ? 1 : -1);
+            }
+            else away /= distance;
+            push += away * (1f - distance / radius);
+        }
+        Vector3 step = Vector3.ClampMagnitude(push, 1f) * Mathf.Min(Mathf.Max(0f, enemyData.separationSpeed), agent.speed) * deltaTime;
+        if (step.sqrMagnitude < .000001f) return;
+        Vector3 destination = agent.nextPosition + step;
+        // Clip against NavMesh boundaries; never push through a wall or off an edge.
+        if (agent.Raycast(destination, out var edge))
+        {
+            Vector3 safe = Vector3.ProjectOnPlane(edge.position - agent.nextPosition, Vector3.up);
+            step = Vector3.ClampMagnitude(safe, Mathf.Max(0f, safe.magnitude - .02f));
+        }
+        agent.Move(step);
+    }
     private void HearNoise(Vector3 position, float radius, Transform source, GameplayNoise.Kind kind)
     {
-        if (IsDead || enemyData == null || !enemyData.canHear || !AgentReady || source == null || source.GetComponent<PlayerController>() == null) return;
+        if (IsDead || !IsPatrolRunning || enemyData == null || !enemyData.canHear || !AgentReady || source == null || source.GetComponent<PlayerController>() == null) return;
         float hearingRadius = EffectiveHearingRadius(radius, kind);
         if (hearingRadius <= 0 || Vector3.Distance(EyePosition, position) > hearingRadius) return;
         // Sight/chase takes priority; hearing never reveals a moving player's live position.
@@ -183,7 +236,13 @@ public class EnemyController : MonoBehaviour
     }
     private void Awake()
     {
+        approachPath = new NavMeshPath();
+        IsPatrolRunning = startPatrolOnStart;
         agent = GetComponent<NavMeshAgent>();
+        float angle = (++nextApproachSlot * 137.50776f) * Mathf.Deg2Rad;
+        approachDirection = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+        if (enemyData != null && enemyData.varyAvoidancePriority)
+            agent.avoidancePriority = 30 + nextApproachSlot % 40;
         animator = GetComponent<Animator>();
         ApplySharedProfile();
         if (patrolRoute != null) { patrolPoints = patrolRoute.points != null ? (Transform[])patrolRoute.points.Clone() : new Transform[0]; patrolMode = patrolRoute.mode; }
@@ -209,15 +268,65 @@ public class EnemyController : MonoBehaviour
             GameObject target = GameObject.FindWithTag("Player");
             if (target != null) player = target.transform;
         }
-        PickPatrolPoint();
+        player = ResolveTargetTransform(player);
+        if (IsPatrolRunning) PickPatrolPoint();
+        else PausePatrol();
+    }
+
+    public void StartPatrol()
+    {
+        if (IsDead || IsPatrolRunning) return;
+        IsPatrolRunning = true;
+        returningToPatrol = true;
+        waitTimer = 0f;
+        if (AgentReady) agent.isStopped = false;
+    }
+
+    public void PausePatrol()
+    {
+        if (IsDead) return;
+        IsPatrolRunning = false;
+        StopAllCoroutines(); // Only attack routines run while this enemy is alive.
+        attackRoutine = null;
+        staggerRemaining = knockbackRemaining = 0f;
+        isAttacking = isAlert = playerDetected = investigatingNoise = false;
+        returningToPatrol = true;
+        waitTimer = 0f;
+        if (AgentReady) { agent.isStopped = true; agent.ResetPath(); }
+        CurrentState = EnemyState.Idle;
+        PlayAnimation(Idle);
     }
 
     private void Update()
     {
         if (massRefreshRequested) ApplyPhysicsMass();
         if (IsDead) return;
+        if (!IsPatrolRunning)
+        {
+            if (AgentReady) agent.isStopped = true;
+            return;
+        }
         attackTimer = Mathf.Max(0f, attackTimer - Time.deltaTime);
         if (enemyData == null || !AgentReady) return;
+        if (staggerRemaining > 0f || knockbackRemaining > 0f)
+        {
+            staggerRemaining = Mathf.Max(0f, staggerRemaining - Time.deltaTime);
+            agent.isStopped = true;
+            CurrentState = EnemyState.HitReaction;
+            if (knockbackRemaining > 0f)
+            {
+                float stepTime = Mathf.Min(Time.deltaTime, knockbackRemaining);
+                knockbackRemaining = Mathf.Max(0f, knockbackRemaining - stepTime);
+                Vector3 step = knockbackVelocity * stepTime;
+                if (agent.Raycast(agent.nextPosition + step, out var edge))
+                {
+                    Vector3 safe = Vector3.ProjectOnPlane(edge.position - agent.nextPosition, Vector3.up);
+                    step = Vector3.ClampMagnitude(safe, Mathf.Max(0f, safe.magnitude - .02f));
+                }
+                agent.Move(step);
+            }
+            return;
+        }
         playerDetected = CanSeePlayer();
         if (playerDetected)
         {
@@ -238,14 +347,24 @@ public class EnemyController : MonoBehaviour
         }
 
         if (isAttacking) return;
+        UpdateMovementSpeed();
         agent.isStopped = false;
         if (isAlert)
         {
             CurrentState = playerDetected ? EnemyState.Chase : EnemyState.Search;
-            agent.SetDestination(lastKnownPlayerPosition);
-            PlayAnimation(agent.pathPending || agent.remainingDistance > agent.stoppingDistance + 0.1f ? Walk : Idle);
-            if (playerDetected && attackTimer <= 0f && InAttackRange())
-                StartCoroutine(PerformAttack());
+            // Attack needs reach and clear sight, not the patrol vision cone.
+            // A nearby player can be beside the enemy after an avoidance manoeuvre.
+            if (attackTimer <= 0f && InAttackRange())
+            {
+                attackRoutine = StartCoroutine(PerformAttack());
+                return;
+            }
+            if (!agent.pathPending && Time.time >= nextChaseRepath)
+            {
+                nextChaseRepath = Time.time + Mathf.Max(.05f, enemyData.chaseRepathInterval);
+                SetChaseDestination();
+            }
+            PlayLocomotion(agent.pathPending || agent.remainingDistance > agent.stoppingDistance + 0.1f);
         }
         else
         {
@@ -263,15 +382,84 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    private void UpdateMovementSpeed()
+    {
+        float speed = Mathf.Max(0f, enemyData.walkSpeed);
+        if (isAlert && playerDetected && player != null)
+        {
+            float distance = Vector3.Distance(transform.position, player.position);
+            float range = Mathf.Max(0f, enemyData.attackRange);
+            float outer = Mathf.Max(range + .01f, enemyData.chaseSlowdownDistance);
+            float blend = Mathf.InverseLerp(range, outer, distance);
+            speed = Mathf.Lerp(Mathf.Max(0f, enemyData.closeApproachSpeed), Mathf.Max(0f, enemyData.chaseSpeed), blend);
+        }
+        agent.speed = Mathf.MoveTowards(agent.speed, speed, Mathf.Max(.1f, enemyData.speedChangeRate) * Time.deltaTime);
+    }
+
+    private void PlayLocomotion(bool moving)
+    {
+        if (!moving) { PlayAnimation(Idle); return; }
+        if (playerDetected && isAlert && agent.velocity.magnitude > enemyData.walkSpeed + .2f &&
+            animator != null && !string.IsNullOrWhiteSpace(enemyData.runAnimation))
+        {
+            int run = Animator.StringToHash(enemyData.runAnimation);
+            if (animator.HasState(0, run)) { PlayAnimation(run); return; }
+        }
+        PlayAnimation(Walk);
+    }
+
     public void AlertTo(Transform source)
     {
-        if (IsDead) return;
-        if (source != null) player = source;
+        if (IsDead || !IsPatrolRunning) return;
+        if (source != null) player = ResolveTargetTransform(source);
         if (player == null) return;
         isAlert = true;
         lostSightTimer = 0f;
         waitTimer = 0f;
         lastKnownPlayerPosition = player.position;
+        nextChaseRepath = 0f;
+    }
+
+    private static Transform ResolveTargetTransform(Transform target)
+    {
+        if (target == null) return null;
+        var controller = target.GetComponentInParent<PlayerController>();
+        if (controller == null) controller = target.GetComponentInChildren<PlayerController>();
+        return controller != null ? controller.transform : target;
+    }
+
+    private void SetChaseDestination()
+    {
+        if (approachPath == null) approachPath = new NavMeshPath();
+        // Search uses the last seen position; offset only a currently visible target.
+        float targetDistance = Vector3.ProjectOnPlane(lastKnownPlayerPosition - transform.position, Vector3.up).magnitude;
+        if (playerDetected && enemyData.spreadChaseTargets &&
+            targetDistance > enemyData.attackRange + agent.stoppingDistance + .5f)
+        {
+            // Allow for the agent's stopping distance so the enemy can still reach attack range.
+            float radius = Mathf.Min(Mathf.Max(0f, enemyData.chaseApproachRadius),
+                Mathf.Max(0f, enemyData.attackRange - agent.stoppingDistance - .25f));
+            // Approach from this enemy's side; a fixed world-space slot could
+            // send it around/behind the player and out of its own vision cone.
+            Vector3 towardEnemy = Vector3.ProjectOnPlane(transform.position - lastKnownPlayerPosition, Vector3.up).normalized;
+            Vector3 direction = Quaternion.AngleAxis(approachDirection.x * 35f, Vector3.up) * towardEnemy;
+            Vector3 desired = lastKnownPlayerPosition + direction * radius;
+            if (radius > 0f && NavMesh.SamplePosition(desired, out var hit, .5f, agent.areaMask) &&
+                Mathf.Abs(hit.position.y - lastKnownPlayerPosition.y) < .75f &&
+                Vector3.Distance(hit.position, lastKnownPlayerPosition) + agent.stoppingDistance < enemyData.attackRange &&
+                agent.CalculatePath(hit.position, approachPath) && approachPath.status == NavMeshPathStatus.PathComplete)
+            {
+                // Do not replace the active path every interval: it can repeatedly
+                // restart acceleration while many agents are avoiding each other.
+                if (!agent.hasPath || (agent.destination - hit.position).sqrMagnitude > .04f)
+                    agent.SetDestination(hit.position);
+                return;
+            }
+        }
+        // Narrow paths or blocked approach positions retain the normal reachable chase behavior.
+        // Close pursuit uses the player directly so offset slots cannot leave
+        // the agent idle just outside attack range.
+        agent.SetDestination(lastKnownPlayerPosition);
     }
 
     private void PickPatrolPoint()
@@ -364,13 +552,30 @@ public class EnemyController : MonoBehaviour
         isAttacking = true;
         CurrentState = EnemyState.Attack;
         agent.isStopped = true;
-        attackTimer = Mathf.Max(attackWindup, enemyData.attackCooldown);
+        float preparation = Mathf.Max(0f, enemyData.attackPreparationTime);
+        attackTimer = Mathf.Max(preparation + attackWindup, enemyData.attackCooldown);
+        if (preparation > 0f)
+        {
+            PlayAnimation(Idle);
+            yield return new WaitForSeconds(preparation);
+            if (!InAttackRange())
+            {
+                isAttacking = false;
+                if (AgentReady) agent.isStopped = false;
+                animationState = 0;
+                yield break;
+            }
+        }
         Vector3 facing = Vector3.ProjectOnPlane(player.position - transform.position, Vector3.up);
         if (facing.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(facing);
         PlayAnimation(Attack);
         yield return new WaitForSeconds(attackWindup);
-        if (InAttackRange() && player.TryGetComponent(out PlayerController controller))
-            controller.TakeDamage(Random.Range(enemyData.minAttack, enemyData.maxAttack));
+        if (InAttackRange())
+        {
+            var target = ResolveTargetTransform(player);
+            if (target != null && target.TryGetComponent(out PlayerController controller))
+                controller.TakeDamage(Random.Range(enemyData.minAttack, enemyData.maxAttack));
+        }
         // Recover once; cooldown is measured from attack start, not counted twice.
         while (attackTimer > 0f) yield return null;
         isAttacking = false;
@@ -387,11 +592,14 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        activeEnemies.Remove(this);
         GameplayNoise.Emitted -= HearNoise;
         investigatingNoise = false;
         if (!IsDead && hitReaction != null) hitReaction.Cancel();
         StopAllCoroutines();
         isAttacking = false;
+        attackRoutine = null;
+        staggerRemaining = knockbackRemaining = 0f;
         animationState = 0;
         if (!IsDead && AgentReady) agent.isStopped = false;
     }
@@ -445,6 +653,7 @@ public class EnemyController : MonoBehaviour
         }
         // Zero keeps the corpse indefinitely.
         if (corpseLifetime > 0f) Destroy(gameObject, corpseLifetime);
+        Died?.Invoke(this);
     }
 
     private IEnumerator ReleaseDeathRagdoll(Rigidbody[] bodies)
@@ -571,6 +780,22 @@ public class EnemyController : MonoBehaviour
     public void ReceiveBulletImpact(Collider collider, Vector3 point, Vector3 direction)
     {
         if (collider == null || direction.sqrMagnitude < 0.001f) return;
+        if (!IsDead && enableHitReaction && enemyData != null && IsPatrolRunning)
+        {
+            float stagger = Mathf.Max(0f, enemyData.hitStaggerDuration);
+            float push = Mathf.Max(0f, enemyData.hitKnockbackDistance);
+            if (stagger > 0f || push > 0f)
+            {
+                if (attackRoutine != null) { StopCoroutine(attackRoutine); attackRoutine = null; }
+                isAttacking = false;
+                staggerRemaining = Mathf.Max(staggerRemaining, stagger);
+                knockbackRemaining = push > 0f ? Mathf.Max(.02f, enemyData.hitKnockbackDuration) : 0f;
+                knockbackVelocity = knockbackRemaining > 0f ? Vector3.ProjectOnPlane(direction, Vector3.up).normalized * push / knockbackRemaining : Vector3.zero;
+                CurrentState = EnemyState.HitReaction;
+                if (AgentReady) agent.isStopped = true;
+                PlayAnimation(Idle);
+            }
+        }
         Rigidbody body = collider.attachedRigidbody;
         if (body == null || body.transform == transform) return;
         if (!IsDead && body.GetComponent<Joint>() == null)
@@ -629,8 +854,11 @@ public class EnemyController : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position + Vector3.up * 2.2f, 0.3f);
 #if UNITY_EDITOR
         UnityEditor.Handles.color = Gizmos.color;
+        string stateLabel = CurrentState.ToString();
+        if (Application.isPlaying && !IsDead)
+            stateLabel = !IsPatrolRunning ? "Waiting for StartPatrol" : enemyData == null ? "Missing Profile" : !AgentReady ? "Agent not on NavMesh" : stateLabel;
         UnityEditor.Handles.Label(transform.position + Vector3.up * 2.6f,
-            name + " | " + (Application.isPlaying ? CurrentState.ToString() : patrolMode.ToString()), LabelStyle(Gizmos.color));
+            name + " | " + (Application.isPlaying ? stateLabel : patrolMode.ToString()), LabelStyle(Gizmos.color));
 #endif
         List<Transform> points = new List<Transform>();
         if (patrolPoints != null)

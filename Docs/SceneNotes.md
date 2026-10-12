@@ -1,37 +1,46 @@
-# Point Notes / Scene Notes
+# Scene Notes — game-wide data catalog
 
-Attach `PointNote` to any GameObject (Add Component > Level Design > Point Note). It is an authoring annotation, separate from collectible story documents.
+PointNoteData is the authoritative ScriptableObject record. Scene Notes lists every PointNoteData asset in the project, including unplaced records and records intended for unopened scenes. Records have a stable internal record ID, Point Type, Title, Status, Note, Location/region and Planned Scene. Mission/Objective/Puzzle fields are shown conditionally; Mission/Objective descriptions remain separate. Mission objectives and prerequisite relationships reference data assets, not scene objects. Related Item/Document/Prefab are asset references.
 
-Open `System Modification > Scene Notes`:
-- Open Scenes: notes in loaded scenes, including inactive objects and the currently open Prefab Stage
-- Prefab Assets: notes inside prefabs under the specified folder, including inactive children and nested prefabs
-- Scenes + Prefabs: both lists; scene instances and prefab source entries are intentionally separate
-- Search title, note content, hierarchy path and scene/prefab path
-- Filter status: Info / Todo / Issue / Done
-- Select an entry to see text, world/local position and hierarchy
-- Select / Frame navigates to scene objects; Open Prefab opens the source for editing; Ping locates the object/asset
-- Add Note to Selected Object attaches the component, or Create Note Point creates a marker at the Scene View pivot
+PointNote is a placement component with a Note Data reference. Its position/rotation, scene Related Object and gizmo settings are local. Multiple scene/prefab points may share one record; editing the record changes all references. Deleting a placement does not delete its record. Position and UnityEvents are never stored in the data asset. References may span chapters/scenes; Gizmos show edges only between available matching placements in the same loaded scene. For multiple placements of the same record in one scene, graph resolution uses the first matching placement.
 
-Scene note fields can be edited in this window with Undo and scene/prefab overrides. Prefab asset entries are read-only here: edit in Prefab Mode then save and Refresh. Save scenes normally (Ctrl+S) to persist notes. Search scans prefabs only when refreshing or changing scope, not every frame. Folder changes and hierarchy changes require Refresh. Unopened scene assets are not scanned.
+## Workflow
+1. Open System Modification > Scene Notes (All Game Data).
+2. Create New Note Data adds an asset under Assets/Data/PointNotes; it does not create a scene object.
+3. Set Location and Planned Scene for the intended area; use search and Location/Point Type/Status filters. List order is Mission ID (natural order), Mission before its objectives, then Objective ID/Title. Entries use two compact lines; tooltips show details.
+4. Place Note Point creates a scene placement referencing the selected record. Trigger records also offer Place Runtime Trigger. Bind Data to Selected GameObject assigns the record to an existing selected object's PointNote (adding the component if missing).
+5. A new WorldTrigger automatically has a PointNote on the same GameObject. In either Inspector, choose Note Data using the object picker, or Create Data from This Note to create/bind an asset. No separate scene Note source or position copying is needed.
+6. Edit note data through Scene Notes or the PointNote Inspector. Configure activation, volume and events separately in the WorldTrigger Inspector or Trigger Configuration.
+7. Save scenes/prefabs and assets normally. No runtime Mission completion or Save/Load is added.
 
-Gizmo colors follow Point Type. In Scene Notes, expand Point Type Colors to adjust Marker, Label background (including opacity) and Label text for each type. Settings are saved in ProjectSettings/PointNoteColors.asset and shared across scenes/prefabs. Reset restores the default for that type. Defaults use dark label backgrounds and white text. Enable Override Colors on an individual note to use its own colors. Status remains visible in the label. Show Gizmos / Show Label, marker size, label font size and offset are adjustable per note. Full note content remains in the Inspector/window to keep scene labels compact. Enable Gizmos in Scene View to see markers.
+The Loaded Placements section lists references in currently loaded scenes/Prefab Stage; absence there does not mean the record is unused across the whole project. Location/Planned Scene describe design intent, not an automatically maintained index of every physical placement in unopened scenes.
 
-Runtime/Editor compile passed. Interactive Editor operation has not been visually verified.
+## Existing notes
+Old inline serialized fields are retained as hidden compatibility fields via FormerlySerializedAs. Existing notes continue to display their previous values until linked/imported; they are not automatically overwritten by choosing a different record. Import Notes from Open Scenes creates asset records, binds current points and preserves objective/prerequisite references (including connected legacy points). It marks scene changes for saving. Create Data from This Note imports an individual note and its outgoing relationships.
 
-## Point types and mission planning
-Choose New Point Type before creating a marker, or change Point Type on an existing note. Types: General, Mission, Objective, Collectible, Loot, EnemySpawn, Patrol, Interaction, Puzzle, Trigger, Audio, SafeZone, Location. Use Point Type Filter to narrow the list.
-Mission / Objective / Puzzle notes show Mission / Objective Design fields in the Inspector and Scene Notes: Mission ID, Objective ID, objective type (Collect/Reach/Interact/ReadDocument/Defeat/Other), description, required count and optional objective. Other types hide this section; switching types preserves previously entered data. Related Content can reference ItemSO, DocumentSO, a prefab or a scene object. These fields describe the intended content; they do not spawn items, grant quests, count collections or complete missions during play.
-Example: Point Type Collectible, Mission ID M01, Objective ID M01_KEY, Objective Type Collect, Required Count 1, Related Item = door key, Note = place the key upstairs after the document clue. Several design points may share a mission ID.
-Status is the annotation's work status: Info (reference), Todo (planned work), Issue (problem to fix), Done (design work complete). Done does not mean the player completed an objective. Point Type provides the grouping/filter; Category and Tags have been removed.
-Search also includes mission/objective IDs, objective description and related item/document names.
+Import All Saved Scenes / Prefabs scans Assets for existing PointNote script references, loads matching prefabs/scenes, imports legacy records and saves the updated assets. Already linked records are reused. Open dirty scenes and the open Prefab Stage are skipped to protect unsaved work; import those separately and save normally. Import is incremental, so a failure may leave already imported records/assets in place; inspect the Console and rerun after addressing the error. Importing a scene with missing dependencies requires those dependencies to be fixed first. Old Related Object remains local; only persistent prefab references can be copied to the data asset.
 
-## Mission relationships and hierarchy names
+## Naming, status and links
+Auto Name In Hierarchy provides two-way synchronization: [PointType] Title. Renaming a linked placement changes its shared record's Title; all linked points follow. Disable the setting to keep an independent object name. Status remains authoring work status (Info/Todo/Issue/Done), never gameplay progress. Category/Tags are removed.
 
-### Objective order
-Mission points show Mission Description; Objective points show Objective Description. Puzzle points retain Objective Description. The general Note remains available on every type. These are independent serialized fields; changing Point Type does not erase either description. Scene Notes search includes both descriptions. Selecting a Mission reveals prerequisite arrows for every Objective assigned to its Objectives list, respecting each Objective's Show Gizmos, Show Prerequisite Links and Max Visible Links settings, even if the mission's dotted membership links are hidden.
-On an Objective, assign Prerequisite Objectives in the Inspector or Scene Notes. Empty means a starting objective; multiple entries mean all are required first. For A -> B -> C, leave A empty, put A in B's prerequisites, then put B in C's prerequisites. Use references to other Objective points in the same scene and with the same Mission ID. Array order alone still does not define dependencies. Solid arrows show prerequisite -> dependent; dotted arrows show Mission -> Objective membership. Selected-only display, link labels and maximum visible links can be adjusted on each Objective. Selecting a point shows its incoming links and direct dependents' links. Warnings cover empty/duplicate/self/wrong-type/cross-scene references and Mission ID mismatches; an error reports dependency cycles including indirect cycles. The Mission inspector also validates its assigned objectives. This is design metadata, not a runtime completion/unlocking system.
-Auto Name In Hierarchy updates the object's name to `[PointType] Title` when editing through the Point Note Inspector or Scene Notes. Existing untouched notes can use Sync hierarchy name and mission IDs. Disable the option to keep a custom object name. Renames and ID synchronization support Undo and prefab instance overrides.
+Mission data lists Objective Data records. Set a meaningful Mission ID; objective IDs are generated only when blank. Existing IDs are preserved. Empty Prerequisite Objectives means a starting objective; all listed prerequisites must happen first. For A -> B -> C, B references A and C references B. Validation checks distinct records, type, Mission ID consistency and cycles without needing scene placements. Dotted arrows show membership; solid arrows show prerequisite -> dependent. Selecting a placed Mission reveals its placed objectives' prerequisite links. Selected-only display, optional link labels, maximum visible links and per-type colors reduce clutter.
 
-For a Mission point, set a descriptive Mission ID (for example `M01_ESCAPE_HOSPITAL`), expand Objectives, set Size to the desired number and drag Objective Point Note components into the slots. Assigned objectives shows the valid count. Each objective belongs to one mission in the same scene or Prefab Stage. Mission ID propagates to those objectives; an empty Objective ID receives `<MissionID>_OBJ_01`, etc. Existing Objective IDs are preserved; use descriptive values such as `M01_FIND_KEY`. Duplicate references, invalid slots, duplicate Objective IDs and mismatched Mission IDs show warnings. Shared objectives with multiple owning missions are not automatically synchronized. Removing a slot removes the visual link but preserves the objective's existing IDs.
+## Primary and Related Note Data
+Point Note เลือก Primary Note Data หนึ่งรายการเพื่อกำหนดชื่อ ประเภท และสี ในข้อมูลหลักเพิ่ม Related Note Data ได้หลายรายการ เช่น Primary = cutscene_01 (Trigger) และ Related = intothewood_reach_01 (Objective) โดยไม่ต้องสร้างจุดซ้ำในฉาก
 
-Show Objective Links draws dotted arrows from mission to objectives. Links Only When Selected defaults to enabled: select the mission or one of its objectives to reveal that group's links. Show Link Labels is off by default; Max Visible Links defaults to 20. Turn off Show Objective Links or Show Gizmos to hide links entirely. Array order is a design list, not gameplay prerequisite logic. Required Count means the amount to collect/perform within one objective, not the mission's objective count. Mission references still describe design; they do not run quests during play.
+ความสัมพันธ์บันทึกใน PointNoteData กลาง จึงเห็นเหมือนกันทุกจุดที่อ้างข้อมูลหลักนี้ เปิดข้อมูลที่เกี่ยวข้องด้วยปุ่ม Open ได้ทั้งใน Point Note, Scene Notes และ Inspector ของ asset ข้อมูลที่เกี่ยวข้องยังคงมีประเภท/คำอธิบายของตัวเอง ไม่รวมเป็นข้อมูลหลัก และไม่สั่งให้ Objective สำเร็จหรือเล่น Timeline อัตโนมัติ
+
+
+### Related Notes in Scene View
+เปิด Show Gizmos, Show Label และ Show Related Notes เพื่อแสดงข้อมูลที่เกี่ยวข้องใต้ชื่อหลัก โดยแสดงประเภทและชื่อจาก Related Note Data โดยตรง ไม่ต้องมีจุดวางของข้อมูลที่เกี่ยวข้อง แสดงไม่เกิน Max Related Note Labels (ค่าเริ่มต้น 3) พร้อมจำนวนที่เหลือ ข้ามรายการว่าง/ซ้ำ/ตัวเอง หากฉากรกเปิด Related Notes Only When Selected ให้แสดงเฉพาะตอนเลือกจุด สีและชื่อ Hierarchy ยังใช้ Primary Note Data
+
+
+## Scene Configuration Menu
+เข้าเครื่องมือผ่าน System Modification > Scene Configuration > Scene Notes และสลับการแสดง Note ทั้งหมดผ่าน Show Point Notes ส่วนหน้าต่าง Trigger อยู่ที่ Scene Configuration > Triggers
+
+
+## Prefab Prefix and Data Asset Naming
+จุดที่มีชื่อขึ้นต้น Prefab_ หรือเป็น instance ของ prefab ชื่อขึ้นต้น Prefab_ จะคง prefix และเปลี่ยนเฉพาะ Title เช่น Prefab_Evidence_RinCamera -> Prefab_Evidence_RonCamera ระบบจำ prefix ใน Hierarchy Name Prefix ซึ่งแก้เองได้เมื่อชื่อมี underscore หลายส่วน จุดธรรมดายังใช้ [Point Type] Title หากชื่อจุดถูกเปลี่ยนเป็นรูปแบบเก่าแล้ว กด Sync hierarchy name เพื่อกู้ prefix จาก prefab ต้นทาง
+
+Note Data ใช้ทุกโฟลเดอร์ใต้ Assets ตามด้วย PointType และ Title เช่น Assets/Data/PointNotes/RinCamera.asset -> Data_PointNotes_Objective_RinCamera.asset เมื่อแก้ Title หรือกด Sync จึงเปลี่ยนชื่อให้ โดยไม่เปลี่ยน GUID หรือช่อง Title เป็นชื่อยาว ส่วนชื่อไฟล์ prefab ใน Project ไม่ถูกเปลี่ยนจากการแก้ชื่อ instance ในฉาก
+

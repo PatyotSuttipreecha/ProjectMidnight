@@ -168,6 +168,27 @@ public class EnemyLabWindow : EditorWindow
                 ? new SerializedObject(enemy.enemyData) : controller;
             tuning.Update();
             Section("Movement and Health");
+            if (enemy.enemyData != null)
+            {
+                var crowd = new SerializedObject(enemy.enemyData);
+                Section("Chase Movement");
+                Property(crowd, "chaseSpeed", "Chase speed (units/s)");
+                Property(crowd, "closeApproachSpeed", "Close approach speed (units/s)");
+                Property(crowd, "chaseSlowdownDistance", "Chase slowdown distance");
+                Property(crowd, "speedChangeRate", "Speed change rate");
+                Property(crowd, "chaseRepathInterval", "Chase repath interval");
+                Property(crowd, "runAnimation", "Run animation state (optional)");
+                Section("Crowd Movement - Approach");
+                Property(crowd, "spreadChaseTargets", "Spread chase targets");
+                Property(crowd, "chaseApproachRadius", "Chase approach radius");
+                Property(crowd, "varyAvoidancePriority", "Vary avoidance priority");
+                Section("Crowd Movement - Separation");
+                Property(crowd, "separateNearbyEnemies", "Separate nearby enemies");
+                Property(crowd, "separationRadius", "Separation radius (units)");
+                Property(crowd, "separationSpeed", "Separation speed (units/s)");
+                if (crowd.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
+            }
+            Section("Patrol Movement and Navigation");
             if (enemy.enemyData != null && enemy.enemyData.useSharedSettings)
             {
                 Property(tuning, "walkSpeed", "Walk speed (units/s)");
@@ -206,6 +227,13 @@ public class EnemyLabWindow : EditorWindow
             tuning.Update();
             Property(tuning, "eyeHeight", "Enemy eye height");
             Property(tuning, "playerTargetHeight", "Player target height");
+            Section("Attack Timing");
+            if (enemy.enemyData != null)
+            {
+                var timing = new SerializedObject(enemy.enemyData);
+                Property(timing, "attackPreparationTime", "Attack preparation time (seconds)");
+                if (timing.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
+            }
             Property(tuning, "attackWindup", "Attack hit delay (seconds)");
             Property(controller, "showGizmos", "Show enemy Gizmos");
             Property(controller, "patrolMarkerSize", "Patrol point marker size");
@@ -221,6 +249,15 @@ public class EnemyLabWindow : EditorWindow
             controller.Update();
             tuning.Update();
             Property(controller, "patrolRoute", "Shared Patrol Route");
+            Property(controller, "startPatrolOnStart", "Start Patrol On Start");
+            if (Application.isPlaying)
+            {
+                EditorGUILayout.LabelField("Patrol", enemy.IsPatrolRunning ? "Running" : "Waiting for command");
+                if (GUILayout.Button(enemy.IsPatrolRunning ? "Pause Patrol" : "Start Patrol"))
+                {
+                    if (enemy.IsPatrolRunning) enemy.PausePatrol(); else enemy.StartPatrol();
+                }
+            }
             if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
             if (enemy.Route != null)
             {
@@ -305,6 +342,14 @@ public class EnemyLabWindow : EditorWindow
             controller.Update();
             tuning.Update();
             Property(tuning, "enableHitReaction", "Enable partial ragdoll hit reaction");
+            if (enemy.enemyData != null)
+            {
+                var impact = new SerializedObject(enemy.enemyData);
+                Property(impact, "hitKnockbackDistance", "Hit knockback distance (units)");
+                Property(impact, "hitKnockbackDuration", "Hit knockback duration (seconds)");
+                Property(impact, "hitStaggerDuration", "Hit stagger duration (seconds)");
+                if (impact.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
+            }
             Property(tuning, "hitPushImpulse", "Bullet push impulse");
             Property(tuning, "hitPhysicsDuration", "Physics reaction time (seconds)");
             Property(tuning, "hitRecoveryDuration", "Return to animation (seconds)");
@@ -431,7 +476,7 @@ public class EnemyLabWindow : EditorWindow
     private static void Property(SerializedObject data, string path, string label)
     {
         SerializedProperty property = data.FindProperty(path);
-        if (property != null) EditorGUILayout.PropertyField(property, new GUIContent(label));
+        if (property != null) EditorGUILayout.PropertyField(property, new GUIContent(label, property.tooltip));
     }
 
     private void CloneProfile()

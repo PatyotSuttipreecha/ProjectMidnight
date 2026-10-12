@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ae3f38b5b394d0c8ad7dfc37948098c, type: 3}
+  m_Name: Data_PointNotes_Objective_Intothewood_REACH_01
+  m_EditorClassIdentifier: Assembly-CSharp::PointNoteData
+  recordId: 49cd3537a2d64d57a3edf7cbe88a7ebe
+  pointType: 2
+  title: Intothewood_REACH_01
+  status: 0
+  note: "\u0E21\u0E34\u0E19\u0E15\u0E23\u0E32\u0E44\u0E14\u0E49\u0E2D\u0E2D\u0E01\u0E2A\u0E33\u0E23\u0E27\u0E08\u0E44\u0E1B\u0E22\u0E31\u0E07\u0E17\u0E35\u0E48\u0E15\u0E48\u0E32\u0E07\u0E46
+    \u0E08\u0E19\u0E43\u0E19\u0E17\u0E48\u0E35\u0E2A\u0E38\u0E14\u0E01\u0E47\u0E15\u0E34\u0E14\u0E15\u0E32\u0E21\u0E40\u0E1A\u0E32\u0E30\u0E41\u0E2A\u0E02\u0E2D\u0E07\u0E23\u0E34\u0E19
+    \u0E19\u0E49\u0E2D\u0E07\u0E2A\u0E32\u0E27\u0E02\u0E2D\u0E07\u0E21\u0E34\u0E19\u0E15\u0E23\u0E32\u0E17\u0E35\u0E48\u0E44\u0E14\u0E49\u0E2B\u0E32\u0E22\u0E15\u0E31\u0E27\u0E44\u0E1B\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23\u0E49\u0E23\u0E48\u0E2D\u0E07\u0E23\u0E2D\u0E22\u0E40\u0E21\u0E37\u0E48\u0E2D
+    2 \u0E40\u0E14\u0E37\u0E2D\u0E19\u0E01\u0E48\u0E2D\u0E19 \u0E08\u0E19\u0E16\u0E36\u0E07\u0E15\u0E2D\u0E19\u0E19\u0E35\u0E49\u0E01\u0E47\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E44\u0E14\u0E49
+    \u0E2B\u0E27\u0E31\u0E07\u0E27\u0E48\u0E32\u0E01\u0E32\u0E23\u0E21\u0E32 \u0E13
+    \u0E2A\u0E16\u0E32\u0E19\u0E17\u0E35\u0E48\u0E41\u0E2B\u0E48\u0E07\u0E19\u0E35\u0E49\u0E08\u0E30\u0E43\u0E2B\u0E49\u0E40\u0E1A\u0E32\u0E30\u0E41\u0E2A\u0E1A\u0E32\u0E07\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E1B"
+  location: Scenes_Gameplay
+  plannedScene: Assets/Scenes/Scenes_Gameplay.unity
+  missionId: M01_INTO_THE_WOOD
+  missionDescription: 
+  objectiveId: M01_REACH_CLIFF
+  objectiveType: 1
+  objectiveDescription: "\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E40\u0E02\u0E49\u0E32\u0E44\u0E1B\u0E43\u0E19\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48"
+  requiredCount: 1
+  optionalObjective: 1
+  objectives: []
+  prerequisiteObjectives: []
+  relatedNotes:
+  - {fileID: 11400000, guid: 00d26ac06cc177640a7b5e1fec9230e7, type: 2}
+  - {fileID: 11400000, guid: 40e2061f43b10a44dbb75ea6198100dd, type: 2}
+  relatedItem: {fileID: 0}
+  relatedDocument: {fileID: 0}
+  relatedPrefab: {fileID: 0}

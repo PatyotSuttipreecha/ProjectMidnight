@@ -6,6 +6,7 @@ using UnityEngine;
 public class DocumentCollection : MonoBehaviour
 {
     public static DocumentCollection Instance { get; private set; }
+    [Tooltip("Shared catalog for DocumentSO and EvidenceSO assets. Register both here for restoring collected IDs.")]
     public DocumentSO[] catalog = new DocumentSO[0];
     public event Action Changed;
     private readonly HashSet<string> collected = new HashSet<string>();

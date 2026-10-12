@@ -1,0 +1,17 @@
+    private static void Studio()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+        var model=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"Rin_EvidenceCamera.prefab"));
+        var rd=ScriptableObject.CreateInstance<UniversalRendererData>();AssetDatabase.CreateAsset(rd,"Assets/StudioRenderer.asset");var pipeline=UniversalRenderPipelineAsset.Create(rd);AssetDatabase.CreateAsset(pipeline,"Assets/StudioPipeline.asset");GraphicsSettings.defaultRenderPipeline=pipeline;QualitySettings.renderPipeline=pipeline;
+        RenderSettings.ambientMode=AmbientMode.Flat;RenderSettings.ambientLight=new Color(.55f,.6f,.65f);
+        foreach(var angle in new[]{new Vector3(25,-150,0),new Vector3(15,140,0)}){var l=new GameObject("StudioLight").AddComponent<Light>();l.type=LightType.Directional;l.intensity=1.6f;l.transform.rotation=Quaternion.Euler(angle);}
+        var c=new GameObject("PreviewCamera").AddComponent<Camera>();c.orthographic=true;c.orthographicSize=.078f;c.clearFlags=CameraClearFlags.SolidColor;c.backgroundColor=new Color(.08f,.095f,.11f);c.nearClipPlane=.01f;c.farClipPlane=4;c.gameObject.AddComponent<UniversalAdditionalCameraData>();
+        c.transform.position=new Vector3(.15f,.105f,.3f);c.transform.LookAt(new Vector3(.008f,0,.006f));Render(c,"RinCamera-front.png");
+        c.transform.position=new Vector3(-.13f,.09f,-.3f);c.transform.LookAt(new Vector3(.008f,0,0));Render(c,"RinCamera-back.png");
+        EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),Folder+"RinCamera_Preview.unity");AssetDatabase.SaveAssets();
+    }
+    private static void Render(Camera c,string filename)
+    {
+        var rt=new RenderTexture(1300,950,24);rt.Create();c.targetTexture=rt;RenderPipeline.SubmitRenderRequest(c,new UniversalRenderPipeline.SingleCameraRequest{destination=rt});
+        var old=RenderTexture.active;RenderTexture.active=rt;var t=new Texture2D(1300,950,TextureFormat.RGB24,false);t.ReadPixels(new Rect(0,0,1300,950),0,0);t.Apply();File.WriteAllBytes(Path.Combine(Application.dataPath,"../"+filename),t.EncodeToPNG());RenderTexture.active=old;c.targetTexture=null;rt.Release();UnityEngine.Object.DestroyImmediate(rt);UnityEngine.Object.DestroyImmediate(t);
+    }

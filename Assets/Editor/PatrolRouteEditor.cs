@@ -150,11 +150,26 @@ public class EnemySpawnPointEditor : Editor
         while (property.NextVisible(enterChildren))
         {
             enterChildren = false;
+            var mode = (EnemySpawnPoint.SpawnMode)serializedObject.FindProperty("spawnMode").enumValueIndex;
+            if (property.propertyPath == "enemyCount" && mode != EnemySpawnPoint.SpawnMode.FixedCount) continue;
+            if ((property.propertyPath == "randomizeInterval" || property.propertyPath == "minimumInterval" || property.propertyPath == "maximumInterval") &&
+                (mode == EnemySpawnPoint.SpawnMode.Once || mode == EnemySpawnPoint.SpawnMode.ExistingSettings)) continue;
             using (new EditorGUI.DisabledScope(property.propertyPath == "m_Script"))
                 EditorGUILayout.PropertyField(property, property.propertyPath == "target" ? new GUIContent("Target (optional)") : new GUIContent(property.displayName), true);
         }
         serializedObject.ApplyModifiedProperties();
         EnemySpawnPoint spawn = (EnemySpawnPoint)target;
+        if (spawn.spawnMode == EnemySpawnPoint.SpawnMode.ExistingSettings)
+        {
+            serializedObject.Update();
+            EditorGUILayout.HelpBox("Existing Settings keeps the saved spawn behavior. Select Once, Continuous or Fixed Count for the new schedule.", MessageType.Info);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("respawn"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("spawnInterval"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("totalSpawnLimit"));
+            serializedObject.ApplyModifiedProperties();
+        }
+        if (spawn.spawnMode == EnemySpawnPoint.SpawnMode.Once && spawn.initialCount > spawn.maxAlive)
+            EditorGUILayout.HelpBox("Once creates one batch only. Initial Count is capped by Max Alive; increase Max Alive to spawn the whole batch.", MessageType.Warning);
         EditorGUILayout.HelpBox("The profile comes from the Enemy Prefab. Target is optional: leave empty to use the prefab target, or automatically find the object tagged Player.", MessageType.Info);
         using (new EditorGUI.DisabledScope(true))
             EditorGUILayout.ObjectField("Prefab Profile", spawn.EffectiveProfile, typeof(EnemyDataSO), false);
@@ -202,6 +217,11 @@ public class EnemySpawnPointEditor : Editor
         if (Application.isPlaying)
         {
             EditorGUILayout.LabelField("Alive", spawn.AliveCount.ToString());
+            EditorGUILayout.LabelField("Total spawned", spawn.SpawnedCount.ToString());
+            EditorGUILayout.LabelField("Schedule", spawn.IsSpawning ? "Running" : "Stopped");
+            if (GUILayout.Button("Start / Resume spawning")) spawn.StartSpawning();
+            if (GUILayout.Button("Pause spawning")) spawn.PauseSpawning();
+            if (GUILayout.Button("Stop spawning + finish event")) spawn.StopSpawning();
             if (GUILayout.Button("Spawn now")) spawn.SpawnOne();
         }
     }

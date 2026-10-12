@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ae3f38b5b394d0c8ad7dfc37948098c, type: 3}
+  m_Name: Data_PointNotes_Objective_EscapeFromVillage_REACH_01
+  m_EditorClassIdentifier: Assembly-CSharp::PointNoteData
+  recordId: 906300e52ecf49e8bf17e9ac08a716dd
+  pointType: 2
+  title: EscapeFromVillage_REACH_01
+  status: 0
+  note: "\u0E40\u0E2B\u0E21\u0E37\u0E2D\u0E19\u0E27\u0E48\u0E32\u0E2B\u0E21\u0E39\u0E48\u0E1A\u0E49\u0E32\u0E19\u0E41\u0E2B\u0E48\u0E07\u0E19\u0E35\u0E49\u0E08\u0E30\u0E44\u0E21\u0E48\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E21\u0E34\u0E19\u0E15\u0E23\u0E32\u0E41\u0E25\u0E49\u0E27
+    \u0E2D\u0E32\u0E08\u0E08\u0E30\u0E16\u0E36\u0E07\u0E40\u0E27\u0E25\u0E32\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E40\u0E2D\u0E32\u0E0A\u0E35\u0E27\u0E34\u0E15\u0E23\u0E2D\u0E14\u0E08\u0E32\u0E01\u0E40\u0E2B\u0E15\u0E38\u0E01\u0E32\u0E23\u0E13\u0E4C\u0E1B\u0E23\u0E30\u0E2B\u0E25\u0E32\u0E14\u0E17\u0E35\u0E48\u0E44\u0E14\u0E49\u0E40\u0E08\u0E2D\u0E21\u0E32\n\n"
+  location: Scenes_Gameplay
+  plannedScene: Assets/Scenes/Scenes_Gameplay.unity
+  missionId: M04_ESCAPE_VILLAGE
+  missionDescription: 
+  objectiveId: M04_ESCAPE_VILLAGE_FRONT
+  objectiveType: 1
+  objectiveDescription: "\u0E2B\u0E19\u0E35\u0E40\u0E2D\u0E32\u0E15\u0E31\u0E27\u0E23\u0E2D\u0E14\u0E08\u0E32\u0E01\u0E2D\u0E31\u0E19\u0E15\u0E23\u0E32\u0E22"
+  requiredCount: 1
+  optionalObjective: 0
+  objectives:
+  - {fileID: 11400000, guid: 8a9569120ec70a04fa368d3afe89c8af, type: 2}
+  prerequisiteObjectives: []
+  relatedItem: {fileID: 0}
+  relatedDocument: {fileID: 11400000, guid: 880e33b6899ce4440a8c90ea773279b4, type: 2}
+  relatedPrefab: {fileID: 0}

@@ -18,3 +18,8 @@ MonoBehaviour:
       marker: {r: 1, g: 0.34901965, b: 0.35235843, a: 1}
       background: {r: 0.06300001, g: 0.18, b: 0.15121797, a: 0.95}
       text: {r: 1, g: 1, b: 1, a: 1}
+  - type: 9
+    colors:
+      marker: {r: 0.27401206, g: 0.80410725, b: 0.8113208, a: 1}
+      background: {r: 0, g: 0.4792453, b: 0.45471677, a: 0.95}
+      text: {r: 1, g: 1, b: 1, a: 1}

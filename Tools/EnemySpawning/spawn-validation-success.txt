@@ -1,0 +1,1 @@
+PASS in Unity Play Mode: Once, once capacity, Continuous cap and refill, ignores legacy limit, FixedCount budget and events, pause/resume/stop, legacy compatibility, randomized/fixed/clamped intervals. Actual EnemySpawnPoint tested with built NavMesh and enemy test doubles.

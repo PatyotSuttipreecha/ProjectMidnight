@@ -15,9 +15,16 @@ public class DocumentConfigurationWindow : EditorWindow
     private Editor preview;
     private GameObject previewSource;
     private DocumentCollection collection;
+    private int category;
 
-    [MenuItem("System Modification/Document Configuration")]
+    [MenuItem("System Modification/ItemLab/Documents")]
     public static void Open() => GetWindow<DocumentConfigurationWindow>("Document Configuration");
+    [MenuItem("System Modification/ItemLab/Evidence")]
+    public static void OpenEvidence()
+    {
+        var window = GetWindow<DocumentConfigurationWindow>("Documents and Evidence");
+        window.category = 2;
+    }
     private void OnEnable() { minSize = new Vector2(650, 480); EditorApplication.projectChanged += RefreshLibrary; RefreshLibrary(); OnSelectionChange(); }
     private void OnDisable() { EditorApplication.projectChanged -= RefreshLibrary; ReleasePreview(); }
     private void RefreshLibrary()
@@ -39,6 +46,7 @@ public class DocumentConfigurationWindow : EditorWindow
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             if (GUILayout.Button("สร้างเอกสาร", EditorStyles.toolbarButton)) CreateDocument(false);
+            if (GUILayout.Button("Create Evidence", EditorStyles.toolbarButton)) CreateDocument(false, true);
             using (new EditorGUI.DisabledScope(document == null))
             {
                 if (GUILayout.Button("ทำสำเนา", EditorStyles.toolbarButton)) CreateDocument(true);
@@ -56,7 +64,7 @@ public class DocumentConfigurationWindow : EditorWindow
                 var selected = (DocumentSO)EditorGUILayout.ObjectField("Document", document, typeof(DocumentSO), false);
                 if (selected != document) Select(selected);
                 if (document == null) { EditorGUILayout.HelpBox("เลือกเอกสารจากรายการ หรือสร้าง DocumentSO ใหม่ เอกสารไม่ใช้ช่อง Inventory", MessageType.Info); return; }
-                tab = GUILayout.Toolbar(tab, new[] { "ข้อมูล", "หน้าเอกสาร", "โมเดล 3D", "ฉาก / UI" });
+                tab = GUILayout.Toolbar(tab, new[] { "Information", document.IsEvidence ? "Details / Images" : "Pages", "3D Model", "Scene / UI" });
                 scroll = EditorGUILayout.BeginScrollView(scroll);
                 var data = new SerializedObject(document); data.Update();
                 switch (tab)
@@ -72,7 +80,14 @@ public class DocumentConfigurationWindow : EditorWindow
                                 break;
                             }
                         break;
-                    case 1: DrawPages(data.FindProperty("pages")); break;
+                    case 1:
+                        DrawPages(data.FindProperty("pages"));
+                        if (document.IsEvidence)
+                        {
+                            EditorGUILayout.PropertyField(data.FindProperty("detailImages"), true);
+                            EditorGUILayout.HelpBox("Image index matches the details page index. Images can also be viewed without page text.", MessageType.Info);
+                        }
+                        break;
                     case 2:
                         EditorGUILayout.PropertyField(data.FindProperty("inspectionPrefab"));
                         EditorGUILayout.PropertyField(data.FindProperty("inspectionRotation"));
@@ -80,7 +95,7 @@ public class DocumentConfigurationWindow : EditorWindow
                         break;
                     case 3: DrawSceneTools(); break;
                 }
-                data.ApplyModifiedProperties();
+                if (data.ApplyModifiedProperties()) ProjectAssetNaming.Sync(document);
                 if (tab == 2) DrawPreview();
                 EditorGUILayout.EndScrollView();
             }
@@ -91,11 +106,13 @@ public class DocumentConfigurationWindow : EditorWindow
         using (new EditorGUILayout.VerticalScope(GUILayout.Width(200)))
         {
             search = EditorGUILayout.TextField(search, EditorStyles.toolbarSearchField);
+            category = EditorGUILayout.Popup("Category", category, new[] { "All", "Documents", "Evidence" });
             EditorGUILayout.LabelField("เอกสารทั้งหมด: " + documents.Count, EditorStyles.miniLabel);
             libraryScroll = EditorGUILayout.BeginScrollView(libraryScroll);
             foreach (var asset in documents)
             {
                 if (asset == null) continue;
+                if (category == 1 && asset.IsEvidence || category == 2 && !asset.IsEvidence) continue;
                 string label = string.IsNullOrWhiteSpace(asset.title) ? asset.name : asset.title;
                 if (!string.IsNullOrWhiteSpace(search) && (label + " " + asset.name + " " + asset.author).IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) continue;
                 if (GUILayout.Toggle(document == asset, label, "Button") && document != asset) Select(asset);
@@ -146,14 +163,16 @@ public class DocumentConfigurationWindow : EditorWindow
         var rect = GUILayoutUtility.GetRect(100, 300, GUILayout.ExpandWidth(true));
         preview.OnInteractivePreviewGUI(rect, EditorStyles.helpBox);
     }
-    private void CreateDocument(bool duplicate)
+    private void CreateDocument(bool duplicate, bool evidence = false)
     {
-        var path = EditorUtility.SaveFilePanelInProject("สร้าง DocumentSO", duplicate ? document.name + " Copy" : "NewDocument", "asset", "เลือกที่เก็บเอกสาร");
+        bool evidenceRecord = duplicate ? document.IsEvidence : evidence;
+        var path = EditorUtility.SaveFilePanelInProject("Create Catalog Record", duplicate ? document.name + " Copy" : evidence ? "NewEvidence" : "NewDocument", "asset", "Choose an asset folder", evidenceRecord ? "Assets/Data/Evidence" : "Assets/Data/Documents");
         if (string.IsNullOrEmpty(path)) return;
-        var asset = duplicate ? Instantiate(document) : CreateInstance<DocumentSO>();
-        if (!duplicate) asset.title = "New Document";
+        var asset = duplicate ? Instantiate(document) : evidence ? CreateInstance<EvidenceSO>() : CreateInstance<DocumentSO>();
+        if (!duplicate) asset.title = evidence ? "New Evidence" : "New Document";
         var data = new SerializedObject(asset); data.FindProperty("documentId").stringValue = Guid.NewGuid().ToString("N"); data.ApplyModifiedPropertiesWithoutUndo();
         AssetDatabase.CreateAsset(asset, path); Undo.RegisterCreatedObjectUndo(asset, "Create Document"); AssetDatabase.SaveAssetIfDirty(asset);
+        ProjectAssetNaming.Sync(asset);
         RefreshLibrary(); Select(asset); Selection.activeObject = asset;
     }
     private void DrawSceneTools()
@@ -179,8 +198,33 @@ public class DocumentConfigurationWindow : EditorWindow
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/Documents/DocumentPickup.prefab");
                 if (prefab != null)
                 {
-                    var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab); Undo.RegisterCreatedObjectUndo(instance, "Place Document Pickup");
-                    var pickup = instance.GetComponent<DocumentPickup>(); pickup.document = document;
+                    GameObject instance;
+                    DocumentPickup pickup;
+                    if (document.IsEvidence)
+                    {
+                        instance = new GameObject(document.title);
+                        Undo.RegisterCreatedObjectUndo(instance, "Place Evidence Pickup");
+                        var collider = Undo.AddComponent<SphereCollider>(instance); collider.isTrigger = true; collider.radius = .4f;
+                        pickup = Undo.AddComponent<DocumentPickup>(instance);
+                    }
+                    else
+                    {
+                        instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                        Undo.RegisterCreatedObjectUndo(instance, "Place Document Pickup");
+                        pickup = instance.GetComponent<DocumentPickup>();
+                    }
+                    pickup.document = document;
+                    if (document.IsEvidence) pickup.BuildEvidenceVisual();
+                    var pointNote = instance.GetComponent<PointNote>();
+                    if (pointNote == null) pointNote = Undo.AddComponent<PointNote>(instance);
+                    if (pointNote.data == null)
+                    {
+                        Undo.RecordObject(pointNote, "Configure Document Note");
+                        pointNote.pointType = PointNote.PointType.Collectible;
+                        pointNote.title = document != null ? document.title : instance.name;
+                        pointNote.relatedDocument = document;
+                        PrefabUtility.RecordPrefabInstancePropertyModifications(pointNote);
+                    }
                     if (SceneView.lastActiveSceneView != null) instance.transform.position = SceneView.lastActiveSceneView.pivot;
                     PrefabUtility.RecordPrefabInstancePropertyModifications(pickup); PrefabUtility.RecordPrefabInstancePropertyModifications(instance.transform);
                     Selection.activeGameObject = instance; EditorSceneManager.MarkSceneDirty(instance.scene); RegisterInCatalog();

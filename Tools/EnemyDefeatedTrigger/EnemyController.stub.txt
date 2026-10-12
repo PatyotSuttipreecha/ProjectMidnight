@@ -1,0 +1,8 @@
+using System;
+using UnityEngine;
+public class EnemyController : MonoBehaviour
+{
+    public bool IsDead { get; private set; }
+    public event Action<EnemyController> Died;
+    public void Kill() { IsDead = true; Died?.Invoke(this); }
+}

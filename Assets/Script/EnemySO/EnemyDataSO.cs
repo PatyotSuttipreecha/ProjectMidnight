@@ -22,27 +22,79 @@ public class EnemyDataSO : ScriptableObject
     [Min(.1f)] public float noiseSearchDuration = 3f;
     [Min(1)] public float noiseTravelTimeout = 15f;
 
-    [Header("Patrol Settings")]
-    [Range(0.5f, 10f)] public float waitTimeAtPoint = 2f;
-    [Range(1f, 10f)] public float lostSightCooldown = 5f;
-
-    [Header("Attack Settings")]
-    [Range(1f, 100f)] public float minAttack = 1f;
-    [Range(1f, 100f)] public float maxAttack = 10f;
-    [Range(1f, 5f)] public float attackRange = 2f;
-    [Range(0.5f, 5f)] public float attackCooldown = 2f;
-    [Header("Shared Enemy Profile")]
+    [Header("Shared Profile and Health")]
+    [Tooltip("Use this profile for health, navigation, combat and physics settings instead of legacy per-enemy values.")]
     public bool useSharedSettings;
-    [Header("Movement and Health")]
+    [Tooltip("Health assigned when the enemy is initialized.")]
     [Min(1f)] public float startingHealth = 100f;
+
+    [Header("Patrol Movement")]
+    [Tooltip("Normal patrol and investigation speed in world units per second.")]
     [Min(0f)] public float walkSpeed = 0.5f;
+    [Tooltip("Default pause at patrol points. Route-specific wait settings can override this.")]
+    [Range(0.5f, 10f)] public float waitTimeAtPoint = 2f;
+
+    [Header("Chase Movement")]
+    [Tooltip("Maximum pursuit speed while the player is visible and outside the slowdown zone.")]
+    [Min(0f)] public float chaseSpeed = 2.5f;
+    [Tooltip("Target pursuit speed near attack range. The enemy stops during attack preparation.")]
+    [Min(0f)] public float closeApproachSpeed = .5f;
+    [Tooltip("Distance in world units where pursuit starts slowing down. Set above Attack Range.")]
+    [Min(0f)] public float chaseSlowdownDistance = 4f;
+    [Tooltip("Rate of change of the requested movement speed, in units per second squared. Agent acceleration also limits actual velocity.")]
+    [Min(.1f)] public float speedChangeRate = 5f;
+    [Tooltip("Minimum seconds between chase path updates. Lower values react faster but cost more path calculations.")]
+    [Min(.05f)] public float chaseRepathInterval = .25f;
+    [Tooltip("Seconds without seeing the player before abandoning chase and returning to patrol.")]
+    [Range(1f, 10f)] public float lostSightCooldown = 5f;
+    [Tooltip("Optional Animator state name on layer 0 for faster visible pursuit. Empty or missing state uses the walk animation.")]
+    public string runAnimation = "";
+
+    [Header("Navigation Steering")]
+    [Tooltip("NavMeshAgent acceleration limit in units per second squared.")]
     [Min(0f)] public float acceleration = 8f;
+    [Tooltip("Maximum NavMeshAgent turning speed in degrees per second.")]
     [Min(0f)] public float turnSpeed = 120f;
+    [Tooltip("Distance where the agent stops before its destination. Keep below Attack Range.")]
     [Min(0f)] public float stoppingDistance = 1f;
-    [Header("Vision and Attack Timing")]
-    [Min(0f)] public float eyeHeight = 1f;
-    [Min(0f)] public float playerTargetHeight = 1f;
+
+    [Header("Crowd Movement - Approach")]
+    [Tooltip("Give distant pursuing enemies different approach targets. Close pursuit returns to the player directly.")]
+    public bool spreadChaseTargets = true;
+    [Tooltip("Maximum approach offset in world units. Clamped to allow stopping within attack range; unreachable offsets fall back to direct pursuit.")]
+    [Min(0f)] public float chaseApproachRadius = 1.5f;
+    [Tooltip("Assign different NavMesh avoidance priorities at initialization. Lower priority numbers take precedence.")]
+    public bool varyAvoidancePriority = true;
+
+    [Header("Crowd Movement - Separation")]
+    [Tooltip("Moving enemies steer away from nearby living enemies. Does not move this enemy while attacking or paused.")]
+    public bool separateNearbyEnemies = true;
+    [Tooltip("Preferred horizontal distance between enemy centers in world units. Separation ignores enemies on another floor.")]
+    [Min(.1f)] public float separationRadius = 1f;
+    [Tooltip("Maximum separation speed in units per second, capped by agent speed and clipped at NavMesh boundaries.")]
+    [Min(0f)] public float separationSpeed = .75f;
+
+    [Header("Attack - Range and Damage")]
+    [Tooltip("Minimum damage applied by a successful attack after its hit delay.")]
+    [Range(1f, 100f)] public float minAttack = 1f;
+    [Tooltip("Maximum damage applied by a successful attack after its hit delay.")]
+    [Range(1f, 100f)] public float maxAttack = 10f;
+    [Tooltip("Maximum distance between enemy and player transforms for attack. Clear sight is also required.")]
+    [Range(1f, 5f)] public float attackRange = 2f;
+
+    [Header("Attack - Timing")]
+    [Tooltip("Stopped Idle time before starting the attack animation. Moving out of range cancels preparation.")]
+    [Min(0f)] public float attackPreparationTime = .25f;
+    [Tooltip("Seconds from starting the attack animation to checking range and applying damage.")]
     [Min(0f)] public float attackWindup = 0.5f;
+    [Tooltip("Minimum time between attack attempts, measured from preparation start. Cannot be shorter than preparation plus hit delay.")]
+    [Range(0.5f, 5f)] public float attackCooldown = 2f;
+
+    [Header("Vision Target Heights")]
+    [Tooltip("Sight ray origin height above the enemy transform in world units.")]
+    [Min(0f)] public float eyeHeight = 1f;
+    [Tooltip("Sight ray target height above the player controller transform in world units.")]
+    [Min(0f)] public float playerTargetHeight = 1f;
     [Header("Death and Ragdoll")]
      public bool useRagdoll;
      public string deathAnimation = "zombie_dead2";
@@ -69,6 +121,12 @@ public class EnemyDataSO : ScriptableObject
     [Min(0f)] public float ragdollAngularDamping = 1.5f;
     [Min(0f)] public float deathPushImpulse = 3f;
     [Header("Bullet Hit Reaction")]
+    [Tooltip("Maximum root displacement away from a bullet hit. NavMesh walls and edges limit movement.")]
+    [Min(0f)] public float hitKnockbackDistance = .15f;
+    [Tooltip("Duration of root knockback in seconds. Repeated hits refresh rather than accumulate displacement.")]
+    [Min(.02f)] public float hitKnockbackDuration = .12f;
+    [Tooltip("Time movement and attacks are interrupted after a bullet hit. Zero disables stagger.")]
+    [Min(0f)] public float hitStaggerDuration = .3f;
      public bool enableHitReaction = true;
     [Min(0f)] public float hitPushImpulse = 0.8f;
     [Min(0.02f)] public float hitPhysicsDuration = 0.12f;

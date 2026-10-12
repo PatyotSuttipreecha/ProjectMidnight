@@ -10,4 +10,10 @@ public class DocumentLibraryView : MonoBehaviour
     public ItemInspectionPreview preview;
     public RawImage modelView;
     public Image fallbackIcon;
+    public Button documentsTab, evidenceTab;
+    public Image detailImage;
+    public TMP_Dropdown catalogSelector;
+    public ScrollRect catalogList;
+    public Button catalogRowTemplate;
+    [HideInInspector] public int catalogLayoutVersion;
 }

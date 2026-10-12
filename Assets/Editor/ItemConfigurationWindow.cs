@@ -15,11 +15,17 @@ public class ItemConfigurationWindow : EditorWindow
     private Editor modelPreview;
     private GameObject previewSource;
 
-    [MenuItem("System Modification/Item Configuration")]
+    [MenuItem("System Modification/ItemLab/Item Settings")]
     public static void Open()
     {
         var window = GetWindow<ItemConfigurationWindow>("Item Configuration");
         window.minSize = new Vector2(440, 480); window.Show();
+    }
+    [MenuItem("System Modification/ItemLab/Inventory and Examine UI")]
+    public static void OpenUI()
+    {
+        Open();
+        GetWindow<ItemConfigurationWindow>().tab = 1;
     }
     private void OnEnable()
     {
@@ -114,7 +120,7 @@ public class ItemConfigurationWindow : EditorWindow
             Field("healDuration", "Healing duration (s, 0 = instant)");
             if (item.healDuration > 0) Field("healTickInterval", "Tick interval (s)");
         }
-        if (settings.ApplyModifiedProperties()) EditorUtility.SetDirty(item);
+        if (settings.ApplyModifiedProperties()) { EditorUtility.SetDirty(item); ProjectAssetNaming.Sync(item); }
         if (item.pickupPrefab == null) EditorGUILayout.HelpBox("ยังทิ้งลงพื้นไม่ได้ เพราะไม่มี Pickup Prefab", MessageType.Warning);
         else if (item.pickupPrefab.itemData != item) EditorGUILayout.HelpBox("Pickup Prefab อ้างถึง ItemSO คนละตัว ตรวจให้ตรงกันก่อนวางของในฉาก", MessageType.Warning);
         DrawModelPreview();
@@ -191,10 +197,11 @@ public class ItemConfigurationWindow : EditorWindow
     private static void Section(string title) { EditorGUILayout.Space(); EditorGUILayout.LabelField(title, EditorStyles.boldLabel); }
     private void CreateItem()
     {
-        string path = EditorUtility.SaveFilePanelInProject("สร้าง ItemSO", "NewItem", "asset", "เลือกที่เก็บไอเทม");
+        string path = EditorUtility.SaveFilePanelInProject("สร้าง ItemSO", "NewItem", "asset", "เลือกที่เก็บไอเทม", "Assets/Data/Items");
         if (string.IsNullOrEmpty(path)) return;
         item = CreateInstance<ItemSO>(); item.itemName = System.IO.Path.GetFileNameWithoutExtension(path);
         AssetDatabase.CreateAsset(item, path); Undo.RegisterCreatedObjectUndo(item, "Create ItemSO");
+        ProjectAssetNaming.Sync(item);
         AssetDatabase.SaveAssets(); settings = null; RefreshLibrary(); Selection.activeObject = item;
     }
 }

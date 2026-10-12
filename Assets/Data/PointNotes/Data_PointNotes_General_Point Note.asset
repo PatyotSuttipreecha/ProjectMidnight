@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ae3f38b5b394d0c8ad7dfc37948098c, type: 3}
+  m_Name: Data_PointNotes_General_Point Note
+  m_EditorClassIdentifier: Assembly-CSharp::PointNoteData
+  recordId: ff3bb7e2acbc42ceaf4b4e2aa9efdcde
+  pointType: 0
+  title: Point Note
+  status: 0
+  note: 
+  location: Scenes_Gameplay
+  plannedScene: Assets/Scenes/Scenes_Gameplay.unity
+  missionId: 
+  missionDescription: 
+  objectiveId: 
+  objectiveType: 0
+  objectiveDescription: 
+  requiredCount: 1
+  optionalObjective: 0
+  objectives: []
+  prerequisiteObjectives: []
+  relatedItem: {fileID: 0}
+  relatedDocument: {fileID: 0}
+  relatedPrefab: {fileID: 0}

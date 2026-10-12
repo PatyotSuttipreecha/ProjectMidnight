@@ -1,0 +1,7 @@
+using UnityEngine;
+public class EnemyController : MonoBehaviour
+{
+    public EnemyDataSO enemyData;
+    public bool IsDead;
+    public void ConfigureSpawn(EnemyDataSO data,PatrolRoute route,Transform target){enemyData=data;}
+}

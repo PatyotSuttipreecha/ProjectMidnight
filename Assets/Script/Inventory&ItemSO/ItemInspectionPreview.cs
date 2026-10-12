@@ -78,6 +78,21 @@ public class ItemInspectionPreview : MonoBehaviour, IPointerDownHandler, IPointe
         return true;
     }
     private void LateUpdate() => RenderPreview();
+    public void RefreshSize()
+    {
+        if (previewCamera == null || texture == null) return;
+        var rect = (RectTransform)transform;
+        float aspect = Mathf.Clamp(rect.rect.width / Mathf.Max(1, rect.rect.height), .5f, 3f);
+        previewCamera.targetTexture = null;
+        var oldTexture = texture;
+        texture = new RenderTexture(Mathf.Clamp(Mathf.RoundToInt(900 * aspect), 450, 2048), 900, 24, RenderTextureFormat.ARGB32);
+        texture.name = "Item Inspection Preview"; texture.Create();
+        previewCamera.targetTexture = texture;
+        previewCamera.aspect = aspect;
+        GetComponent<RawImage>().texture = texture;
+        oldTexture.Release(); Destroy(oldTexture);
+        RenderPreview();
+    }
     private void RenderPreview()
     {
         if (previewCamera == null || texture == null || !texture.IsCreated()) return;

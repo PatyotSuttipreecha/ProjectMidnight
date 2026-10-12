@@ -4,6 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Documents/Document", fileName = "NewDocument")]
 public class DocumentSO : ScriptableObject
 {
+    public virtual bool IsEvidence => false;
     [SerializeField] private string documentId;
     public string Id => documentId;
     public string title;
@@ -13,8 +14,8 @@ public class DocumentSO : ScriptableObject
     public GameObject inspectionPrefab;
     public Vector3 inspectionRotation = new Vector3(0, 25, 0);
     [TextArea(5, 20)] public string[] pages = new string[1];
-    private void OnEnable() => EnsureId();
-    private void OnValidate() => EnsureId();
+    protected virtual void OnEnable() => EnsureId();
+    protected virtual void OnValidate() => EnsureId();
     private void EnsureId()
     {
         if (string.IsNullOrWhiteSpace(documentId)) documentId = Guid.NewGuid().ToString("N");

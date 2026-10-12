@@ -35,7 +35,7 @@ World Pickup ตัวอย่างแสดงกระดาษทั่ว�
 - `Assets/Prefab/UI/DocumentsButton.prefab`: ปุ่มเปิดเอกสาร เป็น nested prefab ใน InventoryPanel
 - `Assets/Prefab/Documents/DocumentPickup.prefab`: จุดเก็บและโมเดลในแมพ
 - `Assets/Prefab/Documents/DocumentModel.prefab`: กระดาษตัวอย่างที่หมุนดูได้ทั้งสองด้าน
-- `Assets/Script/Documents/Data/GuardNote.asset`: เนื้อหาเอกสารตัวอย่างสองหน้า
+- `Assets/Data/Documents (DocumentSO assets)`: เนื้อหาเอกสารตัวอย่างสองหน้า
 
 คงการเชื่อมช่อง DocumentLibraryView ไว้เมื่อจัดตำแหน่งหรือย้ายวัตถุ หากแทนด้วยวัตถุใหม่ให้ลากเชื่อมใหม่ ฟอนต์ UI ใช้ TMP และต้องเลือก Font Asset ที่รองรับภาษาไทยเมื่อเขียนเอกสารภาษาไทย ตัวอย่างเริ่มต้นเป็นภาษาอังกฤษ
 

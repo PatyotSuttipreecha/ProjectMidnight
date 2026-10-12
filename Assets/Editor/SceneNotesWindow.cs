@@ -7,201 +7,136 @@ using UnityEngine.SceneManagement;
 
 public class SceneNotesWindow : EditorWindow
 {
-    private class Entry
-    {
-        public PointNote note;
-        public string assetPath, hierarchy, location;
-        public bool prefab;
-    }
-    private readonly List<Entry> entries = new List<Entry>();
-    private Entry selected;
-    private string search = "", prefabFolder = "Assets/Prefab";
-    private int scope, statusFilter, typeFilter;
+    private readonly List<PointNoteData> records = new List<PointNoteData>();
+    private PointNoteData selected;
+    private string search = "";
+    private string locationFilter = "";
+    private int statusFilter, typeFilter;
     private PointNote.PointType createType;
-    private Vector2 listScroll, detailScroll;
-    private bool sceneDirty = true;
+    private Vector2 listScroll, detailScroll, colorsScroll;
     private bool showColors;
-    private Vector2 colorScroll;
-    [MenuItem("System Modification/Scene Notes")]
+    [MenuItem("System Modification/Scene Configuration/Scene Notes")]
     public static void Open() { var window = GetWindow<SceneNotesWindow>("Scene Notes"); window.minSize = new Vector2(700, 440); }
-    private void OnEnable() { EditorApplication.hierarchyChanged += HierarchyChanged; Undo.undoRedoPerformed += HierarchyChanged; Refresh(); }
-    private void OnDisable() { EditorApplication.hierarchyChanged -= HierarchyChanged; Undo.undoRedoPerformed -= HierarchyChanged; }
-    private void HierarchyChanged() { sceneDirty = true; Repaint(); }
-    private static string Path(Transform target)
-    {
-        string path = target.name;
-        while (target.parent != null) { target = target.parent; path = target.name + "/" + path; }
-        return path;
-    }
+    private void OnEnable() { EditorApplication.projectChanged += Refresh; Undo.undoRedoPerformed += Refresh; Refresh(); }
+    private void OnDisable() { EditorApplication.projectChanged -= Refresh; Undo.undoRedoPerformed -= Refresh; }
     private void Refresh()
     {
-        entries.Clear(); selected = null; sceneDirty = false;
-        if (scope != 1)
+        records.Clear();
+        foreach (var guid in AssetDatabase.FindAssets("t:PointNoteData"))
         {
-            for (int i = 0; i < SceneManager.sceneCount; i++) AddScene(SceneManager.GetSceneAt(i));
-            var stage = PrefabStageUtility.GetCurrentPrefabStage();
-            if (stage != null) AddScene(stage.scene);
+            var record = AssetDatabase.LoadAssetAtPath<PointNoteData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (record != null) records.Add(record);
         }
-        if (scope != 0)
-        {
-            string folder = prefabFolder.Trim().TrimEnd('/').Replace('\\', '/');
-            if (!AssetDatabase.IsValidFolder(folder)) { ShowNotification(new GUIContent("Choose a valid Assets folder.")); return; }
-            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { folder }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                var root = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (root == null) continue;
-                foreach (var note in root.GetComponentsInChildren<PointNote>(true))
-                    entries.Add(new Entry { note = note, prefab = true, assetPath = path, location = path, hierarchy = Path(note.transform) });
-            }
-        }
-        entries.Sort((a,b)=>string.Compare(a.location+a.hierarchy,b.location+b.hierarchy,StringComparison.OrdinalIgnoreCase));
+        Repaint();
     }
-    private void AddScene(Scene scene)
+    private void Sort()
     {
-        if (!scene.IsValid() || !scene.isLoaded) return;
-        foreach (var root in scene.GetRootGameObjects())
-            foreach (var note in root.GetComponentsInChildren<PointNote>(true))
-                entries.Add(new Entry { note = note, assetPath = scene.path, location = string.IsNullOrEmpty(scene.path) ? scene.name + " (unsaved)" : scene.path, hierarchy = Path(note.transform) });
+        records.Sort((a,b) =>
+        {
+            string ma = (a.missionId ?? "").Trim(), mb = (b.missionId ?? "").Trim();
+            if ((ma.Length == 0) != (mb.Length == 0)) return ma.Length == 0 ? 1 : -1;
+            int result = EditorUtility.NaturalCompare(ma, mb); if (result != 0) return result;
+            if ((a.pointType == PointNote.PointType.Mission) != (b.pointType == PointNote.PointType.Mission)) return a.pointType == PointNote.PointType.Mission ? -1 : 1;
+            result = EditorUtility.NaturalCompare(a.objectiveId ?? "", b.objectiveId ?? "");
+            return result != 0 ? result : EditorUtility.NaturalCompare(a.title ?? "", b.title ?? "");
+        });
     }
     private void OnGUI()
     {
+        records.RemoveAll(r => r == null); Sort();
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
-            int nextScope = EditorGUILayout.Popup(scope, new[] { "Open Scenes", "Prefab Assets", "Scenes + Prefabs" }, GUILayout.Width(160));
-            if (nextScope != scope) { scope = nextScope; Refresh(); }
+            GUILayout.Label("All Game Data", GUILayout.Width(105));
             search = GUILayout.TextField(search, EditorStyles.toolbarSearchField);
             statusFilter = EditorGUILayout.Popup(statusFilter, new[] { "All status", "Info", "Todo", "Issue", "Done" }, GUILayout.Width(100));
             if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(65))) Refresh();
+            if (GUILayout.Button(PointNoteVisibility.Visible ? "Hide Notes" : "Show Notes", EditorStyles.toolbarButton, GUILayout.Width(85))) PointNoteVisibility.Toggle();
         }
-        if (scope != 0)
-        {
-            prefabFolder = EditorGUILayout.TextField("Prefab search folder", prefabFolder);
-            EditorGUILayout.HelpBox("Folder changes apply on Refresh. Prefab assets include notes on inactive children and nested prefabs.", MessageType.Info);
-        }
-        if (sceneDirty) EditorGUILayout.HelpBox("Scene hierarchy changed. Refresh to update the list.", MessageType.Info);
-        showColors = EditorGUILayout.Foldout(showColors, "Point Type Colors", true);
-        if (showColors)
-        {
-            colorScroll = EditorGUILayout.BeginScrollView(colorScroll, GUILayout.MaxHeight(230));
-            PointNotePalette.DrawSettings();
-            EditorGUILayout.EndScrollView();
-        }
+        var types = new List<string> { "All point types" }; types.AddRange(Enum.GetNames(typeof(PointNote.PointType)));
         using (new EditorGUILayout.HorizontalScope())
         {
-            var types = new List<string> { "All point types" }; types.AddRange(Enum.GetNames(typeof(PointNote.PointType)));
             typeFilter = EditorGUILayout.Popup("Point type filter", typeFilter, types.ToArray());
-            createType = (PointNote.PointType)EditorGUILayout.EnumPopup("New point type", createType);
+            createType = (PointNote.PointType)EditorGUILayout.EnumPopup("New data type", createType);
         }
+        var locations = new List<string> { "All locations" };
+        foreach (var record in records) if (!string.IsNullOrWhiteSpace(record.location) && !locations.Contains(record.location)) locations.Add(record.location);
+        int locationIndex = string.IsNullOrEmpty(locationFilter) ? 0 : Mathf.Max(0, locations.IndexOf(locationFilter));
+        locationIndex = EditorGUILayout.Popup("Location filter", locationIndex, locations.ToArray());
+        locationFilter = locationIndex == 0 ? "" : locations[locationIndex];
+        using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
         using (new EditorGUILayout.HorizontalScope())
         {
-            using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
-            {
-                if (GUILayout.Button("Add Note to Selected Object"))
-                {
-                    var go = Selection.activeGameObject;
-                    if (go == null || EditorUtility.IsPersistent(go)) ShowNotification(new GUIContent("Select a scene object or open a prefab in Prefab Mode."));
-                    else { var note = go.GetComponent<PointNote>(); if (note == null) { note = Undo.AddComponent<PointNote>(go); note.pointType = createType; } PointNoteEditor.ApplyDesignChanges(note); Selection.activeObject = note; EditorSceneManager.MarkSceneDirty(go.scene); Refresh(); }
-                }
-                if (GUILayout.Button("Create Note Point"))
-                {
-                    var go = new GameObject(createType + " Point"); Undo.RegisterCreatedObjectUndo(go, "Create Note Point");
-                    StageUtility.PlaceGameObjectInCurrentStage(go);
-                    var note = go.AddComponent<PointNote>(); note.pointType = createType; note.title = createType + " Point";
-                    PointNoteEditor.ApplyDesignChanges(note);
-                    if (SceneView.lastActiveSceneView != null) go.transform.position = SceneView.lastActiveSceneView.pivot;
-                    Selection.activeGameObject = go; EditorSceneManager.MarkSceneDirty(go.scene); Refresh();
-                }
-            }
+            if (GUILayout.Button("Create New Note Data")) { selected = PointNoteDataTools.Create(createType, createType + " Note"); AssetDatabase.SaveAssets(); Refresh(); }
+            if (GUILayout.Button("Import Notes from Open Scenes")) { PointNoteDataTools.ImportMany(UnityEngine.Object.FindObjectsByType<PointNote>(FindObjectsInactive.Include, FindObjectsSortMode.None)); Refresh(); }
+            if (GUILayout.Button("Import All Saved Scenes / Prefabs")) { PointNoteDataMigration.ImportAll(); Refresh(); }
         }
+        showColors = EditorGUILayout.Foldout(showColors, "Point Type Colors", true);
+        if (showColors) { colorsScroll = EditorGUILayout.BeginScrollView(colorsScroll, GUILayout.MaxHeight(200)); PointNotePalette.DrawSettings(); EditorGUILayout.EndScrollView(); }
+        EditorGUILayout.HelpBox("Game-wide Note Data catalog, including records not placed in a scene. Scene PointNotes reference these assets; positions, trigger volumes and UnityEvents remain local.", MessageType.Info);
         using (new EditorGUILayout.HorizontalScope())
         {
-            using (new EditorGUILayout.VerticalScope(GUILayout.Width(position.width * .43f)))
+            using (new EditorGUILayout.VerticalScope(GUILayout.Width(position.width * .40f)))
             {
-                listScroll = EditorGUILayout.BeginScrollView(listScroll);
-                int shown = 0;
-                foreach (var entry in entries)
+                listScroll = EditorGUILayout.BeginScrollView(listScroll); int shown = 0;
+                var style = new GUIStyle(EditorStyles.miniButton) { alignment = TextAnchor.UpperLeft, fixedHeight = 0, wordWrap = false, padding = new RectOffset(8,8,6,6), fontSize = 12 };
+                foreach (var record in records)
                 {
-                    if (entry.note == null || statusFilter > 0 && (int)entry.note.status != statusFilter - 1) continue;
-                    if (typeFilter > 0 && (int)entry.note.pointType != typeFilter - 1) continue;
-                    string content = entry.note.title + " " + entry.note.note + " " + entry.location + " " + entry.hierarchy + " " + entry.note.pointType + " " + entry.note.missionId + " " + entry.note.objectiveId + " " + entry.note.missionDescription + " " + entry.note.objectiveDescription + " " + (entry.note.relatedItem != null ? entry.note.relatedItem.itemName : "") + " " + (entry.note.relatedDocument != null ? entry.note.relatedDocument.title : "");
+                    if (typeFilter > 0 && (int)record.pointType != typeFilter - 1 || statusFilter > 0 && (int)record.status != statusFilter - 1) continue;
+                    if (locationFilter.Length > 0 && record.location != locationFilter) continue;
+                    string content = record.title + " " + record.note + " " + record.location + " " + record.plannedScene + " " + record.missionId + " " + record.objectiveId + " " + record.missionDescription + " " + record.objectiveDescription;
                     if (!string.IsNullOrWhiteSpace(search) && content.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     shown++;
-                    entry.hierarchy = Path(entry.note.transform);
-                    var style = new GUIStyle(EditorStyles.miniButton)
-                    {
-                        alignment = TextAnchor.UpperLeft,
-                        wordWrap = true,
-                        fixedHeight = 0,
-                        fontSize = 12,
-                        padding = new RectOffset(8, 8, 6, 6)
-                    };
-                    string label = "[" + entry.note.pointType + " | " + entry.note.status + "] " + entry.note.title + "\n" + entry.hierarchy + "\n" + (entry.prefab ? "Prefab: " : "Scene: ") + entry.location;
-                    // miniButton has a fixed single-line height; allocate the wrapped content explicitly.
-                    float rowWidth = Mathf.Max(120, position.width * .43f - 28);
-                    float rowHeight = Mathf.Max(64, style.CalcHeight(new GUIContent(label), rowWidth));
-                    if (GUILayout.Toggle(selected == entry, label, style, GUILayout.Height(rowHeight))) selected = entry;
+                    string label = (record.title ?? "").Replace('\n',' ').Replace('\r',' ') + "\n" + record.pointType + " | " + record.status;
+                    if (GUILayout.Toggle(selected == record, new GUIContent(label, content + "\n" + AssetDatabase.GetAssetPath(record)), style, GUILayout.Height(46))) selected = record;
                     GUILayout.Space(3);
                 }
-                EditorGUILayout.EndScrollView();
-                EditorGUILayout.LabelField(shown + " / " + entries.Count + " notes", EditorStyles.miniLabel);
+                EditorGUILayout.EndScrollView(); EditorGUILayout.LabelField(shown + " / " + records.Count + " data records", EditorStyles.miniLabel);
             }
-            using (new EditorGUILayout.VerticalScope()) DrawDetails();
+            using (new EditorGUILayout.VerticalScope())
+            {
+                detailScroll = EditorGUILayout.BeginScrollView(detailScroll);
+                if (selected == null) EditorGUILayout.HelpBox("Select a data record, or import existing scene notes to populate this catalog.", MessageType.Info);
+                else
+                {
+                    EditorGUILayout.SelectableLabel(AssetDatabase.GetAssetPath(selected), GUILayout.Height(20));
+                    using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
+                    {
+                        PointNoteDataTools.DrawData(selected);
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            if (GUILayout.Button("Place Note Point")) Place(false);
+                            if (selected.pointType == PointNote.PointType.Trigger && GUILayout.Button("Place Runtime Trigger")) Place(true);
+                            if (GUILayout.Button("Ping Data")) EditorGUIUtility.PingObject(selected);
+                        }
+                        using (new EditorGUI.DisabledScope(Selection.activeGameObject == null || EditorUtility.IsPersistent(Selection.activeGameObject)))
+                            if (GUILayout.Button("Bind Data to Selected GameObject"))
+                            {
+                                var go = Selection.activeGameObject;
+                                var point = go.GetComponent<PointNote>(); if (point == null) point = Undo.AddComponent<PointNote>(go);
+                                Undo.RecordObject(point, "Assign Note Data"); point.data = selected;
+                                PrefabUtility.RecordPrefabInstancePropertyModifications(point); PointNoteEditor.ApplyDesignChanges(point); EditorSceneManager.MarkSceneDirty(go.scene);
+                            }
+                    }
+                    EditorGUILayout.Space(); EditorGUILayout.LabelField("Placements in Loaded Scenes / Prefab Stage", EditorStyles.boldLabel);
+                    int count = 0;
+                    foreach (var point in UnityEngine.Object.FindObjectsByType<PointNote>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    {
+                        if (point.data != selected) continue; count++;
+                        if (GUILayout.Button(point.gameObject.scene.name + " / " + point.name)) { Selection.activeGameObject = point.gameObject; SceneView.lastActiveSceneView?.FrameSelected(); }
+                    }
+                    if (count == 0) EditorGUILayout.HelpBox("No placement in currently loaded scenes. Data exists independently of placement.", MessageType.Info);
+                }
+                EditorGUILayout.EndScrollView();
+            }
         }
     }
-    private void DrawDetails()
+    private void Place(bool runtimeTrigger)
     {
-        if (selected == null || selected.note == null) { EditorGUILayout.HelpBox("Select a note to view its text, location and point information.", MessageType.Info); return; }
-        var note = selected.note;
-        EditorGUILayout.LabelField(selected.prefab ? "Prefab asset" : "Scene object", EditorStyles.boldLabel);
-        EditorGUILayout.SelectableLabel(selected.location, GUILayout.Height(34));
-        EditorGUILayout.SelectableLabel(selected.hierarchy, GUILayout.Height(34));
-        using (new EditorGUI.DisabledScope(true))
-        {
-            EditorGUILayout.Vector3Field(selected.prefab ? "Prefab position" : "World position", note.transform.position);
-            EditorGUILayout.Vector3Field("Local position", note.transform.localPosition);
-        }
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button(selected.prefab ? "Open Prefab" : "Select / Frame"))
-            {
-                if (selected.prefab) AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<GameObject>(selected.assetPath));
-                else { Selection.activeGameObject = note.gameObject; SceneView.lastActiveSceneView?.FrameSelected(); }
-            }
-            if (GUILayout.Button("Ping")) EditorGUIUtility.PingObject(selected.prefab ? AssetDatabase.LoadAssetAtPath<GameObject>(selected.assetPath) : note.gameObject);
-        }
-        if (selected.prefab) EditorGUILayout.HelpBox("Asset notes are read-only here. Open Prefab to edit safely in Prefab Mode, then Refresh.", MessageType.Info);
-        detailScroll = EditorGUILayout.BeginScrollView(detailScroll);
-        var data = new SerializedObject(note); data.Update();
-        using (new EditorGUI.DisabledScope(selected.prefab || EditorApplication.isPlaying))
-        {
-            foreach (var field in new[] { "pointType", "title", "status", "note" })
-                EditorGUILayout.PropertyField(data.FindProperty(field), true);
-            EditorGUILayout.PropertyField(data.FindProperty("autoNameInHierarchy"));
-            var type = (PointNote.PointType)data.FindProperty("pointType").enumValueIndex;
-            if (PointNoteEditor.HasMissionDesign(type))
-            {
-                EditorGUILayout.LabelField("Mission / Objective Design", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("Authoring metadata only. Status tracks design work, not mission progress in gameplay.", MessageType.Info);
-                PointNoteEditor.DrawDesignFields(data, type);
-                if (type == PointNote.PointType.Mission) PointNoteEditor.DrawMissionFields(data);
-                if (type == PointNote.PointType.Objective) PointNoteEditor.DrawPrerequisiteFields(data);
-            }
-            EditorGUILayout.LabelField("Related Content", EditorStyles.boldLabel);
-            foreach (var field in new[] { "relatedItem", "relatedDocument", "relatedPrefab", "relatedObject", "showGizmos", "showLabel", "markerSize", "labelSize", "labelOffset", "overrideColors" })
-                EditorGUILayout.PropertyField(data.FindProperty(field), true);
-            if (data.FindProperty("overrideColors").boolValue)
-                foreach (var field in new[] { "markerColor", "labelBackground", "labelTextColor" }) EditorGUILayout.PropertyField(data.FindProperty(field));
-            if (data.ApplyModifiedProperties())
-            {
-                PointNoteEditor.ApplyDesignChanges(note);
-                selected.hierarchy = Path(note.transform);
-                PrefabUtility.RecordPrefabInstancePropertyModifications(note);
-                EditorSceneManager.MarkSceneDirty(note.gameObject.scene);
-            }
-            PointNoteEditor.DrawValidation(note);
-            if (GUILayout.Button(PointNoteEditor.HasMissionDesign(type) ? "Sync hierarchy name and mission IDs" : "Sync hierarchy name")) PointNoteEditor.ApplyDesignChanges(note);
-        }
-        EditorGUILayout.EndScrollView();
+        var go = new GameObject("[" + selected.pointType + "] " + selected.title); Undo.RegisterCreatedObjectUndo(go, "Place Note Data");
+        StageUtility.PlaceGameObjectInCurrentStage(go);
+        if (SceneView.lastActiveSceneView != null) go.transform.position = SceneView.lastActiveSceneView.pivot;
+        var point = Undo.AddComponent<PointNote>(go); point.data = selected;
+        if (runtimeTrigger) TriggerNoteLink.Create(point);
+        EditorSceneManager.MarkSceneDirty(go.scene); Selection.activeGameObject = go;
     }
 }
