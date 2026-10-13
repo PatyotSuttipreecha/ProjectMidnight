@@ -1,0 +1,1 @@
+PASS Unity 6000.2.4f1: 5572 triangles; accessible house corridor, native mesh/material prefab, no runtime scripts. Based on GDD old Isan timber house and local world-reference-v3-dark.

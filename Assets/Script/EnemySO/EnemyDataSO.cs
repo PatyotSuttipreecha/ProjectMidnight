@@ -50,6 +50,34 @@ public class EnemyDataSO : ScriptableObject
     [Tooltip("Optional Animator state name on layer 0 for faster visible pursuit. Empty or missing state uses the walk animation.")]
     public string runAnimation = "";
 
+    [Header("Approach Decisions")]
+    [Tooltip("Choose direct pressure, a side approach, or a short faster approach. Does not change attack animation or damage.")]
+    public bool useApproachDecisions = true;
+    [Tooltip("Seconds to commit to an approach before considering a new one. Decisions are not changed every frame.")]
+    [Min(.5f)] public float approachDecisionInterval = 2.5f;
+    [Tooltip("Relative weights for Direct, Flank and Burst. All zero uses Direct.")]
+    public Vector3 approachWeights = new Vector3(1f, 1f, .6f);
+    [Tooltip("Side approach angle relative to the enemy's direction when the decision is made.")]
+    [Range(0f, 75f)] public float flankAngle = 40f;
+    [Tooltip("Movement speed multiplier for a direct pressure approach, outside the slowdown zone.")]
+    [Range(.1f, 1f)] public float pressureSpeedMultiplier = .7f;
+    [Tooltip("Movement speed multiplier for a burst approach, outside the slowdown zone.")]
+    [Range(1f, 2f)] public float burstSpeedMultiplier = 1.25f;
+
+    [Header("Group Engagement")]
+    [Tooltip("Reserve attack turns per player. Enemies without a turn hold pressure positions instead of all rushing into melee.")]
+    public bool coordinateAttacks = true;
+    [Tooltip("Maximum simultaneous reserved attackers for the same target. Use consistent limits for profiles in the same encounter.")]
+    [Min(1)] public int maxConcurrentAttackers = 2;
+    [Tooltip("Distance from the player at which an enemy can request an attack turn.")]
+    [Min(.5f)] public float engagementDistance = 6f;
+    [Tooltip("Pressure ring radius for enemies waiting for a turn. Automatically kept outside attack range.")]
+    [Min(.5f)] public float pressureRingRadius = 3.5f;
+    [Tooltip("Maximum approach time for a reserved attacker before releasing its turn if unable to attack.")]
+    [Min(.5f)] public float attackTurnTimeout = 4f;
+    [Tooltip("Delay before requesting another turn after attacking, being interrupted, or timing out. Lets other enemies take a turn.")]
+    [Min(.1f)] public float attackTurnRest = 1f;
+
     [Header("Navigation Steering")]
     [Tooltip("NavMeshAgent acceleration limit in units per second squared.")]
     [Min(0f)] public float acceleration = 8f;

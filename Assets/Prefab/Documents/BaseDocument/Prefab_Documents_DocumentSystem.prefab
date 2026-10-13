@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5145973676510125962}
   - component: {fileID: 3704525200246943660}
   m_Layer: 0
-  m_Name: DocumentSystem
+  m_Name: Prefab_Documents_DocumentSystem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -277,7 +277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4169547380687766543}
   m_Layer: 0
-  m_Name: DocumentModel
+  m_Name: Prefab_Documents_DocumentModel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

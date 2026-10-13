@@ -7,7 +7,12 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
     public enum PatrolMode { Random, Loop, PingPong }
-    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction }
+    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure }
+    public enum ApproachStyle { Direct, Flank, Burst }
+    public ApproachStyle CurrentApproach { get; private set; }
+    public bool HasAttackTurn => enemyData != null && (!enemyData.coordinateAttacks || EnemyAttackCoordinator.HasTurn(this, player));
+    private float nextApproachDecision, turnDeadline, nextTurnRequest;
+    private Vector3 committedApproachDirection;
     public EnemyState CurrentState { get; private set; }
     public bool IsDead { get; private set; }
     // Raised once after death setup, before the corpse is removed.
@@ -285,6 +290,7 @@ public class EnemyController : MonoBehaviour
     public void PausePatrol()
     {
         if (IsDead) return;
+        ReleaseAttackTurn();
         IsPatrolRunning = false;
         StopAllCoroutines(); // Only attack routines run while this enemy is alive.
         attackRoutine = null;
@@ -346,15 +352,17 @@ public class EnemyController : MonoBehaviour
             }
         }
 
+        UpdateApproachAndTurn();
         if (isAttacking) return;
         UpdateMovementSpeed();
         agent.isStopped = false;
         if (isAlert)
         {
             CurrentState = playerDetected ? EnemyState.Chase : EnemyState.Search;
+            if (playerDetected && enemyData.coordinateAttacks && !HasAttackTurn) CurrentState = EnemyState.Pressure;
             // Attack needs reach and clear sight, not the patrol vision cone.
             // A nearby player can be beside the enemy after an avoidance manoeuvre.
-            if (attackTimer <= 0f && InAttackRange())
+            if (attackTimer <= 0f && InAttackRange() && HasAttackTurn)
             {
                 attackRoutine = StartCoroutine(PerformAttack());
                 return;
@@ -392,8 +400,74 @@ public class EnemyController : MonoBehaviour
             float outer = Mathf.Max(range + .01f, enemyData.chaseSlowdownDistance);
             float blend = Mathf.InverseLerp(range, outer, distance);
             speed = Mathf.Lerp(Mathf.Max(0f, enemyData.closeApproachSpeed), Mathf.Max(0f, enemyData.chaseSpeed), blend);
+            if (enemyData.useApproachDecisions)
+            {
+                float multiplier = CurrentApproach == ApproachStyle.Burst ? enemyData.burstSpeedMultiplier :
+                    CurrentApproach == ApproachStyle.Direct ? enemyData.pressureSpeedMultiplier : 1f;
+                speed *= Mathf.Lerp(1f, Mathf.Max(.1f, multiplier), blend);
+            }
+            if (enemyData.coordinateAttacks && !HasAttackTurn && distance <= Mathf.Max(enemyData.engagementDistance, enemyData.attackRange))
+                speed = Mathf.Min(speed, Mathf.Max(enemyData.walkSpeed, enemyData.closeApproachSpeed));
         }
         agent.speed = Mathf.MoveTowards(agent.speed, speed, Mathf.Max(.1f, enemyData.speedChangeRate) * Time.deltaTime);
+    }
+
+    private void UpdateApproachAndTurn()
+    {
+        if (isAlert && playerDetected && player != null && !isAttacking && Time.time >= nextApproachDecision)
+        {
+            nextApproachDecision = Time.time + Mathf.Max(.5f, enemyData.approachDecisionInterval);
+            Vector3 weights = enemyData.approachWeights;
+            float direct = Mathf.Max(0f, weights.x), flank = Mathf.Max(0f, weights.y), burst = Mathf.Max(0f, weights.z);
+            float roll = Random.value * (direct + flank + burst);
+            CurrentApproach = !enemyData.useApproachDecisions || direct + flank + burst <= 0f ? ApproachStyle.Direct :
+                roll < direct ? ApproachStyle.Direct : roll < direct + flank ? ApproachStyle.Flank : ApproachStyle.Burst;
+            Vector3 side = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up).normalized;
+            if (side.sqrMagnitude < .01f) side = approachDirection;
+            committedApproachDirection = Quaternion.AngleAxis((approachDirection.x < 0f ? -1f : 1f) * enemyData.flankAngle, Vector3.up) * side;
+        }
+        if (!enemyData.coordinateAttacks) { EnemyAttackCoordinator.Release(this); return; }
+        bool reserved = EnemyAttackCoordinator.HasTurn(this, player);
+        if (isAttacking)
+        {
+            // Hold the turn through preparation, damage and recovery.
+            EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers);
+            return;
+        }
+        if (!isAlert || !playerDetected || player == null || attackTimer > 0f ||
+            reserved && Time.time >= turnDeadline)
+        {
+            if (reserved) ReleaseAttackTurn();
+            return;
+        }
+        if (Time.time < nextTurnRequest || Vector3.Distance(transform.position, player.position) > Mathf.Max(enemyData.engagementDistance, enemyData.attackRange)) return;
+        if (EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers) && !reserved)
+            turnDeadline = Time.time + Mathf.Max(.5f, enemyData.attackTurnTimeout);
+    }
+
+    private void ReleaseAttackTurn()
+    {
+        EnemyAttackCoordinator.Release(this);
+        nextTurnRequest = Time.time + (enemyData != null ? Mathf.Max(.1f, enemyData.attackTurnRest) : 1f);
+    }
+
+    private bool SetPressureDestination()
+    {
+        if (!enemyData.coordinateAttacks || HasAttackTurn || !playerDetected || player == null) return false;
+        float radius = Mathf.Max(enemyData.pressureRingRadius, enemyData.attackRange + agent.radius + .5f);
+        float distance = Vector3.Distance(transform.position, lastKnownPlayerPosition);
+        if (distance > Mathf.Max(radius + 1f, enemyData.engagementDistance)) return false;
+        Vector3 side = committedApproachDirection.sqrMagnitude > .01f ? committedApproachDirection : approachDirection;
+        Vector3 desired = lastKnownPlayerPosition + side * radius;
+        if (NavMesh.SamplePosition(desired, out var hit, .6f, agent.areaMask) &&
+            Mathf.Abs(hit.position.y - lastKnownPlayerPosition.y) < .75f &&
+            Vector3.Distance(hit.position, lastKnownPlayerPosition) > enemyData.attackRange &&
+            agent.CalculatePath(hit.position, approachPath) && approachPath.status == NavMeshPathStatus.PathComplete)
+        {
+            if (!agent.hasPath || (agent.destination - hit.position).sqrMagnitude > .09f) agent.SetDestination(hit.position);
+        }
+        else agent.isStopped = true; // Wait where reachable rather than rush into a blocked slot.
+        return true;
     }
 
     private void PlayLocomotion(bool moving)
@@ -431,6 +505,7 @@ public class EnemyController : MonoBehaviour
     private void SetChaseDestination()
     {
         if (approachPath == null) approachPath = new NavMeshPath();
+        if (SetPressureDestination()) return;
         // Search uses the last seen position; offset only a currently visible target.
         float targetDistance = Vector3.ProjectOnPlane(lastKnownPlayerPosition - transform.position, Vector3.up).magnitude;
         if (playerDetected && enemyData.spreadChaseTargets &&
@@ -439,14 +514,17 @@ public class EnemyController : MonoBehaviour
             // Allow for the agent's stopping distance so the enemy can still reach attack range.
             float radius = Mathf.Min(Mathf.Max(0f, enemyData.chaseApproachRadius),
                 Mathf.Max(0f, enemyData.attackRange - agent.stoppingDistance - .25f));
+            bool flank = enemyData.useApproachDecisions && CurrentApproach == ApproachStyle.Flank;
+            if (flank) radius = Mathf.Min(Mathf.Max(0f, enemyData.chaseApproachRadius), targetDistance * .5f);
             // Approach from this enemy's side; a fixed world-space slot could
             // send it around/behind the player and out of its own vision cone.
             Vector3 towardEnemy = Vector3.ProjectOnPlane(transform.position - lastKnownPlayerPosition, Vector3.up).normalized;
-            Vector3 direction = Quaternion.AngleAxis(approachDirection.x * 35f, Vector3.up) * towardEnemy;
+            Vector3 direction = enemyData.useApproachDecisions && CurrentApproach == ApproachStyle.Flank && committedApproachDirection.sqrMagnitude > .01f
+                ? committedApproachDirection : Quaternion.AngleAxis(approachDirection.x * 35f, Vector3.up) * towardEnemy;
             Vector3 desired = lastKnownPlayerPosition + direction * radius;
             if (radius > 0f && NavMesh.SamplePosition(desired, out var hit, .5f, agent.areaMask) &&
                 Mathf.Abs(hit.position.y - lastKnownPlayerPosition.y) < .75f &&
-                Vector3.Distance(hit.position, lastKnownPlayerPosition) + agent.stoppingDistance < enemyData.attackRange &&
+                (flank || Vector3.Distance(hit.position, lastKnownPlayerPosition) + agent.stoppingDistance < enemyData.attackRange) &&
                 agent.CalculatePath(hit.position, approachPath) && approachPath.status == NavMeshPathStatus.PathComplete)
             {
                 // Do not replace the active path every interval: it can repeatedly
@@ -560,6 +638,7 @@ public class EnemyController : MonoBehaviour
             yield return new WaitForSeconds(preparation);
             if (!InAttackRange())
             {
+                ReleaseAttackTurn();
                 isAttacking = false;
                 if (AgentReady) agent.isStopped = false;
                 animationState = 0;
@@ -581,6 +660,7 @@ public class EnemyController : MonoBehaviour
         isAttacking = false;
         if (AgentReady) agent.isStopped = false;
         animationState = 0;
+        ReleaseAttackTurn();
     }
 
     private void PlayAnimation(int state)
@@ -592,6 +672,7 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        ReleaseAttackTurn();
         activeEnemies.Remove(this);
         GameplayNoise.Emitted -= HearNoise;
         investigatingNoise = false;
@@ -607,6 +688,7 @@ public class EnemyController : MonoBehaviour
     public void BeginDeath()
     {
         if (IsDead) return;
+        ReleaseAttackTurn();
         if (hitReaction != null) hitReaction.Cancel();
         IsDead = true;
         CurrentState = EnemyState.Dead;
@@ -786,6 +868,7 @@ public class EnemyController : MonoBehaviour
             float push = Mathf.Max(0f, enemyData.hitKnockbackDistance);
             if (stagger > 0f || push > 0f)
             {
+                ReleaseAttackTurn();
                 if (attackRoutine != null) { StopCoroutine(attackRoutine); attackRoutine = null; }
                 isAttacking = false;
                 staggerRemaining = Mathf.Max(staggerRemaining, stagger);
@@ -838,6 +921,7 @@ public class EnemyController : MonoBehaviour
                 case EnemyState.Patrol: return new Color(0.15f, 1f, 0.25f);
                 case EnemyState.Waiting: return Color.yellow;
                 case EnemyState.Chase: return new Color(1f, 0.4f, 0f);
+                case EnemyState.Pressure: return new Color(1f, .75f, .2f);
                 case EnemyState.Search: return new Color(0.75f, 0.3f, 1f);
                 case EnemyState.Attack: return Color.red;
                 case EnemyState.Dead: return new Color(0.6f, 0.6f, 0.6f);
