@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Prefab_Character_TheLost_Unarmed_LowPoly",
+    "triangles": 792,
+    "parts": 22
+  },
+  {
+    "name": "Prefab_Character_TheLost_Machete_LowPoly",
+    "triangles": 864,
+    "parts": 24
+  },
+  {
+    "name": "Prefab_Character_TheLost_WoodClub_LowPoly",
+    "triangles": 820,
+    "parts": 23
+  },
+  {
+    "name": "Prefab_Character_TheLost_HeavyAxe_LowPoly",
+    "triangles": 880,
+    "parts": 25
+  },
+  {
+    "name": "Prefab_Character_TheLost_Stone_LowPoly",
+    "triangles": 828,
+    "parts": 23
+  },
+  {
+    "name": "Prefab_Character_TheLost_Torch_LowPoly",
+    "triangles": 892,
+    "parts": 25
+  }
+]

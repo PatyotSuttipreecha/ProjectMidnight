@@ -25,6 +25,25 @@ public class EnemyDataSO : ScriptableObject
     [Header("Shared Profile and Health")]
     [Tooltip("Use this profile for health, navigation, combat and physics settings instead of legacy per-enemy values.")]
     public bool useSharedSettings;
+    [Header("The Lost - Base and Loadout")]
+    [Tooltip("Opt in to anticipation, facing-limited hits, recovery, restraint and weapon modules. Disabled preserves legacy attacks.")]
+    public bool useLostCombat;
+    [Tooltip("Initial optional weapon. Empty is unarmed. Runtime drops never change this shared asset.")]
+    public EnemyWeaponSO startingWeapon;
+    [Tooltip("Seconds to stop before confirming a newly visible player or investigating a sound.")]
+    [Min(0)] public float detectAnticipation = .4f;
+    [Tooltip("Unarmed hit cone around the facing locked at windup start.")]
+    [Range(1, 180)] public float baseHitArc = 90f;
+    [Tooltip("Stopped recovery after an unarmed hit attempt, even when it misses.")]
+    [Min(.05f)] public float baseRecovery = .8f;
+    [Tooltip("Optional layer-0 unarmed state. Missing state uses zombie_attack2_1.")]
+    public string baseAttackAnimation;
+    [Tooltip("Brief slowdown on an unarmed catch. No input lock or QTE. Zero disables.")]
+    [Min(0)] public float restraintDuration = .4f;
+    [Tooltip("Movement speed multiplier during restraint. Never freezes movement.")]
+    [Range(.25f, 1)] public float restraintSpeedMultiplier = .65f;
+    [Tooltip("Minimum immunity to additional Lost melee and stone hits after a successful hit. Not general invincibility.")]
+    [Min(0)] public float playerHitProtection = .75f;
     [Tooltip("Health assigned when the enemy is initialized.")]
     [Min(1f)] public float startingHealth = 100f;
 

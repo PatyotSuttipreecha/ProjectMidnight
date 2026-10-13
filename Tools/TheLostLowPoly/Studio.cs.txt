@@ -1,0 +1,12 @@
+    private static void Studio()
+    {
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+        int i=0;foreach(string type in new[]{"Unarmed","Machete","WoodClub","HeavyAxe","Stone","Torch"}){var actor=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"Prefab_Character_TheLost_"+type+"_LowPoly.prefab"));actor.transform.position=new Vector3((2.5f-i++)*1.1f,0,0);}
+        var rd=ScriptableObject.CreateInstance<UniversalRendererData>();AssetDatabase.CreateAsset(rd,Folder+"PreviewRenderer.asset");var pipeline=UniversalRenderPipelineAsset.Create(rd);AssetDatabase.CreateAsset(pipeline,Folder+"PreviewPipeline.asset");GraphicsSettings.defaultRenderPipeline=pipeline;QualitySettings.renderPipeline=pipeline;
+        RenderSettings.ambientMode=AmbientMode.Flat;RenderSettings.ambientLight=new Color(.55f,.58f,.62f);
+        var light=new GameObject("PreviewLight").AddComponent<Light>();light.type=LightType.Directional;light.intensity=1.6f;light.transform.rotation=Quaternion.Euler(30,160,0);
+        var c=new GameObject("PreviewCamera").AddComponent<Camera>();c.orthographic=true;c.orthographicSize=1.65f;c.nearClipPlane=.01f;c.farClipPlane=30;c.clearFlags=CameraClearFlags.SolidColor;c.backgroundColor=new Color(.08f,.10f,.12f);c.gameObject.AddComponent<UniversalAdditionalCameraData>();c.transform.position=new Vector3(0,2.0f,10);c.transform.LookAt(new Vector3(0,.86f,0));
+        var rt=new RenderTexture(1800,850,24);rt.Create();c.targetTexture=rt;RenderPipeline.SubmitRenderRequest(c,new UniversalRenderPipeline.SingleCameraRequest{destination=rt});var old=RenderTexture.active;RenderTexture.active=rt;var t=new Texture2D(1800,850,TextureFormat.RGB24,false);t.ReadPixels(new Rect(0,0,1800,850),0,0);t.Apply();File.WriteAllBytes(Path.Combine(Application.dataPath,"../TheLost-lineup.png"),t.EncodeToPNG());RenderTexture.active=old;c.targetTexture=null;rt.Release();UnityEngine.Object.DestroyImmediate(rt);UnityEngine.Object.DestroyImmediate(t);
+        EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(),Folder+"TheLost_Preview.unity");AssetDatabase.SaveAssets();
+    }
+

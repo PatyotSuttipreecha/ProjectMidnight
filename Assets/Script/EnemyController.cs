@@ -7,7 +7,13 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
     public enum PatrolMode { Random, Loop, PingPong }
-    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure }
+    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure, Detect, Preparation, Recovery }
+    private EnemyWeaponRuntime weaponRuntime;
+    private EnemyStoneProjectile activeStone;
+    private float sightConfirmation, noiseAnticipation;
+    public EnemyWeaponSO CurrentWeapon => Application.isPlaying ? (weaponRuntime != null ? weaponRuntime.Current : null) :
+        enemyData != null && enemyData.useLostCombat ? enemyData.startingWeapon : null;
+    public float AttackReach => CurrentWeapon != null ? Mathf.Max(.1f, CurrentWeapon.range) : enemyData != null ? enemyData.attackRange : 0;
     public enum ApproachStyle { Direct, Flank, Burst }
     public ApproachStyle CurrentApproach { get; private set; }
     public bool HasAttackTurn => enemyData != null && (!enemyData.coordinateAttacks || EnemyAttackCoordinator.HasTurn(this, player));
@@ -177,7 +183,9 @@ public class EnemyController : MonoBehaviour
         if (!NavMesh.SamplePosition(position, out var hit, 2f, agent.areaMask)) return;
         var path = new NavMeshPath();
         if (!agent.CalculatePath(hit.position, path) || path.status != NavMeshPathStatus.PathComplete) return;
+        bool newInvestigation = !investigatingNoise;
         investigatingNoise = true; noisePosition = hit.position; noiseSearchTimer = noiseTravelTimer = 0;
+        if (newInvestigation) noiseAnticipation = enemyData.useLostCombat ? Mathf.Max(0, enemyData.detectAnticipation) : 0;
         agent.isStopped = false; agent.SetPath(path); CurrentState = EnemyState.Search;
     }
     private float attackTimer;
@@ -250,6 +258,12 @@ public class EnemyController : MonoBehaviour
             agent.avoidancePriority = 30 + nextApproachSlot % 40;
         animator = GetComponent<Animator>();
         ApplySharedProfile();
+        if (enemyData != null && enemyData.useLostCombat)
+        {
+            weaponRuntime = GetComponent<EnemyWeaponRuntime>();
+            if (weaponRuntime == null) weaponRuntime = gameObject.AddComponent<EnemyWeaponRuntime>();
+            weaponRuntime.Equip(enemyData.startingWeapon);
+        }
         if (patrolRoute != null) { patrolPoints = patrolRoute.points != null ? (Transform[])patrolRoute.points.Clone() : new Transform[0]; patrolMode = patrolRoute.mode; }
         // NavMeshAgent owns movement; animation must not also move the root.
         if (animator != null) animator.applyRootMotion = false;
@@ -295,6 +309,9 @@ public class EnemyController : MonoBehaviour
         StopAllCoroutines(); // Only attack routines run while this enemy is alive.
         attackRoutine = null;
         staggerRemaining = knockbackRemaining = 0f;
+        if (activeStone != null) activeStone.Cancel();
+        activeStone = null;
+        sightConfirmation = noiseAnticipation = 0;
         isAttacking = isAlert = playerDetected = investigatingNoise = false;
         returningToPatrol = true;
         waitTimer = 0f;
@@ -334,6 +351,19 @@ public class EnemyController : MonoBehaviour
             return;
         }
         playerDetected = CanSeePlayer();
+        if (enemyData.useLostCombat && !isAlert && playerDetected)
+        {
+            sightConfirmation += Time.deltaTime;
+            if (sightConfirmation < Mathf.Max(0, enemyData.detectAnticipation))
+            {
+                CurrentState = EnemyState.Detect;
+                agent.isStopped = true;
+                PlayAnimation(Idle);
+                FaceTarget(player);
+                return;
+            }
+        }
+        else sightConfirmation = 0;
         if (playerDetected)
         {
             investigatingNoise = false;
@@ -362,7 +392,7 @@ public class EnemyController : MonoBehaviour
             if (playerDetected && enemyData.coordinateAttacks && !HasAttackTurn) CurrentState = EnemyState.Pressure;
             // Attack needs reach and clear sight, not the patrol vision cone.
             // A nearby player can be beside the enemy after an avoidance manoeuvre.
-            if (attackTimer <= 0f && InAttackRange() && HasAttackTurn)
+            if (attackTimer <= 0f && InAttackRange() && HasAttackTurn && TargetAvailableForLostHit())
             {
                 attackRoutine = StartCoroutine(PerformAttack());
                 return;
@@ -378,6 +408,14 @@ public class EnemyController : MonoBehaviour
         {
             if (investigatingNoise)
             {
+                if (noiseAnticipation > 0)
+                {
+                    noiseAnticipation = Mathf.Max(0, noiseAnticipation - Time.deltaTime);
+                    CurrentState = EnemyState.Detect;
+                    agent.isStopped = true;
+                    PlayAnimation(Idle);
+                    return;
+                }
                 CurrentState = EnemyState.Search;
                 noiseTravelTimer += Time.deltaTime;
                 bool arrived = !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + .1f;
@@ -396,7 +434,7 @@ public class EnemyController : MonoBehaviour
         if (isAlert && playerDetected && player != null)
         {
             float distance = Vector3.Distance(transform.position, player.position);
-            float range = Mathf.Max(0f, enemyData.attackRange);
+            float range = Mathf.Max(0f, AttackReach);
             float outer = Mathf.Max(range + .01f, enemyData.chaseSlowdownDistance);
             float blend = Mathf.InverseLerp(range, outer, distance);
             speed = Mathf.Lerp(Mathf.Max(0f, enemyData.closeApproachSpeed), Mathf.Max(0f, enemyData.chaseSpeed), blend);
@@ -406,7 +444,7 @@ public class EnemyController : MonoBehaviour
                     CurrentApproach == ApproachStyle.Direct ? enemyData.pressureSpeedMultiplier : 1f;
                 speed *= Mathf.Lerp(1f, Mathf.Max(.1f, multiplier), blend);
             }
-            if (enemyData.coordinateAttacks && !HasAttackTurn && distance <= Mathf.Max(enemyData.engagementDistance, enemyData.attackRange))
+            if (enemyData.coordinateAttacks && !HasAttackTurn && distance <= Mathf.Max(enemyData.engagementDistance, AttackReach))
                 speed = Mathf.Min(speed, Mathf.Max(enemyData.walkSpeed, enemyData.closeApproachSpeed));
         }
         agent.speed = Mathf.MoveTowards(agent.speed, speed, Mathf.Max(.1f, enemyData.speedChangeRate) * Time.deltaTime);
@@ -434,13 +472,13 @@ public class EnemyController : MonoBehaviour
             EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers);
             return;
         }
-        if (!isAlert || !playerDetected || player == null || attackTimer > 0f ||
+        if (!isAlert || !playerDetected || player == null || attackTimer > 0f || !TargetAvailableForLostHit() ||
             reserved && Time.time >= turnDeadline)
         {
             if (reserved) ReleaseAttackTurn();
             return;
         }
-        if (Time.time < nextTurnRequest || Vector3.Distance(transform.position, player.position) > Mathf.Max(enemyData.engagementDistance, enemyData.attackRange)) return;
+        if (Time.time < nextTurnRequest || Vector3.Distance(transform.position, player.position) > Mathf.Max(enemyData.engagementDistance, AttackReach)) return;
         if (EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers) && !reserved)
             turnDeadline = Time.time + Mathf.Max(.5f, enemyData.attackTurnTimeout);
     }
@@ -454,14 +492,14 @@ public class EnemyController : MonoBehaviour
     private bool SetPressureDestination()
     {
         if (!enemyData.coordinateAttacks || HasAttackTurn || !playerDetected || player == null) return false;
-        float radius = Mathf.Max(enemyData.pressureRingRadius, enemyData.attackRange + agent.radius + .5f);
+        float radius = Mathf.Max(enemyData.pressureRingRadius, AttackReach + agent.radius + .5f);
         float distance = Vector3.Distance(transform.position, lastKnownPlayerPosition);
         if (distance > Mathf.Max(radius + 1f, enemyData.engagementDistance)) return false;
         Vector3 side = committedApproachDirection.sqrMagnitude > .01f ? committedApproachDirection : approachDirection;
         Vector3 desired = lastKnownPlayerPosition + side * radius;
         if (NavMesh.SamplePosition(desired, out var hit, .6f, agent.areaMask) &&
             Mathf.Abs(hit.position.y - lastKnownPlayerPosition.y) < .75f &&
-            Vector3.Distance(hit.position, lastKnownPlayerPosition) > enemyData.attackRange &&
+            Vector3.Distance(hit.position, lastKnownPlayerPosition) > AttackReach &&
             agent.CalculatePath(hit.position, approachPath) && approachPath.status == NavMeshPathStatus.PathComplete)
         {
             if (!agent.hasPath || (agent.destination - hit.position).sqrMagnitude > .09f) agent.SetDestination(hit.position);
@@ -509,11 +547,11 @@ public class EnemyController : MonoBehaviour
         // Search uses the last seen position; offset only a currently visible target.
         float targetDistance = Vector3.ProjectOnPlane(lastKnownPlayerPosition - transform.position, Vector3.up).magnitude;
         if (playerDetected && enemyData.spreadChaseTargets &&
-            targetDistance > enemyData.attackRange + agent.stoppingDistance + .5f)
+            targetDistance > AttackReach + agent.stoppingDistance + .5f)
         {
             // Allow for the agent's stopping distance so the enemy can still reach attack range.
             float radius = Mathf.Min(Mathf.Max(0f, enemyData.chaseApproachRadius),
-                Mathf.Max(0f, enemyData.attackRange - agent.stoppingDistance - .25f));
+                Mathf.Max(0f, AttackReach - agent.stoppingDistance - .25f));
             bool flank = enemyData.useApproachDecisions && CurrentApproach == ApproachStyle.Flank;
             if (flank) radius = Mathf.Min(Mathf.Max(0f, enemyData.chaseApproachRadius), targetDistance * .5f);
             // Approach from this enemy's side; a fixed world-space slot could
@@ -524,7 +562,7 @@ public class EnemyController : MonoBehaviour
             Vector3 desired = lastKnownPlayerPosition + direction * radius;
             if (radius > 0f && NavMesh.SamplePosition(desired, out var hit, .5f, agent.areaMask) &&
                 Mathf.Abs(hit.position.y - lastKnownPlayerPosition.y) < .75f &&
-                (flank || Vector3.Distance(hit.position, lastKnownPlayerPosition) + agent.stoppingDistance < enemyData.attackRange) &&
+                (flank || Vector3.Distance(hit.position, lastKnownPlayerPosition) + agent.stoppingDistance < AttackReach) &&
                 agent.CalculatePath(hit.position, approachPath) && approachPath.status == NavMeshPathStatus.PathComplete)
             {
                 // Do not replace the active path every interval: it can repeatedly
@@ -621,12 +659,17 @@ public class EnemyController : MonoBehaviour
 
     private bool InAttackRange()
     {
-        return player != null && Vector3.Distance(transform.position, player.position) <= enemyData.attackRange
+        return player != null && Vector3.Distance(transform.position, player.position) <= AttackReach
             && HasClearSight();
     }
 
     private IEnumerator PerformAttack()
     {
+        if (enemyData.useLostCombat)
+        {
+            yield return PerformLostAttack();
+            yield break;
+        }
         isAttacking = true;
         CurrentState = EnemyState.Attack;
         agent.isStopped = true;
@@ -663,6 +706,98 @@ public class EnemyController : MonoBehaviour
         ReleaseAttackTurn();
     }
 
+    private bool TargetAvailableForLostHit()
+    {
+        if (!enemyData.useLostCombat) return true;
+        var target = ResolveTargetTransform(player);
+        return target != null && target.TryGetComponent(out PlayerController controller) && EnemyPlayerEffects.For(controller).CanReceiveAttack;
+    }
+    private void FaceTarget(Transform target)
+    {
+        if (target == null) return;
+        Vector3 facing = Vector3.ProjectOnPlane(target.position - transform.position, Vector3.up);
+        if (facing.sqrMagnitude > .001f) transform.rotation = Quaternion.LookRotation(facing);
+    }
+    private IEnumerator PerformLostAttack()
+    {
+        var module = CurrentWeapon;
+        var target = ResolveTargetTransform(player);
+        float prep = module != null ? module.preparation : enemyData.attackPreparationTime;
+        float windup = module != null ? module.windup : attackWindup;
+        float recovery = module != null ? module.recovery : enemyData.baseRecovery;
+        isAttacking = true;
+        CurrentState = EnemyState.Preparation;
+        agent.isStopped = true;
+        attackTimer = Mathf.Max(0, prep) + Mathf.Max(0, windup) + Mathf.Max(.05f, recovery);
+        FaceTarget(target);
+        PlayAnimation(Idle);
+        if (prep > 0) yield return new WaitForSeconds(prep);
+        if (!InAttackRange() || !TargetAvailableForLostHit() || CurrentWeapon != module)
+        { FinishLostAttack(); yield break; }
+        // Last adjustment before windup. No tracking rotation during the hit window.
+        FaceTarget(target);
+        Vector3 facing = transform.forward;
+        Vector3 committedAim = target != null ? target.position + Vector3.up * playerTargetHeight : lastKnownPlayerPosition;
+        CurrentState = EnemyState.Attack;
+        string stateName = module != null ? module.attackAnimation : enemyData.baseAttackAnimation;
+        int state = !string.IsNullOrWhiteSpace(stateName) ? Animator.StringToHash(stateName) : Attack;
+        PlayAnimation(animator != null && animator.HasState(0, state) ? state : Attack);
+        if (windup > 0) yield return new WaitForSeconds(windup);
+        if (CurrentWeapon == module && target != null && TargetAvailableForLostHit())
+        {
+            if (module != null && module.loadout == EnemyWeaponSO.Loadout.Stone)
+            {
+                // One stone. Snapshot aim can miss if the player moves or hides behind cover.
+                Vector3 origin = transform.position + Vector3.up * eyeHeight + facing * .35f;
+                activeStone = EnemyStoneProjectile.Launch(transform, origin, committedAim,
+                    module, enemyData.playerHitProtection);
+                weaponRuntime.Consume();
+            }
+            else
+            {
+                Vector3 offset = Vector3.ProjectOnPlane(target.position - transform.position, Vector3.up);
+                float arc = module != null ? module.hitArc : enemyData.baseHitArc;
+                if (InAttackRange() && Vector3.Angle(facing, offset) <= arc * .5f && target.TryGetComponent(out PlayerController controller))
+                {
+                    float low = module != null ? module.minDamage : enemyData.minAttack;
+                    float high = module != null ? module.maxDamage : enemyData.maxAttack;
+                    var effects = EnemyPlayerEffects.For(controller);
+                    if (effects.TryHit(Random.Range(Mathf.Min(low, high), Mathf.Max(low, high)), enemyData.playerHitProtection,
+                        module == null ? enemyData.restraintDuration : 0, enemyData.restraintSpeedMultiplier) &&
+                        module != null && module.loadout == EnemyWeaponSO.Loadout.Torch)
+                        effects.Ignite(module.burnDuration, module.burnDamagePerSecond, module.burnEffect);
+                }
+            }
+        }
+        CurrentState = EnemyState.Recovery;
+        if (recovery > 0) yield return new WaitForSeconds(recovery);
+        // Keep the turn while a stone is in flight, even if recovery has ended.
+        while (activeStone != null && !activeStone.Finished) yield return null;
+        activeStone = null;
+        FinishLostAttack();
+    }
+    private void FinishLostAttack()
+    {
+        isAttacking = false;
+        attackRoutine = null;
+        animationState = 0;
+        if (AgentReady) agent.isStopped = false;
+        ReleaseAttackTurn();
+    }
+    private void InterruptLostAttack()
+    {
+        if (activeStone != null) activeStone.Cancel();
+        activeStone = null;
+        if (attackRoutine != null) StopCoroutine(attackRoutine);
+        attackRoutine = null;
+        isAttacking = false;
+        attackTimer = Mathf.Max(attackTimer, enemyData != null ? enemyData.attackTurnRest : 1f);
+        animationState = 0;
+        ReleaseAttackTurn();
+        PlayAnimation(Idle);
+        if (AgentReady) agent.isStopped = !IsPatrolRunning;
+    }
+
     private void PlayAnimation(int state)
     {
         if (animator == null || animationState == state) return;
@@ -672,6 +807,8 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        if (activeStone != null) activeStone.Cancel();
+        activeStone = null;
         ReleaseAttackTurn();
         activeEnemies.Remove(this);
         GameplayNoise.Emitted -= HearNoise;
@@ -688,6 +825,9 @@ public class EnemyController : MonoBehaviour
     public void BeginDeath()
     {
         if (IsDead) return;
+        if (activeStone != null) activeStone.Cancel();
+        activeStone = null;
+        if (weaponRuntime != null) weaponRuntime.Drop();
         ReleaseAttackTurn();
         if (hitReaction != null) hitReaction.Cancel();
         IsDead = true;
@@ -862,12 +1002,16 @@ public class EnemyController : MonoBehaviour
     public void ReceiveBulletImpact(Collider collider, Vector3 point, Vector3 direction)
     {
         if (collider == null || direction.sqrMagnitude < 0.001f) return;
+        if (!IsDead && weaponRuntime != null && weaponRuntime.TryDisarm(collider))
+            InterruptLostAttack();
         if (!IsDead && enableHitReaction && enemyData != null && IsPatrolRunning)
         {
             float stagger = Mathf.Max(0f, enemyData.hitStaggerDuration);
             float push = Mathf.Max(0f, enemyData.hitKnockbackDistance);
             if (stagger > 0f || push > 0f)
             {
+                if (activeStone != null) activeStone.Cancel();
+                activeStone = null;
                 ReleaseAttackTurn();
                 if (attackRoutine != null) { StopCoroutine(attackRoutine); attackRoutine = null; }
                 isAttacking = false;
@@ -926,6 +1070,9 @@ public class EnemyController : MonoBehaviour
                 case EnemyState.Attack: return Color.red;
                 case EnemyState.Dead: return new Color(0.6f, 0.6f, 0.6f);
                 case EnemyState.HitReaction: return new Color(0.1f, 0.6f, 1f);
+                case EnemyState.Detect: return new Color(1f, .85f, .25f);
+                case EnemyState.Preparation: return new Color(1f, .55f, .1f);
+                case EnemyState.Recovery: return new Color(.35f, .8f, .6f);
                 default: return Color.white;
             }
         }
@@ -1020,7 +1167,7 @@ public class EnemyController : MonoBehaviour
             previous = point;
         }
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, enemyData.attackRange);
+        Gizmos.DrawWireSphere(transform.position, AttackReach);
         if (Application.isPlaying && player != null && !IsDead)
         {
             Gizmos.color = playerDetected ? Color.green : Color.red;

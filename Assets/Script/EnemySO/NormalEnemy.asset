@@ -24,28 +24,55 @@ MonoBehaviour:
   gunshotHearingRadius: 15
   noiseSearchDuration: 3
   noiseTravelTimeout: 15
+  useSharedSettings: 1
+  useLostCombat: 0
+  startingWeapon: {fileID: 11400000, guid: 4106b5f3c0074ee2815830914d473b89, type: 2}
+  detectAnticipation: 0.4
+  baseHitArc: 90
+  baseRecovery: 0.8
+  baseAttackAnimation: 
+  restraintDuration: 0.4
+  restraintSpeedMultiplier: 0.65
+  playerHitProtection: 0.75
+  startingHealth: 100
+  walkSpeed: 0.5
+  waitTimeAtPoint: 5
+  chaseSpeed: 2.5
+  closeApproachSpeed: 0.5
+  chaseSlowdownDistance: 4
+  speedChangeRate: 5
+  chaseRepathInterval: 0.2
+  lostSightCooldown: 5
+  runAnimation: 
+  useApproachDecisions: 1
+  approachDecisionInterval: 2.5
+  approachWeights: {x: 1, y: 1, z: 0.6}
+  flankAngle: 40
+  pressureSpeedMultiplier: 0.7
+  burstSpeedMultiplier: 1.25
+  coordinateAttacks: 1
+  maxConcurrentAttackers: 2
+  engagementDistance: 6
+  pressureRingRadius: 3.5
+  attackTurnTimeout: 4
+  attackTurnRest: 1
+  acceleration: 8
+  turnSpeed: 120
+  stoppingDistance: 1
   spreadChaseTargets: 1
   chaseApproachRadius: 2
-  chaseRepathInterval: 0.2
   varyAvoidancePriority: 1
   separateNearbyEnemies: 1
   separationRadius: 2
   separationSpeed: 0.75
-  waitTimeAtPoint: 5
-  lostSightCooldown: 5
   minAttack: 20
   maxAttack: 30
   attackRange: 2
+  attackPreparationTime: 0.25
+  attackWindup: 0.5
   attackCooldown: 2
-  useSharedSettings: 1
-  startingHealth: 100
-  walkSpeed: 0.5
-  acceleration: 8
-  turnSpeed: 120
-  stoppingDistance: 1
   eyeHeight: 1
   playerTargetHeight: 1
-  attackWindup: 0.5
   useRagdoll: 1
   deathAnimation: zombie_dead2
   deathAnimationLeadIn: 0.6
@@ -65,6 +92,9 @@ MonoBehaviour:
   ragdollLinearDamping: 0.8
   ragdollAngularDamping: 1.5
   deathPushImpulse: 3
+  hitKnockbackDistance: 0.15
+  hitKnockbackDuration: 0.12
+  hitStaggerDuration: 0.3
   enableHitReaction: 1
   hitPushImpulse: 0.8
   hitPhysicsDuration: 0.12

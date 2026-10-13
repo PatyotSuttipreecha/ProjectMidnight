@@ -138,7 +138,7 @@ public class EnemyLabWindow : EditorWindow
             EditorGUILayout.LabelField("AI State: " + enemy.CurrentState, stateStyle);
             Repaint();
         }
-        EditorGUILayout.HelpBox("AI colours: white Idle | green Patrol | yellow Waiting | orange Chase | purple Search | red Attack | grey Dead. Pink patrol points turn yellow when targeted.", MessageType.Info);
+        EditorGUILayout.HelpBox("AI colours: white Idle | green Patrol | yellow Waiting/Detect | orange Chase/Preparation | purple Search | red Attack | mint Recovery | grey Dead. Pink patrol points turn yellow when targeted.", MessageType.Info);
         EditorGUILayout.HelpBox(EditorUtility.IsPersistent(enemy) ? "Editing prefab asset: " + AssetDatabase.GetAssetPath(enemy)
             : "Editing scene instance: " + enemy.gameObject.scene.name + " / " + enemy.name, MessageType.Info);
         if (EditorApplication.isPlaying)
@@ -237,6 +237,24 @@ public class EnemyLabWindow : EditorWindow
 
             }
             Section("Vision and Attack Details");
+            if (enemy.enemyData != null)
+            {
+                var lost = new SerializedObject(enemy.enemyData);
+                Section("The Lost - Base and Loadout");
+                Property(lost, "useLostCombat", "Use Lost combat");
+                Property(lost, "startingWeapon", "Starting weapon (empty = unarmed)");
+                Property(lost, "detectAnticipation", "Detect anticipation (seconds)");
+                Property(lost, "baseHitArc", "Unarmed hit arc (degrees)");
+                Property(lost, "baseRecovery", "Unarmed recovery (seconds)");
+                Property(lost, "baseAttackAnimation", "Unarmed animation state (optional)");
+                Property(lost, "restraintDuration", "Restraint duration (seconds)");
+                Property(lost, "restraintSpeedMultiplier", "Restrained movement multiplier");
+                Property(lost, "playerHitProtection", "Protection from repeated Lost hits");
+                if (lost.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
+                if (GUILayout.Button("Open Weapon Modules")) EnemyWeaponLabWindow.Open();
+                if (enemy.enemyData.useLostCombat && enemy.enemyData.obstacleMask.value == 0)
+                    EditorGUILayout.HelpBox("Obstacle Mask is empty: melee sight checks cannot block walls. Select the scene's world obstruction layers, excluding player and enemy hitboxes.", MessageType.Warning);
+            }
             controller.Update();
             tuning.Update();
             Property(tuning, "eyeHeight", "Enemy eye height");

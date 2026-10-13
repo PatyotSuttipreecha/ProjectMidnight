@@ -268,6 +268,8 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.S) && Input.GetMouseButton(1)) // ถอยหลังช้า
             currentSpeed -= 0.2f;
 
+        var enemyEffects = GetComponent<EnemyPlayerEffects>();
+        if (enemyEffects != null) currentSpeed *= enemyEffects.MovementMultiplier;
         ApplyGravity(move.normalized * currentSpeed);
         if (currentHealth > 0 && controller.isGrounded &&
             Vector3.ProjectOnPlane(controller.velocity, Vector3.up).sqrMagnitude > .01f && Time.time >= nextMovementNoise)
