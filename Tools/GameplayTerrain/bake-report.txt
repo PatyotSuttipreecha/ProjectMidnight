@@ -1,0 +1,12 @@
+Source: Scenes_Gameplay/TerrainMock/Terrain (ProBuilder)
+World origin: -115.20709272, -24.00000000, -17.63546020
+Terrain size: 304.04420000, 23.00000000, 479.88555900
+Heightmap: 1025 x 1025
+Source triangles: 102
+Height range: -22.23583126 to -2.79973500
+Max sample quantization error: 0.00035096 m
+Covered cells: 169299 / 1048576
+Native asset version: 6000.2.4f1
+Footprint is finalized through TerrainData.SetHoles on first Unity Editor import.
+Unity Editor compilation and visual verification have not been run.
+Independent verification of all 102 source triangle centres: maximum bilinear height error 0.00031247 m; mean 0.00013289 m.
