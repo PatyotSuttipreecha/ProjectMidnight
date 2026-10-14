@@ -1,0 +1,6 @@
+PASS Unity 6000.2.4f1
+Machete: 2 separate mesh parts, 72 triangles
+WoodClub: 1 separate mesh parts, 28 triangles
+HeavyAxe: 3 separate mesh parts, 88 triangles
+Stone: 1 separate mesh parts, 36 triangles
+Torch: 3 separate mesh parts, 100 triangles

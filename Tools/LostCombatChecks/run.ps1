@@ -3,7 +3,7 @@ $projectRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $validationRoot = Join-Path $projectRoot 'Library/EnemySpawningValidation'
 # Reuse the isolated AI harness; never run tests against the user's open scene.
 if (-not (Test-Path (Join-Path $validationRoot 'ProjectSettings'))) { throw 'Isolated EnemySpawningValidation project is required.' }
-$runtimeSources = @('EnemyController.cs','EnemyAttackCoordinator.cs','EnemyPlayerEffects.cs','EnemyStoneProjectile.cs','EnemyWeaponRuntime.cs','EnemySO/EnemyDataSO.cs','EnemySO/EnemyWeaponSO.cs','HitBox.cs')
+$runtimeSources = @('EnemyController.cs','EnemyAttackCoordinator.cs','EnemyPlayerEffects.cs','EnemyStoneProjectile.cs','EnemyWeaponRuntime.cs','EnemySO/EnemyDataSO.cs','EnemySO/EnemyWeaponSO.cs','HitBox.cs','EnemyGroup.cs','EnemySpawnPoint.cs')
 foreach ($relativeSource in $runtimeSources) {
     Copy-Item -LiteralPath (Join-Path $projectRoot "Assets/Script/$relativeSource") -Destination (Join-Path $validationRoot "Assets/$([IO.Path]::GetFileName($relativeSource))") -Force
     if (Test-Path (Join-Path $projectRoot "Assets/Script/$relativeSource.meta")) {

@@ -68,6 +68,13 @@ public class EnemyDataSO : ScriptableObject
     [Range(1f, 10f)] public float lostSightCooldown = 5f;
     [Tooltip("Optional Animator state name on layer 0 for faster visible pursuit. Empty or missing state uses the walk animation.")]
     public string runAnimation = "";
+    [Header("Chase Rhythm")]
+    [Tooltip("Alternate ordinary walking and short boosted pursuit while far from the target. Pressure and close Approach do not boost.")]
+    public bool useChaseRhythm = true;
+    [Tooltip("Minimum/maximum seconds of ordinary walking before the next burst. Sampled independently per enemy.")]
+    public Vector2 chaseWalkDuration = new Vector2(1.5f, 3f);
+    [Tooltip("Minimum/maximum seconds of boosted pursuit before returning to walking.")]
+    public Vector2 chaseBoostDuration = new Vector2(.7f, 1.4f);
 
     [Header("Approach Decisions")]
     [Tooltip("Choose direct pressure, a side approach, or a short faster approach. Does not change attack animation or damage.")]
@@ -80,18 +87,28 @@ public class EnemyDataSO : ScriptableObject
     [Range(0f, 75f)] public float flankAngle = 40f;
     [Tooltip("Movement speed multiplier for a direct pressure approach, outside the slowdown zone.")]
     [Range(.1f, 1f)] public float pressureSpeedMultiplier = .7f;
-    [Tooltip("Movement speed multiplier for a burst approach, outside the slowdown zone.")]
+    [Tooltip("Chase Burst speed = Chase Speed times this value. Also used by legacy Burst approach when Chase Rhythm is disabled.")]
     [Range(1f, 2f)] public float burstSpeedMultiplier = 1.25f;
 
     [Header("Group Engagement")]
+    [Tooltip("Track the player immediately without Detect/Search. Attack turn limits and damage obstruction checks remain active. Spawn/group can override this default.")]
+    public bool aggressiveOnStart;
     [Tooltip("Reserve attack turns per player. Enemies without a turn hold pressure positions instead of all rushing into melee.")]
     public bool coordinateAttacks = true;
     [Tooltip("Maximum simultaneous reserved attackers for the same target. Use consistent limits for profiles in the same encounter.")]
     [Min(1)] public int maxConcurrentAttackers = 2;
     [Tooltip("Distance from the player at which an enemy can request an attack turn.")]
     [Min(.5f)] public float engagementDistance = 6f;
-    [Tooltip("Pressure ring radius for enemies waiting for a turn. Automatically kept outside attack range.")]
-    [Min(.5f)] public float pressureRingRadius = 3.5f;
+    [Tooltip("Distance from the player's center while circling without an attack turn. Independent of weapon reach; body clearance is still enforced.")]
+    [Min(.5f)] public float pressureRingRadius = 1.8f;
+    [Tooltip("Walking speed while facing and circling the visible player.")]
+    [Min(0f)] public float pressureOrbitSpeed = .6f;
+    [Tooltip("Angle ahead of the current radial position used for each short orbit path.")]
+    [Range(5f, 60f)] public float pressureOrbitStep = 25f;
+    [Tooltip("Seconds without an attack turn before withdrawing to patrol. Zero keeps pressure indefinitely.")]
+    [Min(0f)] public float pressureWaitTimeout = 15f;
+    [Tooltip("Seconds ignoring sight and noise after withdrawing, allowing a return to patrol before detecting again.")]
+    [Min(.5f)] public float pressureRetreatCooldown = 8f;
     [Tooltip("Maximum approach time for a reserved attacker before releasing its turn if unable to attack.")]
     [Min(.5f)] public float attackTurnTimeout = 4f;
     [Tooltip("Delay before requesting another turn after attacking, being interrupted, or timing out. Lets other enemies take a turn.")]

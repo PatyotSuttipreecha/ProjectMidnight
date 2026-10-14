@@ -52,7 +52,7 @@ MonoBehaviour:
   coordinateAttacks: 1
   maxConcurrentAttackers: 1
   engagementDistance: 6
-  pressureRingRadius: 3.5
+  pressureRingRadius: 1.8
   attackTurnTimeout: 4
   attackTurnRest: 1
   acceleration: 8

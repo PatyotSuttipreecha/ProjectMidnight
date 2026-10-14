@@ -15,6 +15,12 @@ public class PlayerController : MonoBehaviour
     [System.NonSerialized] public float cheatSprintMultiplier = 1f;
     [System.NonSerialized] public float cheatFlySpeed = 8f;
     public bool CheatFlying { get; private set; }
+    public bool CheatInfiniteHealth { get; private set; }
+    public void SetCheatInfiniteHealth(bool enabled)
+    {
+        CheatInfiniteHealth = enabled && (Application.isEditor || Debug.isDebugBuild) && currentHealth > 0;
+        if (CheatInfiniteHealth) currentHealth = maxHealth;
+    }
     public void SetCheatFlying(bool enabled)
     {
         CheatFlying = enabled && (Application.isEditor || Debug.isDebugBuild) && currentHealth > 0;
@@ -545,6 +551,7 @@ public class PlayerController : MonoBehaviour
     }
     public void TakeDamage(float damage)
     {   
+        if (CheatInfiniteHealth && (Application.isEditor || Debug.isDebugBuild)) return;
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
     }

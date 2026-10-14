@@ -2199,7 +2199,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       propertyPath: m_Name
-      value: Enemy
+      value: Prefab_Character_Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 63a3d80908a9cad46a3d1980b44420c7, type: 3}
       propertyPath: m_Layer
@@ -2545,8 +2545,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96e477f1851aee345899a83b7db2cf65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  enemyData: {fileID: 11400000, guid: 1c71956df440e5b4ba288f0c43b8e696, type: 2}
+  enemyData: {fileID: 11400000, guid: 2e381be4deb24167aa8a9a87a7d2b9ba, type: 2}
   player: {fileID: 0}
+  startPatrolOnStart: 1
+  <IsPatrolRunning>k__BackingField: 0
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -2558,6 +2560,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  patrolRoute: {fileID: 0}
   patrolMode: 0
   eyeHeight: 1
   playerTargetHeight: 1
@@ -2596,6 +2599,9 @@ MonoBehaviour:
     mass: 30
   isAttacking: 0
   isAlert: 0
+  showHearingGizmos: 1
+  hearingPreviewPlayer: {fileID: 0}
+  hearingPreviewGun: {fileID: 0}
 --- !u!114 &4005269441650440685
 MonoBehaviour:
   m_ObjectHideFlags: 0

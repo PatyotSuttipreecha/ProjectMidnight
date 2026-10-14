@@ -190,6 +190,110 @@ public static class LostModuleChecks
         yield return Wait(.1f);
         Check(Vector3.Distance(go.GetComponent<NavMeshAgent>().destination, Vector3.back * 3) < .2f, "Hearing follows the emitted point, not hidden live player position");
         enemy.PausePatrol();
+        moving.transform.position = Vector3.zero;
+        profile.fieldOfView = 30;
+        profile.pressureRingRadius = 1.8f;
+        profile.pressureWaitTimeout = 1.2f;
+        profile.pressureRetreatCooldown = 2;
+        profile.pressureOrbitSpeed = .6f;
+        go.GetComponent<NavMeshAgent>().Warp(Vector3.back * 1.8f);
+        go.transform.rotation = Quaternion.identity;
+        enemy.StartPatrol();
+        enemy.AlertTo(moving.transform);
+        typeof(EnemyController).GetField("nextTurnRequest", Hidden).SetValue(enemy, Time.time + 10);
+        yield return Wait(.35f);
+        Check(enemy.CurrentState == EnemyController.EnemyState.Pressure && !enemy.HasAttackTurn, "Waiting without a turn stays in Pressure");
+        Check(!go.GetComponent<NavMeshAgent>().updateRotation && Vector3.Dot(go.transform.forward, (moving.transform.position - go.transform.position).normalized) > .85f,
+            "Pressure faces player independently of orbit movement");
+        Check(Vector3.Distance(go.GetComponent<NavMeshAgent>().destination, moving.transform.position) > 1.4f &&
+            Vector3.Distance(go.GetComponent<NavMeshAgent>().destination, moving.transform.position) < 2.2f, "Pressure destination uses configured close ring rather than weapon range");
+        go.transform.rotation = Quaternion.LookRotation(Vector3.right);
+        Call(enemy, "Update");
+        Check(enemy.CurrentState == EnemyController.EnemyState.Pressure, "Tangential facing does not incorrectly change visible Pressure to Search");
+        yield return Wait(1.05f);
+        Check(!enemy.isAlert && !enemy.HasAttackTurn && enemy.CurrentState != EnemyController.EnemyState.Pressure,
+            "Pressure timeout withdraws and prevents immediate sight reacquisition");
+        var groupObject = new GameObject("Chase group"); groupObject.SetActive(false);
+        var group = groupObject.AddComponent<EnemyGroup>();
+        group.sceneEnemies = new[] { enemy };
+        groupObject.SetActive(true);
+        group.EnableAggressive();
+        profile.detectionRadius = .2f;
+        go.transform.rotation = Quaternion.LookRotation(Vector3.back);
+        Call(enemy, "Update");
+        Check(enemy.IsAggressive && enemy.isAlert && enemy.CurrentState == EnemyController.EnemyState.Pressure,
+            "Group Aggressive skips Detect and tracks player outside vision range");
+        yield return Wait(1.35f);
+        Check(enemy.isAlert && enemy.CurrentState == EnemyController.EnemyState.Pressure,
+            "Aggressive pressure never withdraws on wait timeout");
+        enemy.PausePatrol();
+        group.EnableAggressive();
+        Call(enemy, "Update");
+        Check(!enemy.IsPatrolRunning && enemy.CurrentState == EnemyController.EnemyState.Idle,
+            "Group Aggressive does not start paused cutscene actors");
+        enemy.StartPatrol();
+        var aggressiveWall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        aggressiveWall.layer = 7; aggressiveWall.transform.position = new Vector3(0, 1, -.7f);
+        aggressiveWall.transform.localScale = new Vector3(5, 3, .2f);
+        profile.obstacleMask = 1 << 7;
+        go.GetComponent<NavMeshAgent>().Warp(Vector3.back * 1.4f);
+        Physics.SyncTransforms();
+        Call(enemy, "Update");
+        Check(enemy.isAlert && !(bool)typeof(EnemyController).GetMethod("InAttackRange", Hidden).Invoke(enemy, null),
+            "Aggressive tracks through occlusion but melee cannot hit through walls");
+        UnityEngine.Object.Destroy(aggressiveWall);
+        var pointObject = new GameObject("Aggressive spawn test");
+        pointObject.transform.position = Vector3.left * 5;
+        var point = pointObject.AddComponent<EnemySpawnPoint>();
+        point.spawnOnStart = false; point.spawnRadius = 0; point.enemyPrefab = enemy;
+        point.enemyGroup = group; point.aggressionMode = EnemySpawnPoint.AggressionMode.Normal;
+        var spawned = point.SpawnOne();
+        Check(spawned != null && spawned.IsAggressive && !profile.aggressiveOnStart,
+            "Future spawn inherits current group mode above spawn override without mutating profile");
+        group.DisableAggressive();
+        Check(!enemy.IsAggressive && !spawned.IsAggressive, "Disabling group updates existing and spawned members");
+        spawned.PausePatrol();
+        point.enemyGroup = null; point.aggressionMode = EnemySpawnPoint.AggressionMode.Aggressive;
+        var standaloneSpawn = point.SpawnOne();
+        Check(standaloneSpawn != null && standaloneSpawn.IsAggressive, "Spawn Aggressive override works without a group");
+        standaloneSpawn.PausePatrol();
+        profile.detectionRadius = 10;
+        profile.aggressiveOnStart = true;
+        point.aggressionMode = EnemySpawnPoint.AggressionMode.UseProfile;
+        var profileSpawn = point.SpawnOne();
+        Check(profileSpawn != null && profileSpawn.IsAggressive, "Spawn UseProfile inherits Aggressive default");
+        profileSpawn.PausePatrol();
+        profile.aggressiveOnStart = false;
+        enemy.SetAggressive(true);
+        enemy.StartPatrol();
+        go.GetComponent<NavMeshAgent>().Warp(Vector3.zero);
+        moving.transform.position = Vector3.forward * 10;
+        profile.useChaseRhythm = true;
+        profile.useApproachDecisions = false;
+        profile.chaseWalkDuration = profile.chaseBoostDuration = Vector2.one * .3f;
+        profile.walkSpeed = .5f; profile.chaseSpeed = 2f; profile.burstSpeedMultiplier = 1.3f;
+        profile.speedChangeRate = 100;
+        typeof(EnemyController).GetField("nextTurnRequest", Hidden).SetValue(enemy, Time.time + 10);
+        yield return Wait(.15f);
+        Check(!enemy.IsChaseBoosting && enemy.CurrentState == EnemyController.EnemyState.Chase && go.GetComponent<NavMeshAgent>().speed < .6f,
+            "Chase rhythm begins with ordinary walk speed");
+        yield return Wait(.22f);
+        Check(enemy.IsChaseBoosting && enemy.CurrentState == EnemyController.EnemyState.ChaseBurst && go.GetComponent<NavMeshAgent>().speed > 2.4f,
+            "Chase enters a timed speed-boosted burst");
+        yield return Wait(.3f);
+        Check(!enemy.IsChaseBoosting && go.GetComponent<NavMeshAgent>().speed < .6f,
+            "Chase burst returns to walking after its duration");
+        profile.useChaseRhythm = false;
+        yield return Wait(.1f);
+        Check(!enemy.IsChaseBoosting && Mathf.Abs(go.GetComponent<NavMeshAgent>().speed - 2f) < .05f,
+            "Disabling rhythm restores continuous chase speed");
+        profile.useChaseRhythm = true;
+        moving.transform.position = go.transform.position + Vector3.forward * 2;
+        yield return Wait(.1f);
+        Check(!enemy.IsChaseBoosting && enemy.CurrentState == EnemyController.EnemyState.Pressure &&
+            Mathf.Abs(go.GetComponent<NavMeshAgent>().speed - profile.pressureOrbitSpeed) < .05f,
+            "Close Pressure keeps its orbit speed and clears chase boost");
+        enemy.PausePatrol();
         enemy.BeginDeath();
         Check(enemy.IsDead && !enemy.HasAttackTurn && runtime.Current == null, "Death clears module and group reservation");
     }

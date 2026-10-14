@@ -77,6 +77,7 @@ public class EnemyControllerEditor : Editor
     {
         DrawDefaultInspector();
         EnemyController enemy = (EnemyController)target;
+        if (enemy.enemyData != null) EnemyWeaponLabWindow.DrawProfileLink(enemy.enemyData);
         EditorGUILayout.HelpBox("Enemy tuning, including ragdoll, mass and loot, belongs to its shared Profile. Use Enemy Lab to edit it. Patrol points and wait times belong to the Route.", MessageType.Info);
         using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
         {
@@ -135,11 +136,13 @@ public static class EnemyLootEditor
 [CustomEditor(typeof(EnemyDataSO))]
 public class EnemyDataProfileEditor : Editor
 {
+    private bool weaponSettingsExpanded = true;
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
         DrawPropertiesExcluding(serializedObject, "lootTable", "lootPrefab", "lootDropChance");
         EnemyLootEditor.Draw(serializedObject);
         serializedObject.ApplyModifiedProperties();
+        EnemyWeaponLabWindow.DrawInlineSettings((EnemyDataSO)target, ref weaponSettingsExpanded);
     }
 }

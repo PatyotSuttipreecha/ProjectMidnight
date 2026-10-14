@@ -52,7 +52,7 @@ for name in ['Unarmed',*modules]:
         startingHealth=100,walkSpeed=.5,chaseSpeed=2.5,closeApproachSpeed=.5,chaseSlowdownDistance=4,speedChangeRate=5,chaseRepathInterval=.25,
         detectionRadius=12,fieldOfView=100,obstacleMask='\n    serializedVersion: 2\n    m_Bits: 136',canHear=1,hearingMultiplier=1,walkHearingRadius=3,runHearingRadius=8,gunshotHearingRadius=25,
         noiseSearchDuration=3,noiseTravelTimeout=15,lostSightCooldown=5,waitTimeAtPoint=2,useApproachDecisions=1,approachDecisionInterval=2.5,approachWeights='{x: 1, y: 0, z: 0.4}',
-        flankAngle=30,pressureSpeedMultiplier=.8,burstSpeedMultiplier=1.2,coordinateAttacks=1,maxConcurrentAttackers=1,engagementDistance=6,pressureRingRadius=3.5,attackTurnTimeout=4,attackTurnRest=1,
+        flankAngle=30,pressureSpeedMultiplier=.8,burstSpeedMultiplier=1.2,coordinateAttacks=1,maxConcurrentAttackers=1,engagementDistance=6,pressureRingRadius=1.8,pressureOrbitSpeed=.6,pressureOrbitStep=25,pressureWaitTimeout=15,pressureRetreatCooldown=8,attackTurnTimeout=4,attackTurnRest=1,
         acceleration=8,turnSpeed=120,stoppingDistance=.8,spreadChaseTargets=0,chaseApproachRadius=1.5,varyAvoidancePriority=1,separateNearbyEnemies=1,separationRadius=1,separationSpeed=.75,
         minAttack=8,maxAttack=12,attackRange=2,attackPreparationTime=.35,attackWindup=.5,attackCooldown=2,eyeHeight=1,playerTargetHeight=1,
         useRagdoll=0,enableHitReaction=1,hitStaggerDuration=.3,hitKnockbackDistance=.15,hitKnockbackDuration=.12,corpseLifetime=8,lootDropChance=0)

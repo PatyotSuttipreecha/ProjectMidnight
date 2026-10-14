@@ -23,6 +23,7 @@ public class EnemyLabWindow : EditorWindow
     private PatrolRoute selectedRoute;
     private EnemySpawnPoint selectedSpawn;
     private Editor workspaceEditor;
+    private bool weaponSettingsExpanded = true;
 
     [MenuItem("System Modification/Enemy Lab/Enemy Settings")]
     public static void Open()
@@ -120,6 +121,7 @@ public class EnemyLabWindow : EditorWindow
                     }
                     EnemyLootEditor.Draw(settings);
                     if (settings.ApplyModifiedProperties()) EditorUtility.SetDirty(standaloneProfile);
+                    EnemyWeaponLabWindow.DrawInlineSettings(standaloneProfile, ref weaponSettingsExpanded);
                     if (GUILayout.Button("Save Profile")) AssetDatabase.SaveAssetIfDirty(standaloneProfile);
                 }
                 EditorGUILayout.EndScrollView();
@@ -178,18 +180,27 @@ public class EnemyLabWindow : EditorWindow
                 Property(crowd, "speedChangeRate", "Speed change rate");
                 Property(crowd, "chaseRepathInterval", "Chase repath interval");
                 Property(crowd, "runAnimation", "Run animation state (optional)");
+                Section("Chase Rhythm");
+                Property(crowd, "useChaseRhythm", "Alternate walk / boost");
+                Property(crowd, "chaseWalkDuration", "Walk duration min / max (seconds)");
+                Property(crowd, "chaseBoostDuration", "Boost duration min / max (seconds)");
+                Property(crowd, "burstSpeedMultiplier", "Boost speed multiplier");
                 Section("Approach Decisions");
                 Property(crowd, "useApproachDecisions", "Use approach decisions");
                 Property(crowd, "approachDecisionInterval", "Decision interval (seconds)");
                 Property(crowd, "approachWeights", "Direct / Flank / Burst weights");
                 Property(crowd, "flankAngle", "Flank angle (degrees)");
                 Property(crowd, "pressureSpeedMultiplier", "Pressure speed multiplier");
-                Property(crowd, "burstSpeedMultiplier", "Burst speed multiplier");
                 Section("Group Engagement");
+                Property(crowd, "aggressiveOnStart", "Aggressive on start");
                 Property(crowd, "coordinateAttacks", "Coordinate attacks");
                 Property(crowd, "maxConcurrentAttackers", "Maximum reserved attackers");
                 Property(crowd, "engagementDistance", "Engagement distance");
                 Property(crowd, "pressureRingRadius", "Pressure ring radius");
+                Property(crowd, "pressureOrbitSpeed", "Pressure orbit speed");
+                Property(crowd, "pressureOrbitStep", "Pressure orbit step (degrees)");
+                Property(crowd, "pressureWaitTimeout", "Pressure wait timeout (seconds, 0 = unlimited)");
+                Property(crowd, "pressureRetreatCooldown", "Retreat detection cooldown (seconds)");
                 Property(crowd, "attackTurnTimeout", "Attack turn timeout (seconds)");
                 Property(crowd, "attackTurnRest", "Rest before next turn (seconds)");
                 Section("Crowd Movement - Approach");
@@ -252,6 +263,7 @@ public class EnemyLabWindow : EditorWindow
                 Property(lost, "playerHitProtection", "Protection from repeated Lost hits");
                 if (lost.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
                 if (GUILayout.Button("Open Weapon Modules")) EnemyWeaponLabWindow.Open();
+                EnemyWeaponLabWindow.DrawProfileLink(enemy.enemyData);
                 if (enemy.enemyData.useLostCombat && enemy.enemyData.obstacleMask.value == 0)
                     EditorGUILayout.HelpBox("Obstacle Mask is empty: melee sight checks cannot block walls. Select the scene's world obstruction layers, excluding player and enemy hitboxes.", MessageType.Warning);
             }

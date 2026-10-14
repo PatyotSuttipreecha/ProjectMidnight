@@ -10,6 +10,12 @@ public class EnemySpawnPoint : MonoBehaviour
     [System.Serializable] public class EnemySpawnedEvent : UnityEvent<EnemyController> { }
     public EnemyController enemyPrefab;
     public PatrolRoute patrolRoute;
+    public enum AggressionMode { UseProfile, Aggressive, Normal }
+    [Header("Encounter Behaviour")]
+    [Tooltip("Override the profile for new enemies. Enemy Group takes priority.")]
+    public AggressionMode aggressionMode;
+    [Tooltip("Optional group. New enemies inherit its current Aggressive state.")]
+    public EnemyGroup enemyGroup;
     [UnityEngine.Serialization.FormerlySerializedAs("player")]
     [Tooltip("Optional target. Leave empty to use the prefab target or automatically find the object tagged Player.")]
     public Transform target;
@@ -43,6 +49,10 @@ public class EnemySpawnPoint : MonoBehaviour
     [Tooltip("No more scheduled enemies will spawn. This does NOT mean all enemies have died.")]
     public UnityEvent onSpawningFinished = new UnityEvent();
     public int AliveCount { get { living.RemoveAll(e => e == null || e.IsDead); return living.Count; } }
+    public void RegisterLivingEnemies(EnemyGroup group)
+    {
+        foreach (var enemy in living) group.RegisterEnemy(enemy);
+    }
 
     private void Start()
     {
@@ -148,6 +158,9 @@ public class EnemySpawnPoint : MonoBehaviour
         instance.ConfigureSpawn(resolvedProfile, patrolRoute, target);
         instance.transform.SetParent(null, true);
         instance.gameObject.SetActive(true);
+        if (aggressionMode != AggressionMode.UseProfile)
+            instance.SetAggressive(aggressionMode == AggressionMode.Aggressive);
+        if (enemyGroup != null) enemyGroup.RegisterEnemy(instance);
         Destroy(staging);
         living.Add(instance);
         spawnedCount++;

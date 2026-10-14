@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Data_Enemies_TheLost_Weapon_Machete
   m_EditorClassIdentifier: 
   loadout: 0
-  heldModel: {fileID: 100000, guid: 73e3d6d0fdcfc1d4483701317ca34665, type: 3}
+  heldModel: {fileID: 3399683653545851429, guid: e8bb22ae1b69a9341af089b2b9a4fa67, type: 3}
   localPosition: {x: 0, y: 0, z: 0}
   localEulerAngles: {x: 0, y: 0, z: 0}
   localScale: {x: 1, y: 1, z: 1}
