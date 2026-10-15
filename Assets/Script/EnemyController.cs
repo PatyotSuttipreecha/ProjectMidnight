@@ -12,6 +12,9 @@ public class EnemyController : MonoBehaviour
     private bool chaseRhythmActive;
     public bool IsChaseBoosting { get; private set; }
     private float pressureWaitTime, retreatUntil;
+    private bool pressureOrbitActive;
+    private float nextPressureDirectionTime;
+    public int PressureOrbitDirection { get; private set; } = 1;
     private bool aggressionOverrideSet, aggressionOverride;
     public bool IsAggressive => aggressionOverrideSet ? aggressionOverride : enemyData != null && enemyData.aggressiveOnStart;
     public void SetAggressive(bool enabled)
@@ -50,6 +53,21 @@ public class EnemyController : MonoBehaviour
     private float nextApproachDecision, turnDeadline, nextTurnRequest;
     private Vector3 committedApproachDirection;
     public EnemyState CurrentState { get; private set; }
+    private void OnGUI()
+    {
+        if (!EnemyStateDisplay.Available || !EnemyStateDisplay.Enabled) return;
+        EnemyStateDisplay.DrawAll(activeEnemies);
+    }
+    public string GameplayDebugState
+    {
+        get
+        {
+        string status = CurrentState.ToString();
+        if (!IsDead)
+            status = !IsPatrolRunning ? "Paused - waiting for StartPatrol" : enemyData == null ? "Missing Enemy Profile" : !AgentReady ? "Agent not on NavMesh" : status;
+        return status;
+        }
+    }
     public bool IsDead { get; private set; }
     // Raised once after death setup, before the corpse is removed.
     public event System.Action<EnemyController> Died;
@@ -58,6 +76,15 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private Transform player;
     private NavMeshAgent agent;
     private Animator animator;
+    private EnemyLocomotionAnimator locomotionAnimator;
+    public bool UsesLocomotionBlendTree => locomotionAnimator != null && locomotionAnimator.Compatible;
+    public float AnimationMovementSpeed => locomotionAnimator != null ? locomotionAnimator.MeasuredSpeed : 0;
+    public float AnimationTargetBlend => locomotionAnimator != null ? locomotionAnimator.TargetBlend : 0;
+    public float AnimationCurrentBlend => locomotionAnimator != null ? locomotionAnimator.CurrentBlend : 0;
+    public string AnimationSpeedParameter => UsesLocomotionBlendTree ? locomotionAnimator.ResolvedSpeedParameter : "Not connected";
+    public string LastAttackAnimation => locomotionAnimator != null ? locomotionAnimator.LastAttackStateName : "";
+    public Vector2 AnimationMovementDirection => locomotionAnimator != null ? locomotionAnimator.Direction : Vector2.zero;
+    private Vector3 lastAnimationPosition;
 
     [Header("Patrol Settings")]
     [Tooltip("Disable for cutscene actors. The enemy waits without patrol, sight or hearing reactions until StartPatrol is called.")]
@@ -168,7 +195,20 @@ public class EnemyController : MonoBehaviour
         activeEnemies.Add(this);
         GameplayNoise.Emitted += HearNoise;
     }
-    private void LateUpdate() => ApplyCrowdSeparation(Time.deltaTime);
+    private void LateUpdate()
+    {
+        ApplyCrowdSeparation(Time.deltaTime);
+        float deltaTime = Time.deltaTime;
+        if (deltaTime > 0 && !IsDead)
+        {
+            // Include NavMesh avoidance and separation; exclude forced knockback.
+            Vector3 velocity = IsPatrolRunning && !isAttacking && staggerRemaining <= 0 && knockbackRemaining <= 0 && AgentReady && !agent.isStopped
+                ? (transform.position - lastAnimationPosition) / deltaTime : Vector3.zero;
+            if (velocity.sqrMagnitude > 10000) velocity = Vector3.zero; // Warp/teleport is not locomotion.
+            locomotionAnimator?.Update(velocity, isAttacking && CurrentState == EnemyState.Attack, deltaTime, CurrentWeapon);
+        }
+        lastAnimationPosition = transform.position;
+    }
     private void ApplyCrowdSeparation(float deltaTime)
     {
         if (IsDead || !IsPatrolRunning || isAttacking || !AgentReady || agent.isStopped ||
@@ -287,6 +327,8 @@ public class EnemyController : MonoBehaviour
         if (enemyData != null && enemyData.varyAvoidancePriority)
             agent.avoidancePriority = 30 + nextApproachSlot % 40;
         animator = GetComponent<Animator>();
+        locomotionAnimator = new EnemyLocomotionAnimator(animator, enemyData);
+        lastAnimationPosition = transform.position;
         ApplySharedProfile();
         if (enemyData != null && enemyData.useLostCombat)
         {
@@ -334,6 +376,7 @@ public class EnemyController : MonoBehaviour
     public void PausePatrol()
     {
         if (IsDead) return;
+        pressureOrbitActive = false;
         ResetChaseRhythm();
         ReleaseAttackTurn();
         IsPatrolRunning = false;
@@ -368,6 +411,7 @@ public class EnemyController : MonoBehaviour
         agent.stoppingDistance = Mathf.Max(0, enemyData.stoppingDistance);
         if (staggerRemaining > 0f || knockbackRemaining > 0f)
         {
+            pressureOrbitActive = false;
             ResetChaseRhythm();
             staggerRemaining = Mathf.Max(0f, staggerRemaining - Time.deltaTime);
             agent.isStopped = true;
@@ -388,6 +432,7 @@ public class EnemyController : MonoBehaviour
         }
         if (Time.time < retreatUntil && !isAttacking)
         {
+            pressureOrbitActive = false;
             ResetChaseRhythm();
             agent.isStopped = false;
             agent.speed = Mathf.Max(0, enemyData.walkSpeed);
@@ -432,7 +477,7 @@ public class EnemyController : MonoBehaviour
         }
 
         UpdateApproachAndTurn();
-        if (isAttacking) { ResetChaseRhythm(); return; }
+        if (isAttacking) { pressureOrbitActive = false; ResetChaseRhythm(); return; }
         agent.isStopped = false;
         if (isAlert)
         {
@@ -444,6 +489,7 @@ public class EnemyController : MonoBehaviour
             UpdateMovementSpeed();
             if (CurrentState == EnemyState.Pressure)
             {
+                UpdatePressureDirection();
                 pressureWaitTime += Time.deltaTime;
                 if (!IsAggressive && enemyData.pressureWaitTimeout > 0 && pressureWaitTime >= enemyData.pressureWaitTimeout)
                 {
@@ -465,7 +511,7 @@ public class EnemyController : MonoBehaviour
                 if (facing.sqrMagnitude > .001f)
                     transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facing), Mathf.Max(1, enemyData.turnSpeed) * Time.deltaTime);
             }
-            else pressureWaitTime = 0;
+            else { pressureWaitTime = 0; pressureOrbitActive = false; }
             // Attack needs reach and clear sight, not the patrol vision cone.
             // A nearby player can be beside the enemy after an avoidance manoeuvre.
             if (attackTimer <= 0f && InAttackRange() && HasAttackTurn && TargetAvailableForLostHit())
@@ -482,6 +528,7 @@ public class EnemyController : MonoBehaviour
         }
         else
         {
+            pressureOrbitActive = false;
             ResetChaseRhythm();
             UpdateMovementSpeed();
             pressureWaitTime = 0;
@@ -601,6 +648,21 @@ public class EnemyController : MonoBehaviour
     }
 
     private float PressureRadius => Mathf.Max(enemyData.pressureRingRadius, agent.radius + .5f);
+    private void UpdatePressureDirection()
+    {
+        if (enemyData.pressureOrbitMode != EnemyDataSO.PressureOrbitMode.Random)
+        {
+            PressureOrbitDirection = enemyData.pressureOrbitMode == EnemyDataSO.PressureOrbitMode.Clockwise ? 1 : -1;
+            pressureOrbitActive = true;
+            return;
+        }
+        if (pressureOrbitActive && Time.time < nextPressureDirectionTime) return;
+        pressureOrbitActive = true;
+        PressureOrbitDirection = Random.value < .5f ? -1 : 1;
+        float minimum = Mathf.Max(.5f, enemyData.pressureDirectionDuration.x);
+        nextPressureDirectionTime = Time.time + Random.Range(minimum, Mathf.Max(minimum, enemyData.pressureDirectionDuration.y));
+        nextChaseRepath = 0; // Repath once for the newly selected direction.
+    }
     private bool SetPressureDestination()
     {
         if (!enemyData.coordinateAttacks || HasAttackTurn || !playerDetected || player == null) return false;
@@ -612,7 +674,7 @@ public class EnemyController : MonoBehaviour
         if (side.sqrMagnitude < .01f) side = approachDirection;
         // Short same-direction arcs avoid cutting across the player's body.
         if (distance >= radius - .25f && distance <= radius + .5f)
-            side = Quaternion.AngleAxis(enemyData.pressureOrbitStep, Vector3.up) * side;
+            side = Quaternion.AngleAxis(enemyData.pressureOrbitStep * PressureOrbitDirection, Vector3.up) * side;
         Vector3 desired = lastKnownPlayerPosition + side * radius;
         if (NavMesh.SamplePosition(desired, out var hit, .6f, agent.areaMask) &&
             Mathf.Abs(hit.position.y - lastKnownPlayerPosition.y) < .75f &&
@@ -798,7 +860,7 @@ public class EnemyController : MonoBehaviour
             yield break;
         }
         isAttacking = true;
-        CurrentState = EnemyState.Attack;
+        CurrentState = EnemyState.Preparation;
         agent.isStopped = true;
         float preparation = Mathf.Max(0f, enemyData.attackPreparationTime);
         attackTimer = Mathf.Max(preparation + attackWindup, enemyData.attackCooldown);
@@ -817,6 +879,7 @@ public class EnemyController : MonoBehaviour
         }
         Vector3 facing = Vector3.ProjectOnPlane(player.position - transform.position, Vector3.up);
         if (facing.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(facing);
+        CurrentState = EnemyState.Attack;
         PlayAnimation(Attack);
         yield return new WaitForSeconds(attackWindup);
         if (InAttackRange())
@@ -826,6 +889,7 @@ public class EnemyController : MonoBehaviour
                 controller.TakeDamage(Random.Range(enemyData.minAttack, enemyData.maxAttack));
         }
         // Recover once; cooldown is measured from attack start, not counted twice.
+        CurrentState = EnemyState.Recovery;
         while (attackTimer > 0f) yield return null;
         isAttacking = false;
         if (AgentReady) agent.isStopped = false;
@@ -867,8 +931,8 @@ public class EnemyController : MonoBehaviour
         Vector3 committedAim = target != null ? target.position + Vector3.up * playerTargetHeight : lastKnownPlayerPosition;
         CurrentState = EnemyState.Attack;
         string stateName = module != null ? module.attackAnimation : enemyData.baseAttackAnimation;
-        int state = !string.IsNullOrWhiteSpace(stateName) ? Animator.StringToHash(stateName) : Attack;
-        PlayAnimation(animator != null && animator.HasState(0, state) ? state : Attack);
+        int state = locomotionAnimator != null ? locomotionAnimator.ResolveAttackState(stateName, module != null) : Attack;
+        PlayAnimation(state);
         if (windup > 0) yield return new WaitForSeconds(windup);
         if (CurrentWeapon == module && target != null && TargetAvailableForLostHit())
         {
@@ -927,8 +991,12 @@ public class EnemyController : MonoBehaviour
 
     private void PlayAnimation(int state)
     {
-        if (animator == null || animationState == state) return;
-        animator.Play(state, 0, 0f);
+        if (animator == null) return;
+        state = locomotionAnimator != null ? locomotionAnimator.ResolveState(state, Idle, Walk, Attack) : state;
+        if (animationState == state || !animator.HasState(0, state)) return;
+        if (locomotionAnimator != null && locomotionAnimator.IsLocomotion(state))
+            animator.CrossFadeInFixedTime(state, Mathf.Max(0, enemyData.locomotionTransition), 0);
+        else animator.Play(state, 0, 0f);
         animationState = state;
     }
 

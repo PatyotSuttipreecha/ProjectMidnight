@@ -11,14 +11,14 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5deb79e919456cf4a82325633eb49a1f, type: 3}
   m_Name: Data_Enemies_TheLost_Weapon_Torch
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   loadout: 4
-  heldModel: {fileID: 0}
+  heldModel: {fileID: 6251734861226475694, guid: d6810627c24197843857b4898e22ce6c, type: 3}
   localPosition: {x: 0, y: 0, z: 0}
   localEulerAngles: {x: 0, y: 0, z: 0}
   localScale: {x: 1, y: 1, z: 1}
-  attackAnimation: TheLost_Sweep
-  range: 2.8
+  attackAnimation: Art_Animation_Thelost_Torch_Attack
+  range: 1.2
   hitArc: 110
   minDamage: 10
   maxDamage: 15
@@ -34,9 +34,9 @@ MonoBehaviour:
   projectileGravity: 9.81
   projectileRadius: 0.12
   projectileLifetime: 5
-  projectileObstacles: 
+  projectileObstacles:
     serializedVersion: 2
     m_Bits: 4294967295
   burnDuration: 3
   burnDamagePerSecond: 2
-  burnEffect: {fileID: 0}
+  burnEffect: {fileID: 161738, guid: 7cfc30e9807ebb54e92fbc67239154cc, type: 3}

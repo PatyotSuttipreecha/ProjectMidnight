@@ -7,7 +7,7 @@ public class DoorConfigurationWindow : EditorWindow
     private DoorController door;
     private Editor inspector;
     private Vector2 scroll;
-    [MenuItem("System Modification/Door Configuration")]
+    [MenuItem("System Modification/Scene Configuration/Door Configuration")]
     public static void Open() => GetWindow<DoorConfigurationWindow>("Door Configuration");
     private void OnSelectionChange()
     {

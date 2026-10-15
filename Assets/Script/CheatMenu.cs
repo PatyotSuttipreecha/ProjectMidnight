@@ -9,7 +9,8 @@ public class CheatMenu : MonoBehaviour
     private bool open;
     private CursorLockMode cursorLock;
     private bool cursorVisible;
-    private Rect window = new Rect(20, 20, 420, 540);
+    private Rect window = new Rect(20, 20, 420, 660);
+    private Vector2 scroll;
     private GUIStyle heading, muted, card;
     private bool Available => Application.isEditor || Debug.isDebugBuild;
 
@@ -17,6 +18,7 @@ public class CheatMenu : MonoBehaviour
     private void Update()
     {
         if (!Available || player == null) return;
+        if (Input.GetKeyDown(KeyCode.F8)) EnemyStateDisplay.Enabled = !EnemyStateDisplay.Enabled;
         if (Input.GetKeyDown(KeyCode.F9) && !player.IsGameplayInputBlocked)
             player.SetCheatFlying(!player.CheatFlying);
         if (Input.GetKeyDown(KeyCode.F10))
@@ -44,13 +46,14 @@ public class CheatMenu : MonoBehaviour
             card = new GUIStyle(GUI.skin.box) { padding = new RectOffset(14, 14, 10, 10) };
         }
         window.width = Mathf.Min(420, Screen.width);
-        window.height = Mathf.Min(540, Screen.height);
+        window.height = Mathf.Min(660, Screen.height);
         window.x = Mathf.Clamp(window.x, 0, Mathf.Max(0, Screen.width - window.width));
         window.y = Mathf.Clamp(window.y, 0, Mathf.Max(0, Screen.height - window.height));
         window = GUI.Window(GetInstanceID(), window, DrawWindow, "Cheat Menu (F10)");
     }
     private void DrawWindow(int id)
     {
+        scroll = GUILayout.BeginScrollView(scroll);
         GUILayout.Label("DEBUG CONTROL CENTER", heading);
         GUILayout.Label("Temporary controls for gameplay testing", muted);
         GUILayout.Space(8);
@@ -77,8 +80,18 @@ public class CheatMenu : MonoBehaviour
         GUILayout.Label("Shift: 2x fly speed | Collisions remain enabled", muted);
         GUILayout.EndVertical();
         GUILayout.Space(10);
+        GUILayout.BeginVertical(card);
+        GUILayout.Label("ENEMY DEBUG", heading);
+        EnemyStateDisplay.Enabled = GUILayout.Toggle(EnemyStateDisplay.Enabled, "Show Enemy States (F8)");
+        EnemyStateDisplay.ShowDetails = GUILayout.Toggle(EnemyStateDisplay.ShowDetails, "Show behaviour and attack permission");
+        GUILayout.Label("Label range: " + EnemyStateDisplay.MaxDistance.ToString("0") + " m", muted);
+        EnemyStateDisplay.MaxDistance = GUILayout.HorizontalSlider(EnemyStateDisplay.MaxDistance, 5, 100);
+        GUILayout.Label("Text size: " + EnemyStateDisplay.FontSize, muted);
+        EnemyStateDisplay.FontSize = Mathf.RoundToInt(GUILayout.HorizontalSlider(EnemyStateDisplay.FontSize, 10, 22));
+        GUILayout.EndVertical();
         if (GUILayout.Button("Reset All Cheats", GUILayout.Height(30))) ResetCheats();
         if (GUILayout.Button("Resume Game (Esc / F10)", GUILayout.Height(32))) Close();
+        GUILayout.EndScrollView();
         GUI.DragWindow(new Rect(0, 0, window.width, 24));
     }
     private void ResetCheats()
@@ -88,6 +101,7 @@ public class CheatMenu : MonoBehaviour
         player.SetCheatFlying(false);
         player.cheatFlySpeed = 8f;
         player.SetCheatInfiniteHealth(false);
+        EnemyStateDisplay.Reset();
     }
     private void Close()
     {

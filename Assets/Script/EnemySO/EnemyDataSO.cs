@@ -68,6 +68,31 @@ public class EnemyDataSO : ScriptableObject
     [Range(1f, 10f)] public float lostSightCooldown = 5f;
     [Tooltip("Optional Animator state name on layer 0 for faster visible pursuit. Empty or missing state uses the walk animation.")]
     public string runAnimation = "";
+    [Header("Locomotion Blend Tree")]
+    [Tooltip("Drive a compatible locomotion tree using actual velocity. Controllers without the configured state/float parameter keep legacy clip playback.")]
+    public bool useLocomotionBlendTree = true;
+    [Tooltip("Use AI Walk Speed and Chase Speed x Boost Multiplier as animation reference speeds. Avoids maintaining duplicate speed settings.")]
+    public bool autoAnimationReferenceSpeeds = true;
+    [Tooltip("Once movement exceeds the stop threshold, use at least the full Walk branch instead of a mostly-Idle pose. Parameter damping still smooths starts/stops.")]
+    public bool keepWalkBlendWhileMoving = true;
+    [Tooltip("Measured movement below this speed is treated as stopped to avoid tiny avoidance jitter animating the feet.")]
+    [Min(0f)] public float animationStopSpeed = .03f;
+    public string locomotionState = "Controlling";
+    public string locomotionBlendParameter = "Speed";
+    public string locomotionHorizontalParameter = "Horizontal";
+    [Tooltip("Matches the current controller's spelling: Verticle. Change this if the Animator parameter is renamed.")]
+    public string locomotionVerticalParameter = "Verticle";
+    public string locomotionAttackParameter = "Attacking";
+    [Tooltip("Fallback attack state for the new controller when a module has no matching animation state.")]
+    public string locomotionAttackState = "Art_Animation_Thelost_Machete_Attack";
+    [Tooltip("Actual speed represented by the full Walk branch (Blend 0.5). Tune independently of AI speed to match the clip's footwork.")]
+    [Min(.01f)] public float animationWalkSpeed = .5f;
+    [Tooltip("Actual speed represented by the full Run branch (Blend 1).")]
+    [Min(.02f)] public float animationRunSpeed = 3.125f;
+    [Tooltip("Smoothing time for speed/direction parameters. Zero updates immediately.")]
+    [Min(0f)] public float locomotionDamping = .12f;
+    [Tooltip("Seconds blending from an attack or legacy clip into locomotion.")]
+    [Min(0f)] public float locomotionTransition = .12f;
     [Header("Chase Rhythm")]
     [Tooltip("Alternate ordinary walking and short boosted pursuit while far from the target. Pressure and close Approach do not boost.")]
     public bool useChaseRhythm = true;
@@ -105,6 +130,11 @@ public class EnemyDataSO : ScriptableObject
     [Min(0f)] public float pressureOrbitSpeed = .6f;
     [Tooltip("Angle ahead of the current radial position used for each short orbit path.")]
     [Range(5f, 60f)] public float pressureOrbitStep = 25f;
+    public enum PressureOrbitMode { Random, Clockwise, CounterClockwise }
+    [Tooltip("Random selects a direction independently per enemy and keeps it for a sampled time. Fixed modes always circle in one direction.")]
+    public PressureOrbitMode pressureOrbitMode = PressureOrbitMode.Random;
+    [Tooltip("Minimum/maximum seconds before considering a new random orbit direction. A reroll can keep the current direction.")]
+    public Vector2 pressureDirectionDuration = new Vector2(2f, 4f);
     [Tooltip("Seconds without an attack turn before withdrawing to patrol. Zero keeps pressure indefinitely.")]
     [Min(0f)] public float pressureWaitTimeout = 15f;
     [Tooltip("Seconds ignoring sight and noise after withdrawing, allowing a return to patrol before detecting again.")]

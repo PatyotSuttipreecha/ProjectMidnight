@@ -3,7 +3,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class EnemyWeaponRuntime : MonoBehaviour
 {
-    [Tooltip("Optional hand attachment. Empty uses the Humanoid right hand, then the enemy root.")]
+    [Tooltip("Optional explicit attachment. Empty finds Enemy_GripPoint in this enemy, then uses the Humanoid right hand or enemy root. Module offsets are relative to the attachment.")]
     public Transform weaponAnchor;
     public EnemyWeaponSO Current { get; private set; }
     private GameObject heldVisual;
@@ -16,6 +16,10 @@ public class EnemyWeaponRuntime : MonoBehaviour
         nextDropRoll = 0;
         if (module == null || module.heldModel == null) return;
         Transform anchor = weaponAnchor;
+        if (anchor == null)
+            foreach (Transform candidate in GetComponentsInChildren<Transform>(true))
+                if (candidate.name == "Enemy_GripPoint" && candidate.GetComponentInParent<EnemyWeaponRuntime>() == this)
+                { anchor = candidate; break; }
         var animator = GetComponent<Animator>();
         if (anchor == null && animator != null && animator.isHuman) anchor = animator.GetBoneTransform(HumanBodyBones.RightHand);
         if (anchor == null) anchor = transform;

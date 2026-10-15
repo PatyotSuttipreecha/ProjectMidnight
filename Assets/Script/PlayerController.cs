@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
     public void SetCheatInfiniteHealth(bool enabled)
     {
         CheatInfiniteHealth = enabled && (Application.isEditor || Debug.isDebugBuild) && currentHealth > 0;
-        if (CheatInfiniteHealth) currentHealth = maxHealth;
+        if (CheatInfiniteHealth) { float before = currentHealth; currentHealth = maxHealth; RecordHealthChange(before, "Infinite Health enabled"); }
     }
     public void SetCheatFlying(bool enabled)
     {
@@ -86,6 +86,26 @@ public class PlayerController : MonoBehaviour
     [Header("Health Setting")]
     public float maxHealth = 100f;
     public float currentHealth;
+    public string LastDamageResult { get; private set; } = "No damage attempt";
+    public string LastHealthChange { get; private set; } = "No health change";
+    public float LastHealthChangeTime { get; private set; }
+    [Tooltip("Log actual health changes and their source to Console for debugging.")]
+    public bool logHealthChanges;
+    private float observedHealth;
+    private bool healthInitialized;
+    private void RecordHealthChange(float before, string source)
+    {
+        observedHealth = currentHealth;
+        if (Mathf.Approximately(before, currentHealth)) return;
+        LastHealthChange = source + ": " + before.ToString("0.00") + " -> " + currentHealth.ToString("0.00");
+        LastHealthChangeTime = Time.time;
+        if (logHealthChanges) Debug.Log(LastHealthChange, this);
+    }
+    private void LateUpdate()
+    {
+        if (healthInitialized && !Mathf.Approximately(observedHealth, currentHealth))
+            RecordHealthChange(observedHealth, "External / Inspector health change");
+    }
     private bool isDeath;
 
     [Header("InventorySetting")]
@@ -186,7 +206,10 @@ public class PlayerController : MonoBehaviour
         aimingLayerIndex = animator.GetLayerIndex("Aiming");
         GunHoldingLayerIndex = animator.GetLayerIndex("GunHolding");
 
+        float initialHealth = currentHealth;
         currentHealth = maxHealth;
+        healthInitialized = true;
+        RecordHealthChange(initialHealth, "Initial health");
     }
 
     void Update()
@@ -550,10 +573,20 @@ public class PlayerController : MonoBehaviour
             SoundManager.PlaySound(footstepWalkSO, Random.Range(0.03f, 0.06f));
     }
     public void TakeDamage(float damage)
-    {   
-        if (CheatInfiniteHealth && (Application.isEditor || Debug.isDebugBuild)) return;
-        currentHealth -= damage;
-        currentHealth = Mathf.Max(0, currentHealth);
+    {
+        TryTakeDamage(damage);
+    }
+    public bool TryTakeDamage(float damage, string source = "Damage")
+    {
+        if (float.IsNaN(damage) || float.IsInfinity(damage) || damage <= 0) { LastDamageResult = "Invalid / zero damage"; return false; }
+        if (currentHealth <= 0 || !isActiveAndEnabled) { LastDamageResult = "Player dead / disabled"; return false; }
+        if (IsCutsceneInputLocked) { LastDamageResult = "Cutscene protection"; return false; }
+        if (CheatInfiniteHealth && (Application.isEditor || Debug.isDebugBuild)) { LastDamageResult = "Infinite Health"; return false; }
+        float before = currentHealth;
+        currentHealth = Mathf.Max(0, currentHealth - damage);
+        RecordHealthChange(before, source);
+        LastDamageResult = "Hit: " + (before - currentHealth).ToString("0.00") + " HP";
+        return currentHealth < before;
     }
     private Coroutine healingRoutine;
     public bool IsHealingOverTime { get; private set; }
@@ -562,7 +595,8 @@ public class PlayerController : MonoBehaviour
     public bool TryUseHealing(ItemSO item)
     {
         if (!CanUseHealing(item)) return false;
-        if (item.healDuration <= 0) currentHealth = Mathf.Min(maxHealth, currentHealth + item.healAmount);
+        if (item.healDuration <= 0)
+        { float before = currentHealth; currentHealth = Mathf.Min(maxHealth, currentHealth + item.healAmount); RecordHealthChange(before, "Heal: " + item.itemName); }
         else
         {
             IsHealingOverTime = true;
@@ -580,7 +614,9 @@ public class PlayerController : MonoBehaviour
             if (currentHealth <= 0) break;
             elapsed += step;
             float target = total * Mathf.Clamp01(elapsed / duration);
+            float before = currentHealth;
             currentHealth = Mathf.Min(maxHealth, currentHealth + target - delivered);
+            RecordHealthChange(before, "Healing over time");
             delivered = target;
         }
         IsHealingOverTime = false;

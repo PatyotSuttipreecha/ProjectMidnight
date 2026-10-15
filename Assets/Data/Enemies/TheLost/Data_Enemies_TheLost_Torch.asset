@@ -11,7 +11,19 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 66a91380e3b54ad428aed93a244661f6, type: 3}
   m_Name: Data_Enemies_TheLost_Torch
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
+  detectionRadius: 12
+  fieldOfView: 100
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 136
+  canHear: 1
+  hearingMultiplier: 1
+  walkHearingRadius: 3
+  runHearingRadius: 8
+  gunshotHearingRadius: 25
+  noiseSearchDuration: 3
+  noiseTravelTimeout: 15
   useSharedSettings: 1
   useLostCombat: 1
   startingWeapon: {fileID: 11400000, guid: 38e334893fe24d18ad62cd600d4a1337, type: 2}
@@ -23,38 +35,51 @@ MonoBehaviour:
   restraintSpeedMultiplier: 0.65
   playerHitProtection: 0.75
   startingHealth: 100
-  walkSpeed: 0.5
+  walkSpeed: 1
+  waitTimeAtPoint: 2
   chaseSpeed: 2.5
-  closeApproachSpeed: 0.5
-  chaseSlowdownDistance: 4
+  closeApproachSpeed: 1
+  chaseSlowdownDistance: 2
   speedChangeRate: 5
   chaseRepathInterval: 0.25
-  detectionRadius: 12
-  fieldOfView: 100
-  obstacleMask: 
-    serializedVersion: 2
-    m_Bits: 136
-  canHear: 1
-  hearingMultiplier: 1
-  walkHearingRadius: 3
-  runHearingRadius: 8
-  gunshotHearingRadius: 25
-  noiseSearchDuration: 3
-  noiseTravelTimeout: 15
   lostSightCooldown: 5
-  waitTimeAtPoint: 2
+  runAnimation: 
+  useLocomotionBlendTree: 1
+  autoAnimationReferenceSpeeds: 1
+  keepWalkBlendWhileMoving: 1
+  animationStopSpeed: 0.03
+  locomotionState: Controlling
+  locomotionBlendParameter: Speed
+  locomotionHorizontalParameter: Horizontal
+  locomotionVerticalParameter: Verticle
+  locomotionAttackParameter: Attacking
+  locomotionAttackState: Art_Animation_Thelost_Machete_Attack
+  animationWalkSpeed: 0.5
+  animationRunSpeed: 3.125
+  locomotionDamping: 0.12
+  locomotionTransition: 0.12
+  useChaseRhythm: 1
+  chaseWalkDuration: {x: 5, y: 6}
+  chaseBoostDuration: {x: 2, y: 3}
   useApproachDecisions: 1
   approachDecisionInterval: 2.5
   approachWeights: {x: 1, y: 0, z: 0.4}
   flankAngle: 30
   pressureSpeedMultiplier: 0.8
   burstSpeedMultiplier: 1.2
+  aggressiveOnStart: 0
   coordinateAttacks: 1
   maxConcurrentAttackers: 1
-  engagementDistance: 6
-  pressureRingRadius: 1.8
+  engagementDistance: 1
+  pressureRingRadius: 1
+  pressureOrbitSpeed: 0.6
+  pressureOrbitStep: 25
+  pressureOrbitMode: 0
+  pressureDirectionDuration: {x: 10, y: 15}
+  pressureWaitTimeout: 15
+  pressureRetreatCooldown: 8
   attackTurnTimeout: 4
-  attackTurnRest: 1
+  attackTurnRest: 3
   acceleration: 8
   turnSpeed: 120
   stoppingDistance: 0.8
@@ -66,16 +91,37 @@ MonoBehaviour:
   separationSpeed: 0.75
   minAttack: 8
   maxAttack: 12
-  attackRange: 2
-  attackPreparationTime: 0.35
+  attackRange: 1.2
+  attackPreparationTime: 1
   attackWindup: 0.5
   attackCooldown: 2
   eyeHeight: 1
   playerTargetHeight: 1
   useRagdoll: 0
-  enableHitReaction: 1
-  hitStaggerDuration: 0.3
+  deathAnimation: zombie_dead2
+  deathAnimationLeadIn: 0.6
+  deathBlendDuration: 1.2
+  deathAnimationDrive: 25
+  hybridDeathPushScale: 0.35
+  corpseLifetime: 8
+  lootTable: []
+  lootPrefab: {fileID: 0}
+  lootDropChance: 0
+  lootOffset: {x: 0, y: 0.2, z: 0}
+  ragdollGravityScale: 0.45
+  ragdollLinearDamping: 0.8
+  ragdollAngularDamping: 1.5
+  deathPushImpulse: 3
   hitKnockbackDistance: 0.15
   hitKnockbackDuration: 0.12
-  corpseLifetime: 8
-  lootDropChance: 0
+  hitStaggerDuration: 0.3
+  enableHitReaction: 1
+  hitPushImpulse: 0.8
+  hitPhysicsDuration: 0.12
+  hitRecoveryDuration: 0.2
+  hitReactionBlend: 0.75
+  hitAnimationSupport: 30
+  hitMaxAngle: 25
+  corpseSettleDelay: 0.75
+  physicsMassMultiplier: 1
+  boneMassOverrides: []

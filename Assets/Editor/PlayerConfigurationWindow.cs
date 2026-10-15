@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PlayerConfigurationWindow : EditorWindow
 {
+    private void OnInspectorUpdate() { if (Application.isPlaying) Repaint(); }
     [SerializeField] private PlayerController player;
     [SerializeField] private InventoryManager inventory;
     [SerializeField] private bool followSelection = true;

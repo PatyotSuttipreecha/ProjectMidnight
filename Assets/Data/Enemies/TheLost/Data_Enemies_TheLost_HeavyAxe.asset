@@ -23,6 +23,7 @@ MonoBehaviour:
   restraintSpeedMultiplier: 0.65
   playerHitProtection: 0.75
   startingHealth: 100
+  locomotionBlendParameter: Speed
   walkSpeed: 0.5
   chaseSpeed: 2.5
   closeApproachSpeed: 0.5

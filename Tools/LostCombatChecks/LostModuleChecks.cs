@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -61,12 +61,151 @@ public static class LostModuleChecks
     }
     private static IEnumerator Run()
     {
+        var schemaFields = new List<string>();
+        foreach (var groupFields in EnemyProfileGUI.Fields) schemaFields.AddRange(groupFields);
+        Check(new HashSet<string>(schemaFields).Count == schemaFields.Count, "Canonical Enemy Profile editor has no duplicate setting paths");
+        var rulesProfile = ScriptableObject.CreateInstance<EnemyDataSO>();
+        var rulesData = new SerializedObject(rulesProfile);
+        Check(schemaFields.TrueForAll(field => rulesData.FindProperty(field) != null), "Every Enemy editor setting resolves to a serialized property");
+        var missingFields = Array.FindAll(typeof(EnemyDataSO).GetFields(BindingFlags.Public | BindingFlags.Instance), field => !schemaFields.Contains(field.Name));
+        Check(missingFields.Length == 0,
+            "Canonical editor covers all current profile fields without dropping saved settings: " + string.Join(", ", Array.ConvertAll(missingFields, field => field.Name)));
+        rulesProfile.useLostCombat = false;
+        Check(!EnemyProfileGUI.IsVisible("startingWeapon", rulesProfile, true), "Weapon module is hidden when Lost Combat is disabled");
+        rulesProfile.useLostCombat = true;
+        Check(EnemyProfileGUI.IsVisible("startingWeapon", rulesProfile, true), "Weapon module returns when Lost Combat is enabled");
+        rulesProfile.coordinateAttacks = false;
+        Check(!EnemyProfileGUI.IsVisible("pressureRingRadius", rulesProfile, true), "Pressure settings are hidden without turn coordination");
+        rulesProfile.coordinateAttacks = true;
+        Check(EnemyProfileGUI.IsVisible("pressureRingRadius", rulesProfile, true), "Pressure settings return with coordination enabled");
+        Check(!EnemyProfileGUI.IsVisible("animationWalkSpeed", rulesProfile, true), "Automatic references hide duplicate custom speed controls");
+        rulesProfile.autoAnimationReferenceSpeeds = false;
+        Check(EnemyProfileGUI.IsVisible("animationWalkSpeed", rulesProfile, true), "Custom references remain available on request");
+        Check(!EnemyProfileGUI.IsVisible("locomotionState", rulesProfile, false) && EnemyProfileGUI.IsVisible("locomotionState", rulesProfile, true),
+            "Advanced Animator binding fields remain accessible");
+        rulesProfile.canHear = false;
+        Check(!EnemyProfileGUI.IsVisible("gunshotHearingRadius", rulesProfile, true), "Hearing ranges are hidden when hearing is off");
+        rulesProfile.animationWalkSpeed = 2;
+        Check(EnemyProfileGUI.Warnings(rulesProfile).Exists(message => message.Contains("Custom Walk Reference")), "Editor warns about the screenshot's reference-speed mismatch");
+        var newController = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>("Assets/TheLostAnimator/Enemy.controller");
+        Check(newController != null, "New Enemy Blend Tree controller imports");
+        var states = newController.layers[0].stateMachine.states;
+        var locomotionState = Array.Find(states, s => s.state.name == "Controlling").state;
+        var familyTree = locomotionState.motion as UnityEditor.Animations.BlendTree;
+        Check(familyTree != null && familyTree.blendParameter == "EnemyType", "Family selector is independent of movement Speed");
+        var weaponTree = familyTree.children[0].motion as UnityEditor.Animations.BlendTree;
+        Check(weaponTree != null && weaponTree.blendParameter == "WeaponType" && weaponTree.children.Length == 6, "TheLost has six discrete loadout branches");
+        foreach (var branch in weaponTree.children)
+        {
+            var movement = branch.motion as UnityEditor.Animations.BlendTree;
+            Check(movement != null && movement.children.Length == 3 && movement.children[0].motion != null && movement.children[2].motion != null, "Every loadout has a usable movement branch");
+        }
+        var speedTree = weaponTree.children[1].motion as UnityEditor.Animations.BlendTree;
+        Check(speedTree != null && speedTree.children.Length == 3 && speedTree.children[1].threshold == .5f && speedTree.children[2].threshold == 1f,
+            "Actual controller has Idle/Walk/Run thresholds matching the velocity adapter");
+        var directionTree = speedTree.children[1].motion as UnityEditor.Animations.BlendTree;
+        Check(directionTree != null && directionTree.blendParameter == "Horizontal" && directionTree.blendParameterY == "Verticle",
+            "Walk directional parameters match current controller spelling");
+        Check(!Array.Exists(newController.layers[0].stateMachine.anyStateTransitions, transition =>
+            transition.conditions.Length == 0 || Array.Exists(transition.conditions, condition => condition.parameter == "Attacking")),
+            "No unconditional/Attacking Any State entry can override a script-selected attack");
+        foreach (var clipPath in new[] { "Idle", "Walking", "Run", "LTurn", "RTurn" })
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/TheLostAnimator/Machete/Art_Animation_Thelost_Machete_" + clipPath + ".anim");
+            Check(clip != null && AnimationUtility.GetAnimationClipSettings(clip).loopTime, clipPath + " loops in locomotion");
+        }
+        var testController = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath("Assets/LocomotionFixture.controller");
+        foreach (var parameter in new[] { "Blend", "Horizontal", "Verticle", "WeaponType", "EnemyType" }) testController.AddParameter(parameter, AnimatorControllerParameterType.Float);
+        testController.AddParameter("Attacking", AnimatorControllerParameterType.Bool);
+        testController.layers[0].stateMachine.AddState("Controlling");
+        testController.layers[0].stateMachine.AddState("Art_Animation_Thelost_Machete_Attack");
+        var animationObject = new GameObject("Locomotion parameter test");
+        var animation = animationObject.AddComponent<Animator>(); animation.runtimeAnimatorController = testController; animation.Update(0);
+        var animationProfile = ScriptableObject.CreateInstance<EnemyDataSO>(); animationProfile.locomotionDamping = 0;
+        var driver = new EnemyLocomotionAnimator(animation, animationProfile);
+        var selectionModule = ScriptableObject.CreateInstance<EnemyWeaponSO>();
+        var loadouts = new[] { EnemyWeaponSO.Loadout.Machete, EnemyWeaponSO.Loadout.Log, EnemyWeaponSO.Loadout.Torch, EnemyWeaponSO.Loadout.Stone, EnemyWeaponSO.Loadout.HeavyAxe };
+        for (int index = 0; index < loadouts.Length; index++)
+        {
+            selectionModule.loadout = loadouts[index];
+            driver.Update(Vector3.forward, false, .1f, selectionModule);
+            Check(Mathf.Abs(animation.GetFloat("WeaponType") - (index + 1) * .2f) < .001f && animation.GetFloat("EnemyType") == 0, "Held loadout selects its exact branch: " + loadouts[index]);
+        }
+        driver.Update(Vector3.zero, false, .1f);
+        Check(animation.GetFloat("WeaponType") == 0, "Disarmed enemy selects Unarm without blending loadouts");
+        UnityEngine.Object.Destroy(selectionModule);
+        animationProfile.autoAnimationReferenceSpeeds = false;
+        animationProfile.keepWalkBlendWhileMoving = false;
+        animationProfile.animationWalkSpeed = 2;
+        Check(Mathf.Abs(EnemyLocomotionAnimator.BlendForMovement(.6f, animationProfile) - .15f) < .001f,
+            "Reproduces low Blend from 0.6 m/s movement and 2 m/s custom walk reference");
+        animationProfile.autoAnimationReferenceSpeeds = true;
+        animationProfile.keepWalkBlendWhileMoving = true;
+        Check(EnemyLocomotionAnimator.BlendForMovement(.6f, animationProfile) >= .5f,
+            "Automatic movement references prevent old custom reference leaving Pressure mostly Idle");
+        Check(Mathf.Abs(EnemyLocomotionAnimator.BlendForMovement(.1f, animationProfile) - .5f) < .001f,
+            "Crowd-slowed movement retains full Walk branch");
+        Check(EnemyLocomotionAnimator.BlendForMovement(.01f, animationProfile) == 0,
+            "Tiny avoidance jitter stays Idle under stop threshold");
+        animationProfile.walkSpeed = 1; animationProfile.chaseSpeed = 4; animationProfile.burstSpeedMultiplier = 1.5f;
+        Check(EnemyLocomotionAnimator.ReferenceSpeeds(animationProfile) == new Vector2(1, 6),
+            "Automatic animation references follow current AI speed settings");
+        animationProfile.walkSpeed = .5f; animationProfile.chaseSpeed = 2.5f; animationProfile.burstSpeedMultiplier = 1.25f;
+        animationProfile.animationWalkSpeed = .5f;
+        Check(driver.Compatible, "Velocity adapter recognizes configured locomotion state and parameters");
+        Check(driver.ResolvedSpeedParameter == "Blend", "New Speed default remains compatible with an old Blend controller");
+        driver.Update(Vector3.zero, false, .1f);
+        Check(animation.GetFloat("Blend") == 0, "Stationary actor drives Idle blend");
+        driver.Update(Vector3.forward * animationProfile.animationWalkSpeed, false, .1f);
+        Check(Mathf.Abs(animation.GetFloat("Blend") - .5f) < .001f && animation.GetFloat("Verticle") > .99f, "Real walk speed selects Walk and forward direction");
+        driver.Update(Vector3.right * animationProfile.animationWalkSpeed, false, .1f);
+        Check(animation.GetFloat("Horizontal") > .99f && Mathf.Abs(animation.GetFloat("Verticle")) < .001f, "Pressure side movement drives horizontal walk direction");
+        animationObject.transform.rotation = Quaternion.Euler(0, 90, 0);
+        driver.Update(Vector3.forward * animationProfile.animationWalkSpeed, false, .1f);
+        Check(animation.GetFloat("Horizontal") < -.99f, "Direction is relative to enemy facing rather than world axes");
+        driver.Update(Vector3.forward * animationProfile.animationRunSpeed, true, .1f);
+        Check(Mathf.Abs(animation.GetFloat("Blend") - 1f) < .001f && animation.GetBool("Attacking"), "Run speed and attack bool reach configured parameters");
+        Check(driver.ResolveState(Animator.StringToHash("zombie_walk2"), Animator.StringToHash("zombie_idle1"), Animator.StringToHash("zombie_walk2"), Animator.StringToHash("zombie_attack2_1")) == Animator.StringToHash("Controlling"),
+            "Legacy walk request resolves to the new locomotion state");
+        animationProfile.useLocomotionBlendTree = false;
+        animationProfile.useLocomotionBlendTree = true;
+        Check(driver.ResolveState(Animator.StringToHash("zombie_attack2_1"), Animator.StringToHash("zombie_idle1"), Animator.StringToHash("zombie_walk2"), Animator.StringToHash("zombie_attack2_1")) == Animator.StringToHash("Art_Animation_Thelost_Machete_Attack"),
+            "Legacy attack fallback resolves to the new attack state");
+        animationProfile.useLocomotionBlendTree = false;
+        Check(!driver.Compatible, "Disabling Blend Tree preserves legacy animation path");
+        var migratedParameters = testController.parameters;
+        foreach (var parameter in migratedParameters) if (parameter.name == "Blend") parameter.name = "Speed";
+        testController.parameters = migratedParameters;
+        animation.Rebind(); animation.Update(0);
+        animationProfile.useLocomotionBlendTree = true;
+        animationProfile.locomotionBlendParameter = "Blend";
+        var migratedDriver = new EnemyLocomotionAnimator(animation, animationProfile);
+        Check(migratedDriver.Compatible && migratedDriver.ResolvedSpeedParameter == "Speed", "Saved Blend profile connects to renamed Speed controller");
+        migratedDriver.Update(Vector3.forward * .5f, false, .1f);
+        Check(Mathf.Abs(animation.GetFloat("Speed") - .5f) < .001f, "Migrated controller receives movement on Speed instead of the missing Blend parameter");
+        testController.layers[0].stateMachine.AddState("zombie_attack2_1");
+        testController.layers[0].stateMachine.AddState("Unarmed_Attack");
+        animation.Rebind(); animation.Update(0);
+        var attackDriver = new EnemyLocomotionAnimator(animation, animationProfile);
+        int legacyAttack = Animator.StringToHash("zombie_attack2_1");
+        Check(attackDriver.ResolveState(legacyAttack, Animator.StringToHash("zombie_idle1"), Animator.StringToHash("zombie_walk2"), legacyAttack) == legacyAttack,
+            "Existing unarmed legacy state is never rewritten to armed fallback");
+        Check(attackDriver.ResolveAttackState("Missing_Sweep", true) == Animator.StringToHash("Art_Animation_Thelost_Machete_Attack"),
+            "Armed module without a specific state uses the armed fallback");
+        Check(attackDriver.ResolveAttackState("zombie_attack2_1", false) == legacyAttack && attackDriver.LastAttackStateName == "zombie_attack2_1",
+            "Dropped weapon selects the configured base animation instead of Machete");
+        Check(attackDriver.ResolveAttackState("Unarmed_Attack", false) == Animator.StringToHash("Unarmed_Attack"),
+            "Custom Base Attack Animation takes priority after disarm");
+        UnityEngine.Object.Destroy(animationObject);
         foreach (string name in new[] { "Unarmed", "Machete", "Log", "HeavyAxe", "Stone", "Torch" })
         {
             var imported = AssetDatabase.LoadAssetAtPath<EnemyDataSO>("Assets/TheLostPresets/Data_Enemies_TheLost_" + name + ".asset");
             Check(imported != null && imported.useLostCombat && imported.maxConcurrentAttackers == 1, "Imported " + name + " prototype profile");
             Check(name == "Unarmed" ? imported.startingWeapon == null : imported.startingWeapon != null && imported.startingWeapon.loadout.ToString() == name,
                 "Imported " + name + " module reference");
+            Check(imported.locomotionBlendParameter == speedTree.blendParameter, name + " profile matches actual controller speed parameter");
+            if (name == "Machete") Check(imported.autoAnimationReferenceSpeeds && EnemyLocomotionAnimator.BlendForMovement(.6f, imported) >= .5f,
+                "Existing Machete profile uses automatic references even with saved custom walk speed 2");
         }
         var floor = new NavMeshBuildSource { shape = NavMeshBuildSourceShape.Box, size = new Vector3(30, .2f, 30), transform = Matrix4x4.TRS(new Vector3(0, -.1f, 0), Quaternion.identity, Vector3.one) };
         var mesh = NavMeshBuilder.BuildNavMeshData(NavMesh.GetSettingsByIndex(0), new List<NavMeshBuildSource> { floor }, new Bounds(Vector3.zero, new Vector3(30, 4, 30)), Vector3.zero, Quaternion.identity);
@@ -177,6 +316,13 @@ public static class LostModuleChecks
         player.IsCutsceneInputLocked = true;
         Check(!effects.TryHit(50, .65f), "Cutscene-locked target rejects Lost hits");
         player.IsCutsceneInputLocked = false;
+        float healthBeforeBlocked = player.currentHealth;
+        player.CheatInfiniteHealth = true;
+        Check(!effects.TryHit(10, .65f, 1, .5f) && effects.ProtectionRemaining == 0 && effects.MovementMultiplier == 1 && player.currentHealth == healthBeforeBlocked, "Blocked damage creates no hit protection or restraint");
+        player.CheatInfiniteHealth = false;
+        Check(!effects.TryHit(-10, .65f) && !effects.TryHit(float.NaN, .65f) && player.currentHealth == healthBeforeBlocked, "Invalid damage never heals or counts as a hit");
+        Check(effects.TryHit(1, .05f) && player.currentHealth == healthBeforeBlocked - 1, "Damage succeeds immediately after invincibility ends");
+        yield return Wait(.06f);
         moving.transform.position = Vector3.back * 3; go.transform.rotation = Quaternion.identity;
         enemy.StartPatrol();
         GameplayNoise.Emit(moving.transform.position, 25, moving.transform, GameplayNoise.Kind.Gunshot);
@@ -205,6 +351,34 @@ public static class LostModuleChecks
         Check(enemy.CurrentState == EnemyController.EnemyState.Pressure && !enemy.HasAttackTurn, "Waiting without a turn stays in Pressure");
         Check(!go.GetComponent<NavMeshAgent>().updateRotation && Vector3.Dot(go.transform.forward, (moving.transform.position - go.transform.position).normalized) > .85f,
             "Pressure faces player independently of orbit movement");
+        profile.pressureOrbitMode = EnemyDataSO.PressureOrbitMode.Clockwise;
+        Call(enemy, "UpdatePressureDirection");
+        var radial = Vector3.ProjectOnPlane(go.transform.position - moving.transform.position, Vector3.up);
+        Call(enemy, "SetPressureDestination");
+        yield return Wait(.05f); // NavMesh commits requested destinations asynchronously.
+        Check(enemy.PressureOrbitDirection == 1 && Vector3.SignedAngle(radial, go.GetComponent<NavMeshAgent>().destination - moving.transform.position, Vector3.up) > 5,
+            "Clockwise Pressure generates a positive orbit path");
+        profile.pressureOrbitMode = EnemyDataSO.PressureOrbitMode.CounterClockwise;
+        Call(enemy, "UpdatePressureDirection"); Call(enemy, "SetPressureDestination");
+        yield return Wait(.05f);
+        Check(enemy.PressureOrbitDirection == -1 && Vector3.SignedAngle(radial, go.GetComponent<NavMeshAgent>().destination - moving.transform.position, Vector3.up) < -5,
+            "Counter-clockwise Pressure generates the opposite orbit path");
+        profile.pressureOrbitMode = EnemyDataSO.PressureOrbitMode.Random;
+        var savedRandom = UnityEngine.Random.state; UnityEngine.Random.InitState(42);
+        bool clockwiseSeen = false, counterSeen = false;
+        for (int sample = 0; sample < 20; sample++)
+        {
+            typeof(EnemyController).GetField("pressureOrbitActive", Hidden).SetValue(enemy, false);
+            Call(enemy, "UpdatePressureDirection");
+            clockwiseSeen |= enemy.PressureOrbitDirection > 0; counterSeen |= enemy.PressureOrbitDirection < 0;
+        }
+        Check(clockwiseSeen && counterSeen, "Random Pressure entry can select either orbit direction");
+        int heldDirection = enemy.PressureOrbitDirection;
+        float heldDeadline = (float)typeof(EnemyController).GetField("nextPressureDirectionTime", Hidden).GetValue(enemy);
+        Call(enemy, "UpdatePressureDirection");
+        Check(enemy.PressureOrbitDirection == heldDirection && (float)typeof(EnemyController).GetField("nextPressureDirectionTime", Hidden).GetValue(enemy) == heldDeadline,
+            "Random direction remains committed instead of rerolling each frame");
+        UnityEngine.Random.state = savedRandom;
         Check(Vector3.Distance(go.GetComponent<NavMeshAgent>().destination, moving.transform.position) > 1.4f &&
             Vector3.Distance(go.GetComponent<NavMeshAgent>().destination, moving.transform.position) < 2.2f, "Pressure destination uses configured close ring rather than weapon range");
         go.transform.rotation = Quaternion.LookRotation(Vector3.right);

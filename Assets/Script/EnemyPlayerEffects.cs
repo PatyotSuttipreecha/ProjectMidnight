@@ -9,6 +9,10 @@ public class EnemyPlayerEffects : MonoBehaviour
     private float burnUntil, burnStarted, burnDps;
     private GameObject burnVisual;
     public bool IsBurning => Time.time < burnUntil;
+    public float ProtectionRemaining => Mathf.Max(0, protectedUntil - Time.time);
+    public string LastHitResult { get; private set; } = "No hit attempt";
+    public string BlockReason => player == null ? "Missing player" : !player.isActiveAndEnabled || player.currentHealth <= 0 ? "Player dead / disabled" :
+        player.IsCutsceneInputLocked ? "Cutscene protection" : Time.time < protectedUntil ? "Hit protection: " + ProtectionRemaining.ToString("0.00") + "s" : "Ready";
     public bool CanReceiveAttack => player != null && player.isActiveAndEnabled && player.currentHealth > 0 &&
         !player.IsCutsceneInputLocked && Time.time >= protectedUntil;
     public float MovementMultiplier => Time.time < restraintUntil ? restraintMultiplier : 1f;
@@ -23,8 +27,9 @@ public class EnemyPlayerEffects : MonoBehaviour
     private void Awake() => player = GetComponent<PlayerController>();
     public bool TryHit(float damage, float protection, float restraintDuration = 0, float speedMultiplier = 1)
     {
-        if (!CanReceiveAttack) return false;
-        player.TakeDamage(Mathf.Max(0, damage));
+        if (!CanReceiveAttack) { LastHitResult = BlockReason; return false; }
+        if (!player.TryTakeDamage(damage, "Enemy hit")) { LastHitResult = player.LastDamageResult; return false; }
+        LastHitResult = player.LastDamageResult;
         protectedUntil = Time.time + Mathf.Max(0, protection);
         // Do not extend a restraint while it is active. Protection is at least as long as restraint.
         if (restraintDuration > 0 && Time.time >= restraintUntil)
@@ -50,7 +55,7 @@ public class EnemyPlayerEffects : MonoBehaviour
         { Clear(); return; }
         // Integrate only the part of this frame covered by the effect's expiry.
         float burningStep = Mathf.Max(0, Mathf.Min(burnUntil, Time.time) - Mathf.Max(burnStarted, Time.time - Time.deltaTime));
-        if (burningStep > 0) player.TakeDamage(burnDps * burningStep);
+        if (burningStep > 0) player.TryTakeDamage(burnDps * burningStep, "Burn");
         if (!IsBurning && burnVisual != null) { Destroy(burnVisual); burnVisual = null; }
     }
     private void Clear()

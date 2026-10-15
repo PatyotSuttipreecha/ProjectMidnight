@@ -23,7 +23,7 @@ public class EnemyLabWindow : EditorWindow
     private PatrolRoute selectedRoute;
     private EnemySpawnPoint selectedSpawn;
     private Editor workspaceEditor;
-    private bool weaponSettingsExpanded = true;
+
 
     [MenuItem("System Modification/Enemy Lab/Enemy Settings")]
     public static void Open()
@@ -60,8 +60,12 @@ public class EnemyLabWindow : EditorWindow
     private void PlayModeChanged(PlayModeStateChange state) { placePoints = false; editPoints = false; Refresh(); }
     private void FollowSelection()
     {
+        if (followSelection && Selection.activeObject is EnemyWeaponSO module)
+        { selectedModule = module; workspace = 5; Refresh(); return; }
         if (followSelection && Selection.activeGameObject != null)
         {
+            var group = Selection.activeGameObject.GetComponent<EnemyGroup>();
+            if (group != null) { selectedGroup = group; workspace = 4; Refresh(); return; }
             PatrolRoute route = Selection.activeGameObject.GetComponentInParent<PatrolRoute>();
             EnemySpawnPoint spawn = Selection.activeGameObject.GetComponent<EnemySpawnPoint>();
             if (route != null) { selectedRoute = route; workspace = 2; Refresh(); return; }
@@ -88,345 +92,176 @@ public class EnemyLabWindow : EditorWindow
         !EditorUtility.IsPersistent(enemy) && enemy.gameObject.scene.IsValid() &&
         PrefabStageUtility.GetCurrentPrefabStage() == null;
 
+    private readonly EnemyProfileGUI profileGUI = new EnemyProfileGUI();
+    private bool patrolExpanded, gizmosExpanded, legacyExpanded;
+    private EnemyGroup selectedGroup;
+    private EnemyWeaponSO selectedModule;
+
     private void OnGUI()
     {
         EditorGUILayout.LabelField("Enemy Lab", EditorStyles.boldLabel);
-        workspace = GUILayout.Toolbar(workspace, new[] { "Enemy", "Profiles", "Routes", "Spawns" });
+        int previous = workspace;
+        workspace = GUILayout.Toolbar(workspace, new[] { "Enemy", "Profiles", "Routes", "Spawns", "Groups", "Modules" });
+        if (previous != workspace) { placePoints = editPoints = false; scroll = Vector2.zero; }
         if (workspace >= 2) { DrawWorkspace(); return; }
-        if (workspace == 1) enemy = null;
-        EditorGUILayout.LabelField("Tune enemy behaviour and build patrol points on the NavMesh.", EditorStyles.wordWrappedLabel);
-        EditorGUI.BeginChangeCheck();
-        EnemyController selected = (EnemyController)EditorGUILayout.ObjectField("Enemy", enemy, typeof(EnemyController), true);
-        if (EditorGUI.EndChangeCheck()) SelectEnemy(selected);
         followSelection = EditorGUILayout.ToggleLeft("Follow Hierarchy / Project selection", followSelection);
-        standaloneProfile = (EnemyDataSO)EditorGUILayout.ObjectField("Standalone Profile", standaloneProfile, typeof(EnemyDataSO), false);
-        if (workspace == 1 && GUILayout.Button("Create Enemy Profile")) EnemyProfileMigration.CreateProfile();
-        if (enemy == null)
+        if (workspace == 0)
         {
-            if (standaloneProfile != null)
-            {
-                EditorGUILayout.HelpBox("Shared settings for all enemies using this profile. Changes apply when enemies initialize.", MessageType.Info);
-                scroll = EditorGUILayout.BeginScrollView(scroll);
-                using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
-                {
-                    SerializedObject settings = new SerializedObject(standaloneProfile);
-                    settings.Update();
-                    SerializedProperty property = settings.GetIterator();
-                    bool enterChildren = true;
-                    while (property.NextVisible(enterChildren))
-                    {
-                        enterChildren = false;
-                        if (property.propertyPath == "m_Script" || property.propertyPath == "lootTable" || property.propertyPath == "lootPrefab" || property.propertyPath == "lootDropChance") continue;
-                        EditorGUILayout.PropertyField(property, true);
-                    }
-                    EnemyLootEditor.Draw(settings);
-                    if (settings.ApplyModifiedProperties()) EditorUtility.SetDirty(standaloneProfile);
-                    EnemyWeaponLabWindow.DrawInlineSettings(standaloneProfile, ref weaponSettingsExpanded);
-                    if (GUILayout.Button("Save Profile")) AssetDatabase.SaveAssetIfDirty(standaloneProfile);
-                }
-                EditorGUILayout.EndScrollView();
-                return;
-            }
-            EditorGUILayout.HelpBox("Select an Enemy in the scene or drag its EnemyController here. Place the enemy in a scene with a baked NavMesh to build patrol points.", MessageType.Info);
+            EditorGUI.BeginChangeCheck();
+            var selected = (EnemyController)EditorGUILayout.ObjectField("Enemy instance / prefab", enemy, typeof(EnemyController), true);
+            if (EditorGUI.EndChangeCheck()) SelectEnemy(selected);
+        }
+        else
+        {
+            standaloneProfile = (EnemyDataSO)EditorGUILayout.ObjectField("Enemy Profile", standaloneProfile, typeof(EnemyDataSO), false);
+            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+                if (GUILayout.Button("Create Enemy Profile")) EnemyProfileMigration.CreateProfile();
+        }
+        if (workspace == 1)
+        {
+            if (standaloneProfile == null) { EditorGUILayout.HelpBox("Select a profile asset to configure it without a scene enemy.", MessageType.Info); return; }
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            EditorGUILayout.HelpBox("Shared profile: edits affect every enemy using this asset when initialized.", MessageType.Info);
+            profileGUI.Draw(standaloneProfile);
+            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+                if (GUILayout.Button("Save Profile")) AssetDatabase.SaveAssetIfDirty(standaloneProfile);
+            EditorGUILayout.EndScrollView();
             return;
         }
+        if (enemy == null) { EditorGUILayout.HelpBox("Select a scene enemy or prefab. Profiles, routes, spawn points, groups and modules have their own workspaces.", MessageType.Info); return; }
         scroll = EditorGUILayout.BeginScrollView(scroll);
-        if (EditorApplication.isPlaying)
-        {
-            GUIStyle stateStyle = new GUIStyle(EditorStyles.helpBox);
-            stateStyle.fontSize = 16;
-            stateStyle.fontStyle = FontStyle.Bold;
-            stateStyle.normal.textColor = enemy.StateColor;
-            EditorGUILayout.LabelField("AI State: " + enemy.CurrentState, stateStyle);
-            Repaint();
-        }
-        EditorGUILayout.HelpBox("AI colours: white Idle | green Patrol | yellow Waiting/Detect | orange Chase/Preparation | purple Search | red Attack | mint Recovery | grey Dead. Pink patrol points turn yellow when targeted.", MessageType.Info);
-        EditorGUILayout.HelpBox(EditorUtility.IsPersistent(enemy) ? "Editing prefab asset: " + AssetDatabase.GetAssetPath(enemy)
-            : "Editing scene instance: " + enemy.gameObject.scene.name + " / " + enemy.name, MessageType.Info);
-        if (EditorApplication.isPlaying)
-            EditorGUILayout.HelpBox("Enemy Lab edits are disabled during Play Mode. Settings and patrol changes are made in Edit Mode.", MessageType.Info);
+        if (Application.isPlaying) { EnemyDiagnosticsGUI.Draw(enemy); Repaint(); }
+        EditorGUILayout.HelpBox("Instance settings: references, patrol assignment and Gizmos. Shared tuning: the Profile below. Route placement: Routes workspace.", MessageType.Info);
         using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
         {
-            SerializedObject controller = new SerializedObject(enemy);
-            controller.Update();
-            Section("Behaviour Profile");
-            EditorGUILayout.PropertyField(controller.FindProperty("enemyData"), new GUIContent("Enemy data profile"));
+            var controller = new SerializedObject(enemy); controller.Update();
+            Property(controller, "enemyData", "Enemy Profile");
+            Property(controller, "player", "Target (optional)");
+            Property(controller, "startPatrolOnStart", "Start AI / Patrol On Start");
+            Property(controller, "patrolRoute", "Patrol Route");
             if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
-            if (enemy.enemyData != null)
-            {
-                EditorGUILayout.HelpBox("This profile is shared. Editing it affects every enemy that uses it. Create a copy for independent tuning.", MessageType.Warning);
-                if (GUILayout.Button("Create independent profile copy")) CloneProfile();
-                DrawProfile();
-            }
-            else EditorGUILayout.HelpBox("Assign an EnemyDataSO profile before this enemy can run its AI.", MessageType.Warning);
-
             if (enemy.enemyData == null || !enemy.enemyData.useSharedSettings)
             {
-                EditorGUILayout.HelpBox("Legacy per-enemy settings are active. Promote them to a new shared profile to preserve all current tuning.", MessageType.Info);
-                if (GUILayout.Button("Promote current settings to shared Profile"))
-                { EnemyProfileMigration.Promote(enemy); status = "Profile created. Assign it to any spawn point."; }
+                EditorGUILayout.HelpBox("Legacy instance settings are preserved. Promote them once to a shared Profile for one place to tune health, navigation and physics.", MessageType.Warning);
+                if (GUILayout.Button("Promote current settings to shared Profile")) EnemyProfileMigration.Promote(enemy);
+                legacyExpanded = EditorGUILayout.Foldout(legacyExpanded, "Legacy component tuning", true);
+                if (legacyExpanded) DrawLegacySettings(controller);
             }
-            SerializedObject tuning = enemy.enemyData != null && enemy.enemyData.useSharedSettings
-                ? new SerializedObject(enemy.enemyData) : controller;
-            tuning.Update();
-            Section("Movement and Health");
-            if (enemy.enemyData != null)
+            if (enemy.enemyData != null && GUILayout.Button("Create independent profile copy")) CloneProfile();
+        }
+        if (enemy.enemyData != null)
+        {
+            profileGUI.Draw(enemy.enemyData);
+            if (!Application.isPlaying)
+                foreach (var warning in EnemyProfileGUI.AnimatorWarnings(enemy.GetComponent<Animator>(), enemy.enemyData)) EditorGUILayout.HelpBox(warning, MessageType.Warning);
+        }
+        else EditorGUILayout.HelpBox("Assign an Enemy Profile before configuring AI.", MessageType.Warning);
+        using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+        {
+            gizmosExpanded = EditorGUILayout.Foldout(gizmosExpanded, "Instance Gizmos / previews", true);
+            if (gizmosExpanded)
             {
-                var crowd = new SerializedObject(enemy.enemyData);
-                Section("Chase Movement");
-                Property(crowd, "chaseSpeed", "Chase speed (units/s)");
-                Property(crowd, "closeApproachSpeed", "Close approach speed (units/s)");
-                Property(crowd, "chaseSlowdownDistance", "Chase slowdown distance");
-                Property(crowd, "speedChangeRate", "Speed change rate");
-                Property(crowd, "chaseRepathInterval", "Chase repath interval");
-                Property(crowd, "runAnimation", "Run animation state (optional)");
-                Section("Chase Rhythm");
-                Property(crowd, "useChaseRhythm", "Alternate walk / boost");
-                Property(crowd, "chaseWalkDuration", "Walk duration min / max (seconds)");
-                Property(crowd, "chaseBoostDuration", "Boost duration min / max (seconds)");
-                Property(crowd, "burstSpeedMultiplier", "Boost speed multiplier");
-                Section("Approach Decisions");
-                Property(crowd, "useApproachDecisions", "Use approach decisions");
-                Property(crowd, "approachDecisionInterval", "Decision interval (seconds)");
-                Property(crowd, "approachWeights", "Direct / Flank / Burst weights");
-                Property(crowd, "flankAngle", "Flank angle (degrees)");
-                Property(crowd, "pressureSpeedMultiplier", "Pressure speed multiplier");
-                Section("Group Engagement");
-                Property(crowd, "aggressiveOnStart", "Aggressive on start");
-                Property(crowd, "coordinateAttacks", "Coordinate attacks");
-                Property(crowd, "maxConcurrentAttackers", "Maximum reserved attackers");
-                Property(crowd, "engagementDistance", "Engagement distance");
-                Property(crowd, "pressureRingRadius", "Pressure ring radius");
-                Property(crowd, "pressureOrbitSpeed", "Pressure orbit speed");
-                Property(crowd, "pressureOrbitStep", "Pressure orbit step (degrees)");
-                Property(crowd, "pressureWaitTimeout", "Pressure wait timeout (seconds, 0 = unlimited)");
-                Property(crowd, "pressureRetreatCooldown", "Retreat detection cooldown (seconds)");
-                Property(crowd, "attackTurnTimeout", "Attack turn timeout (seconds)");
-                Property(crowd, "attackTurnRest", "Rest before next turn (seconds)");
-                Section("Crowd Movement - Approach");
-                Property(crowd, "spreadChaseTargets", "Spread chase targets");
-                Property(crowd, "chaseApproachRadius", "Chase approach radius");
-                Property(crowd, "varyAvoidancePriority", "Vary avoidance priority");
-                Section("Crowd Movement - Separation");
-                Property(crowd, "separateNearbyEnemies", "Separate nearby enemies");
-                Property(crowd, "separationRadius", "Separation radius (units)");
-                Property(crowd, "separationSpeed", "Separation speed (units/s)");
-                if (crowd.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
+                var data = new SerializedObject(enemy); data.Update();
+                foreach (string field in new[] { "showGizmos", "patrolMarkerSize", "patrolPointColor", "patrolRouteColor", "showHearingGizmos", "hearingPreviewPlayer", "hearingPreviewGun" })
+                    Property(data, field, ObjectNames.NicifyVariableName(field));
+                if (data.ApplyModifiedProperties()) MarkDirty(enemy);
             }
-            Section("Patrol Movement and Navigation");
-            if (enemy.enemyData != null && enemy.enemyData.useSharedSettings)
-            {
-                Property(tuning, "walkSpeed", "Walk speed (units/s)");
-                Property(tuning, "acceleration", "Acceleration");
-                Property(tuning, "turnSpeed", "Turn speed (degrees/s)");
-                Property(tuning, "stoppingDistance", "Stopping distance");
-                Property(tuning, "startingHealth", "Starting health");
-                if (tuning.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
-            }
-            else
-            {
-
-            NavMeshAgent agent = enemy.GetComponent<NavMeshAgent>();
-            if (agent != null)
-            {
-                SerializedObject navigation = new SerializedObject(agent);
-                navigation.Update();
-                Property(navigation, "m_Speed", "Walk speed (units/s)");
-                Property(navigation, "m_Acceleration", "Acceleration");
-                Property(navigation, "m_AngularSpeed", "Turn speed (degrees/s)");
-                Property(navigation, "m_StoppingDistance", "Stopping distance");
-                if (navigation.ApplyModifiedProperties()) MarkDirty(agent);
-            }
-            HitBoxManager health = enemy.GetComponent<HitBoxManager>();
-            if (health != null)
-            {
-                SerializedObject hp = new SerializedObject(health);
-                hp.Update();
-                Property(hp, "health", "Starting health");
-                if (hp.ApplyModifiedProperties()) MarkDirty(health);
-            }
-
-            }
-            Section("Vision and Attack Details");
-            if (enemy.enemyData != null)
-            {
-                var lost = new SerializedObject(enemy.enemyData);
-                Section("The Lost - Base and Loadout");
-                Property(lost, "useLostCombat", "Use Lost combat");
-                Property(lost, "startingWeapon", "Starting weapon (empty = unarmed)");
-                Property(lost, "detectAnticipation", "Detect anticipation (seconds)");
-                Property(lost, "baseHitArc", "Unarmed hit arc (degrees)");
-                Property(lost, "baseRecovery", "Unarmed recovery (seconds)");
-                Property(lost, "baseAttackAnimation", "Unarmed animation state (optional)");
-                Property(lost, "restraintDuration", "Restraint duration (seconds)");
-                Property(lost, "restraintSpeedMultiplier", "Restrained movement multiplier");
-                Property(lost, "playerHitProtection", "Protection from repeated Lost hits");
-                if (lost.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
-                if (GUILayout.Button("Open Weapon Modules")) EnemyWeaponLabWindow.Open();
-                EnemyWeaponLabWindow.DrawProfileLink(enemy.enemyData);
-                if (enemy.enemyData.useLostCombat && enemy.enemyData.obstacleMask.value == 0)
-                    EditorGUILayout.HelpBox("Obstacle Mask is empty: melee sight checks cannot block walls. Select the scene's world obstruction layers, excluding player and enemy hitboxes.", MessageType.Warning);
-            }
-            controller.Update();
-            tuning.Update();
-            Property(tuning, "eyeHeight", "Enemy eye height");
-            Property(tuning, "playerTargetHeight", "Player target height");
-            Section("Attack Timing");
-            if (enemy.enemyData != null)
-            {
-                var timing = new SerializedObject(enemy.enemyData);
-                Property(timing, "attackPreparationTime", "Attack preparation time (seconds)");
-                if (timing.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
-            }
-            Property(tuning, "attackWindup", "Attack hit delay (seconds)");
-            Property(controller, "showGizmos", "Show enemy Gizmos");
-            Property(controller, "patrolMarkerSize", "Patrol point marker size");
-            Property(controller, "patrolPointColor", "Patrol point colour");
-            Property(controller, "patrolRouteColor", "Patrol route colour");
-            if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
-            if (tuning.ApplyModifiedProperties()) EditorUtility.SetDirty(tuning.targetObject);
-            if (enemy.enemyData != null && enemy.GetComponent<NavMeshAgent>() != null && (enemy.enemyData.useSharedSettings ? enemy.enemyData.stoppingDistance : enemy.GetComponent<NavMeshAgent>().stoppingDistance) >= enemy.enemyData.attackRange)
-                EditorGUILayout.HelpBox("Stopping distance should be smaller than attack range so the enemy can reach attack distance.", MessageType.Warning);
-
-            Section("Patrol Points");
-            EditorGUILayout.HelpBox("Random picks any point. Loop follows array order and wraps around. Ping-pong follows array order then reverses. Scene arrows show the chosen mode. Pink spheres are patrol points; yellow is the current target.", MessageType.Info);
-            controller.Update();
-            tuning.Update();
-            Property(controller, "patrolRoute", "Shared Patrol Route");
-            Property(controller, "startPatrolOnStart", "Start Patrol On Start");
-            if (Application.isPlaying)
-            {
-                EditorGUILayout.LabelField("Patrol", enemy.IsPatrolRunning ? "Running" : "Waiting for command");
-                if (GUILayout.Button(enemy.IsPatrolRunning ? "Pause Patrol" : "Start Patrol"))
-                {
-                    if (enemy.IsPatrolRunning) enemy.PausePatrol(); else enemy.StartPatrol();
-                }
-            }
-            if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
             if (enemy.Route != null)
             {
-                SerializedObject routeData = new SerializedObject(enemy.Route);
-                Property(routeData, "mode", "Patrol mode");
-                EditorGUILayout.PropertyField(routeData.FindProperty("points"), new GUIContent("Shared route points"), true);
-                if (routeData.ApplyModifiedProperties()) MarkDirty(enemy.Route);
-                if (GUILayout.Button("Select Route for placement / generation")) Selection.activeGameObject = enemy.Route.gameObject;
+                if (GUILayout.Button("Edit assigned Patrol Route")) { selectedRoute = enemy.Route; workspace = 2; placePoints = editPoints = false; }
             }
             else
             {
-                Property(controller, "patrolMode", "Patrol mode");
-                EditorGUILayout.PropertyField(controller.FindProperty("patrolPoints"), new GUIContent("Assigned patrol points"), true);
-                if (CanEditPath && GUILayout.Button("Extract current points into shared Route")) ExtractRoute();
+                patrolExpanded = EditorGUILayout.Foldout(patrolExpanded, "Legacy patrol points / generation", true);
+                if (patrolExpanded) DrawLegacyPatrol();
             }
-            if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
-            if (tuning.ApplyModifiedProperties()) EditorUtility.SetDirty(tuning.targetObject);
-            DrawPointSettings();
-            using (new EditorGUI.DisabledScope(!CanEditPath))
-            {
-                placePoints = EditorGUILayout.ToggleLeft("Place points: Shift + left click in Scene View", placePoints);
-                editPoints = EditorGUILayout.ToggleLeft("Move assigned points with Scene handles", editPoints);
-                if (placePoints || editPoints) SceneView.RepaintAll();
-                snapDistance = EditorGUILayout.Slider("NavMesh snap distance", snapDistance, 0.1f, 5f);
-                Section("Generate Patrol");
-                generateCount = EditorGUILayout.IntSlider("Point count", generateCount, 2, 20);
-                generateRadius = EditorGUILayout.Slider("Radius around enemy", generateRadius, 1f, 50f);
-                minimumSpacing = EditorGUILayout.Slider("Minimum point spacing", minimumSpacing, 0.1f, 10f);
-                EditorGUILayout.HelpBox("Generation uses the enemy agent type and allowed NavMesh areas. It validates complete paths from the enemy and between generated points. It replaces assigned references; existing point objects are preserved.", MessageType.Info);
-                if (GUILayout.Button("Generate connected patrol points")) GeneratePatrol();
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("Validate assigned paths")) ValidatePatrol();
-                    if (GUILayout.Button("Clear point assignments"))
-                    {
-                        AssignPoints(new List<Transform>());
-                        status = "Patrol assignments cleared. Existing point objects are preserved.";
-                    }
-                }
-            }
-            if (!CanEditPath) EditorGUILayout.HelpBox("Patrol placement and generation require a scene instance in Edit Mode, outside Prefab Mode.", MessageType.Info);
-            Section("Physics Mass");
-            controller.Update();
-            tuning.Update();
-            Property(tuning, "physicsMassMultiplier", "Whole-body mass multiplier");
-            if (tuning.FindProperty("physicsMassMultiplier").floatValue > 5f)
-                EditorGUILayout.HelpBox("This is a multiplier, not total kilograms. 65 means every bone weighs 65 times its base mass. Start at 1 for the default body weight; use per-bone kg for individual weights.", MessageType.Warning);
-            EditorGUILayout.PropertyField(tuning.FindProperty("boneMassOverrides"),
-                new GUIContent("Per-bone base mass (kg)"), true);
-            if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
-            if (tuning.ApplyModifiedProperties()) EditorUtility.SetDirty(tuning.targetObject);
-            EditorGUILayout.HelpBox("Effective mass = bone base mass × whole-body multiplier. Add a Humanoid bone override to customize one body part. Empty overrides keep the rig's original masses. Higher mass reduces the response to the same bullet impulse; it does not make gravity fall slower.", MessageType.Info);
-            Section("Death and Loot");
-            controller.Update();
-            tuning.Update();
-            Property(tuning, "useRagdoll", "Use ragdoll (auto-build Humanoid)");
-            Property(tuning, "deathAnimation", "Death animation state");
-            Property(tuning, "deathAnimationLeadIn", "Animation before ragdoll (seconds)");
-            Property(tuning, "deathBlendDuration", "Animation / ragdoll blend (seconds)");
-            Property(tuning, "deathAnimationDrive", "Animation support strength");
-            Property(tuning, "hybridDeathPushScale", "Hybrid death push scale (0–1)");
-            EditorGUILayout.HelpBox("Hybrid death starts with animation, then physics follows a fading animation support force during the blend. Increase blend time for a softer release. Set lead-in time to 0 for pure ragdoll.", MessageType.Info);
-            Property(tuning, "corpseLifetime", "Corpse lifetime (seconds)");
-            Property(tuning, "ragdollGravityScale", "Death gravity scale (lower = slower)");
-            Property(tuning, "ragdollLinearDamping", "Death movement damping");
-            Property(tuning, "ragdollAngularDamping", "Death rotation damping");
-            Property(tuning, "corpseSettleDelay", "Settle time before physics sleep (seconds)");
-            Property(tuning, "deathPushImpulse", "Fatal bullet push impulse");
-            if (enemy.enemyData != null)
-            {
-                SerializedObject lootSettings = new SerializedObject(enemy.enemyData);
-                lootSettings.Update(); EnemyLootEditor.Draw(lootSettings);
-                if (lootSettings.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
-            }
-            Property(tuning, "lootOffset", "Loot spawn offset");
-            if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
-            if (tuning.ApplyModifiedProperties()) EditorUtility.SetDirty(tuning.targetObject);
-            EditorGUILayout.HelpBox("Corpse lifetime 0 keeps the corpse. Ragdoll uses the configured rig, or builds bone physics at runtime for a Humanoid Animator. Non-Humanoid models need a manual rig. Assign a pickup prefab for loot.", MessageType.Info);
-            if (tuning.FindProperty("useRagdoll").boolValue && enemy.GetComponentsInChildren<Joint>(true).Length == 0)
-                EditorGUILayout.HelpBox("No ragdoll joints yet. A Humanoid rig will be generated when the game starts; custom joint limits can still be configured manually.", MessageType.Info);
-            Section("Bullet Hit Reaction");
-            controller.Update();
-            tuning.Update();
-            Property(tuning, "enableHitReaction", "Enable partial ragdoll hit reaction");
-            if (enemy.enemyData != null)
-            {
-                var impact = new SerializedObject(enemy.enemyData);
-                Property(impact, "hitKnockbackDistance", "Hit knockback distance (units)");
-                Property(impact, "hitKnockbackDuration", "Hit knockback duration (seconds)");
-                Property(impact, "hitStaggerDuration", "Hit stagger duration (seconds)");
-                if (impact.ApplyModifiedProperties()) EditorUtility.SetDirty(enemy.enemyData);
-            }
-            Property(tuning, "hitPushImpulse", "Bullet push impulse");
-            Property(tuning, "hitPhysicsDuration", "Physics reaction time (seconds)");
-            Property(tuning, "hitRecoveryDuration", "Return to animation (seconds)");
-            Property(tuning, "hitReactionBlend", "Hit physics blend (0–1)");
-            Property(tuning, "hitAnimationSupport", "Hit animation support");
-            Property(tuning, "hitMaxAngle", "Maximum hit deflection (degrees)");
-            if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
-            if (tuning.ApplyModifiedProperties()) EditorUtility.SetDirty(tuning.targetObject);
-            EditorGUILayout.HelpBox("Walking and attacking continue during hits. A separate jointed rig absorbs the impulse; only struck-chain rotations blend onto the animation. Proxy physics has no world colliders. Keep impulses small. Death physics uses the full visible ragdoll.", MessageType.Info);
             if (GUILayout.Button("Save Scene / Prefab / Profile")) SaveEnemyChanges();
         }
         if (!string.IsNullOrEmpty(status)) EditorGUILayout.HelpBox(status, MessageType.Info);
         EditorGUILayout.EndScrollView();
     }
-
+    private void DrawLegacySettings(SerializedObject controller)
+    {
+        controller.Update();
+        foreach (var field in typeof(EnemyDataSO).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+        {
+            var property = controller.FindProperty(field.Name);
+            if (property != null) EditorGUILayout.PropertyField(property, true);
+        }
+        if (controller.ApplyModifiedProperties()) MarkDirty(enemy);
+        var agent = enemy.GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            var data = new SerializedObject(agent); data.Update();
+            Property(data, "m_Speed", "Legacy walk speed"); Property(data, "m_Acceleration", "Legacy acceleration");
+            Property(data, "m_AngularSpeed", "Legacy turn speed"); Property(data, "m_StoppingDistance", "Legacy stopping distance");
+            if (data.ApplyModifiedProperties()) MarkDirty(agent);
+        }
+        var health = enemy.GetComponent<HitBoxManager>();
+        if (health != null)
+        {
+            var data = new SerializedObject(health); data.Update(); Property(data, "health", "Legacy health");
+            if (data.ApplyModifiedProperties()) MarkDirty(health);
+        }
+    }
+    private void DrawLegacyPatrol()
+    {
+        var data = new SerializedObject(enemy); data.Update();
+        Property(data, "patrolMode", "Patrol mode");
+        EditorGUILayout.PropertyField(data.FindProperty("patrolPoints"), new GUIContent("Assigned points"), true);
+        if (data.ApplyModifiedProperties()) MarkDirty(enemy);
+        if (CanEditPath && GUILayout.Button("Extract points into shared Route")) ExtractRoute();
+        DrawPointSettings();
+        using (new EditorGUI.DisabledScope(!CanEditPath))
+        {
+            placePoints = EditorGUILayout.ToggleLeft("Place points: Shift + click in Scene", placePoints);
+            editPoints = EditorGUILayout.ToggleLeft("Move points with Scene handles", editPoints);
+            snapDistance = EditorGUILayout.Slider("NavMesh snap distance", snapDistance, .1f, 5);
+            generateCount = EditorGUILayout.IntSlider("Point count", generateCount, 2, 20);
+            generateRadius = EditorGUILayout.Slider("Generation radius", generateRadius, 1, 50);
+            minimumSpacing = EditorGUILayout.Slider("Minimum spacing", minimumSpacing, .1f, 10);
+            if (GUILayout.Button("Generate connected patrol points")) GeneratePatrol();
+            if (GUILayout.Button("Validate assigned paths")) ValidatePatrol();
+            if (GUILayout.Button("Clear point assignments")) AssignPoints(new List<Transform>());
+        }
+        if (!CanEditPath) EditorGUILayout.HelpBox("Point placement requires a scene instance in Edit Mode, outside Prefab Mode.", MessageType.Info);
+    }
     private void DrawWorkspace()
     {
         followSelection = EditorGUILayout.ToggleLeft("Follow selection", followSelection);
         if (workspace == 2)
         {
             selectedRoute = (PatrolRoute)EditorGUILayout.ObjectField("Patrol Route", selectedRoute, typeof(PatrolRoute), true);
-            if (GUILayout.Button("Create Patrol Route")) EnemyProfileMigration.CreateRoute();
+            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+                if (GUILayout.Button("Create Patrol Route")) EnemyProfileMigration.CreateRoute();
+        }
+        else if (workspace == 3)
+        {
+            selectedSpawn = (EnemySpawnPoint)EditorGUILayout.ObjectField("Spawn Point", selectedSpawn, typeof(EnemySpawnPoint), true);
+            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+                if (GUILayout.Button("Create Spawn Point")) EnemyProfileMigration.CreateSpawner();
+        }
+        else if (workspace == 4)
+        {
+            selectedGroup = (EnemyGroup)EditorGUILayout.ObjectField("Enemy Group", selectedGroup, typeof(EnemyGroup), true);
+            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+                if (GUILayout.Button("Create Enemy Group")) EnemyGroupEditor.CreateGroup();
         }
         else
         {
-            selectedSpawn = (EnemySpawnPoint)EditorGUILayout.ObjectField("Spawn Point", selectedSpawn, typeof(EnemySpawnPoint), true);
-            if (GUILayout.Button("Create Spawn Point")) EnemyProfileMigration.CreateSpawner();
+            selectedModule = (EnemyWeaponSO)EditorGUILayout.ObjectField("Weapon Module", selectedModule, typeof(EnemyWeaponSO), false);
+            EditorGUILayout.HelpBox("Weapon settings belong here; the Combat profile category contains the unarmed/base attack. Edits affect every profile using this module.", MessageType.Info);
+            if (GUILayout.Button("Open Weapon Module window")) EnemyWeaponLabWindow.Open(selectedModule);
         }
-        Object target = workspace == 2 ? (Object)selectedRoute : selectedSpawn;
+        Object target = workspace == 2 ? (Object)selectedRoute : workspace == 3 ? (Object)selectedSpawn : workspace == 4 ? (Object)selectedGroup : selectedModule;
         if (target == null) { EditorGUILayout.HelpBox("Select an existing object or create one here.", MessageType.Info); return; }
         Editor.CreateCachedEditor(target, null, ref workspaceEditor);
         scroll = EditorGUILayout.BeginScrollView(scroll);
-        workspaceEditor.OnInspectorGUI();
+        using (new EditorGUI.DisabledScope(workspace == 5 && EditorApplication.isPlayingOrWillChangePlaymode))
+        {
+            workspaceEditor.OnInspectorGUI();
+            if (workspace == 5 && GUILayout.Button("Save Weapon Module")) AssetDatabase.SaveAssetIfDirty(selectedModule);
+        }
         EditorGUILayout.EndScrollView();
     }
 
@@ -454,34 +289,6 @@ public class EnemyLabWindow : EditorWindow
         MarkDirty(enemy); MarkDirty(route);
         status = "Shared route created. Assign it to spawn points.";
     }
-    private void DrawProfile()
-    {
-        SerializedObject profile = new SerializedObject(enemy.enemyData);
-        profile.Update();
-        Section("Detection");
-        Property(profile, "detectionRadius", "Detection radius");
-        Property(profile, "fieldOfView", "Field of view (degrees)");
-        Property(profile, "obstacleMask", "Sight-blocking layers");
-        Property(profile, "canHear", "Can hear movement / gunshots");
-        Property(profile, "hearingMultiplier", "Hearing radius multiplier");
-        Property(profile, "walkHearingRadius", "Walk hearing range (m)");
-        Property(profile, "runHearingRadius", "Run hearing range (m)");
-        Property(profile, "gunshotHearingRadius", "Gunshot hearing range (m)");
-        Property(profile, "noiseSearchDuration", "Search at sound location (seconds)");
-        Property(profile, "noiseTravelTimeout", "Sound investigation timeout (seconds)");
-        Section("Patrol and Alert");
-        Property(profile, "waitTimeAtPoint", "Wait at point (seconds)");
-        Property(profile, "lostSightCooldown", "Lost sight timeout (seconds)");
-        Section("Attack");
-        Property(profile, "minAttack", "Minimum damage");
-        Property(profile, "maxAttack", "Maximum damage");
-        Property(profile, "attackRange", "Attack range");
-        Property(profile, "attackCooldown", "Attack interval (seconds)");
-        if (profile.FindProperty("maxAttack").floatValue < profile.FindProperty("minAttack").floatValue)
-            EditorGUILayout.HelpBox("Maximum damage must be at least minimum damage.", MessageType.Warning);
-        if (profile.ApplyModifiedProperties()) { EditorUtility.SetDirty(enemy.enemyData); Refresh(); }
-    }
-
     private void DrawPointSettings()
     {
         if (enemy.Route != null)
