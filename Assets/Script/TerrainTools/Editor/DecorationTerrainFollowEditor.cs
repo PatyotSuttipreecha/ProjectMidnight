@@ -70,6 +70,8 @@ public static class DecorationTerrainFollowService
         foreach (var binding in follower.bindings)
         {
             if (!SceneObject(binding.target) || !binding.terrain || (terrain && binding.terrain != terrain)) continue;
+            // Old child bindings must not keep moving visual geometry independently of its bake root.
+            if (PlacementRoot(binding.target, follower.splitNestedPrefabs) != binding.target) continue;
             if (region.HasValue)
             {
                 var local = binding.target.position - binding.terrain.transform.position;
@@ -94,7 +96,14 @@ public static class DecorationTerrainFollowService
         if (!CanRun || !SceneObject(follower)) return 0;
         Undo.RecordObject(follower, "Bind Decorations to Terrain");
         follower.bindings.RemoveAll(b => !b.target);
-        var candidates = new List<Transform>(targets);
+        var candidates = new List<Transform>();
+        foreach (var supplied in targets)
+        {
+            var root = PlacementRoot(supplied, follower.splitNestedPrefabs);
+            if (root && !candidates.Contains(root)) candidates.Add(root);
+        }
+        // Rebinding a prefab root replaces stale visual-child bindings on this tool.
+        follower.bindings.RemoveAll(b => candidates.Exists(t => b.target != t && b.target.IsChildOf(t)));
         // Replace a previous container binding when rebinding its individual decorations.
         // Otherwise that ancestor would reject every child as a duplicate.
         follower.bindings.RemoveAll(b => candidates.Exists(t => t && t != b.target && t.IsChildOf(b.target)));
@@ -139,7 +148,7 @@ public static class DecorationTerrainFollowService
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Auto Follow Terrain", EditorStyles.boldLabel);
         var follower = owner.GetComponent<DecorationTerrainFollower>();
-        EditorGUILayout.HelpBox("Bind once at the intended height. Terrain sculpting then preserves each object's vertical offset. Rebind after manually changing its height or rotation. Updates after a short pause; works in Edit Mode.", MessageType.Info);
+        EditorGUILayout.HelpBox("Bind prefab roots at the intended height: visuals and bake components move together. Nested prefabs stay together by default. Enable Split Nested Prefabs only for level/container groups whose nested objects should move independently. Rebind after changing height or rotation.", MessageType.Info);
         EditorGUILayout.LabelField("Ready to bind", candidates.Count.ToString());
         using (new EditorGUI.DisabledScope(!CanRun || !SceneObject(owner.transform)))
         {
@@ -148,8 +157,12 @@ public static class DecorationTerrainFollowService
                 var so = new SerializedObject(follower); so.Update();
                 EditorGUILayout.PropertyField(so.FindProperty("autoFollow"));
                 EditorGUILayout.PropertyField(so.FindProperty("followSlope"));
+                EditorGUILayout.PropertyField(so.FindProperty("splitNestedPrefabs"), new GUIContent("Split Nested Prefabs (level groups)"));
                 so.ApplyModifiedProperties();
                 EditorGUILayout.LabelField("Bound decorations", follower.bindings.FindAll(b => b.target).Count.ToString());
+                int unsafeChildren = follower.bindings.FindAll(b => b.target && PlacementRoot(b.target, follower.splitNestedPrefabs) != b.target).Count;
+                if (unsafeChildren > 0)
+                    EditorGUILayout.HelpBox($"{unsafeChildren} old child bindings are paused to protect prefab/bake roots. Select the intended prefab roots and Bind / Rebind. Existing child transform overrides are preserved; review them before rebinding.", MessageType.Warning);
             }
             if (GUILayout.Button("Bind / Rebind Decorations"))
             {
@@ -163,6 +176,15 @@ public static class DecorationTerrainFollowService
                 PrefabUtility.RecordPrefabInstancePropertyModifications(follower); EditorUtility.SetDirty(follower);
             }
         }
+    }
+
+    public static Transform PlacementRoot(Transform target, bool splitNestedPrefabs)
+    {
+        if (!target) return null;
+        var prefab = splitNestedPrefabs
+            ? PrefabUtility.GetNearestPrefabInstanceRoot(target.gameObject)
+            : PrefabUtility.GetOutermostPrefabInstanceRoot(target.gameObject);
+        return prefab ? prefab.transform : target;
     }
 }
 
@@ -182,11 +204,13 @@ public sealed class DecorationTerrainFollowerEditor : Editor
         selectionDirty = false;
         targets.Clear();
         foreach (var go in Selection.gameObjects)
-            if (go != follower.gameObject && DecorationTerrainFollowService.SceneObject(go.transform)) Collect(go.transform, targets);
+            if (go != follower.gameObject && DecorationTerrainFollowService.SceneObject(go.transform)) Collect(go.transform, targets, follower.splitNestedPrefabs);
         var selected = new HashSet<Transform>(targets);
         targets.RemoveAll(t => HasSelectedParent(t, selected));
         }
+        bool splitBefore = follower.splitNestedPrefabs;
         DecorationTerrainFollowService.DrawControls(follower.gameObject, targets);
+        if (splitBefore != follower.splitNestedPrefabs) Invalidate();
         EditorGUILayout.HelpBox("Use System Modification > TerrainTools > Decoration Auto Follow Terrain to keep this panel open while selecting scene decorations.", MessageType.None);
     }
     private static bool HasSelectedParent(Transform target, HashSet<Transform> selected)
@@ -194,9 +218,18 @@ public sealed class DecorationTerrainFollowerEditor : Editor
         for (var parent = target.parent; parent; parent = parent.parent) if (selected.Contains(parent)) return true;
         return false;
     }
-    public static void Collect(Transform root, List<Transform> targets)
+    public static void Collect(Transform root, List<Transform> targets, bool splitNestedPrefabs = false)
     {
         if (root.GetComponent<Terrain>()) return;
+        if (!splitNestedPrefabs)
+        {
+            var prefabRoot = DecorationTerrainFollowService.PlacementRoot(root, false);
+            if (PrefabUtility.IsAnyPrefabInstanceRoot(prefabRoot.gameObject))
+            {
+                if (!prefabRoot.GetComponentInChildren<Terrain>(true) && !targets.Contains(prefabRoot)) targets.Add(prefabRoot);
+                return;
+            }
+        }
         // A level-sized prefab can contain many nested decoration prefabs. It is a
         // container, not a single tree/rock, even though it is a prefab instance root.
         bool nestedPrefabs = false;
@@ -207,7 +240,7 @@ public sealed class DecorationTerrainFollowerEditor : Editor
         if (root.GetComponent<Renderer>() || root.GetComponent<Collider>() || root.GetComponent<LODGroup>() ||
             (PrefabUtility.IsAnyPrefabInstanceRoot(root.gameObject) && !nestedPrefabs && hasGeometry))
         { if (!targets.Contains(root)) targets.Add(root); return; }
-        foreach (Transform child in root) Collect(child, targets);
+        foreach (Transform child in root) Collect(child, targets, splitNestedPrefabs);
     }
 }
 

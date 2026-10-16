@@ -6,7 +6,7 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 [CustomEditor(typeof(ProceduralDecorationPlacer))]
-public sealed class ProceduralDecorationPlacerEditor : Editor
+public sealed partial class ProceduralDecorationPlacerEditor : Editor
 {
     private static ProceduralDecorationPlacerEditor areaEditor;
     private readonly BoxBoundsHandle areaHandle = new BoxBoundsHandle();
@@ -15,22 +15,27 @@ public sealed class ProceduralDecorationPlacerEditor : Editor
     private void OnEnable()
     {
         SceneView.duringSceneGui += DrawAreaHandles;
+        EnablePlanningPreview();
         Undo.undoRedoPerformed += RefreshArea;
     }
 
     private void OnDisable()
     {
         SceneView.duringSceneGui -= DrawAreaHandles;
+        DisablePlanningPreview();
         Undo.undoRedoPerformed -= RefreshArea;
         if (areaEditor == this) areaEditor = null;
         SceneView.RepaintAll();
     }
 
-    private void RefreshArea() { Repaint(); SceneView.RepaintAll(); }
+    private void RefreshArea() { InvalidatePreview(); Repaint(); SceneView.RepaintAll(); }
 
     private void DrawAreaControls(ProceduralDecorationPlacer placer)
     {
         EditorGUILayout.LabelField("Generation Area", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("areaMode"), new GUIContent("Area Shape"));
+        if (serializedObject.FindProperty("areaMode").enumValueIndex == (int)ProceduralDecorationPlacer.GenerationAreaMode.Polygon)
+        { DrawPolygonControls(placer); return; }
         using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode || EditorUtility.IsPersistent(placer)))
         {
             bool editing = areaEditor == this;
@@ -61,6 +66,8 @@ public sealed class ProceduralDecorationPlacerEditor : Editor
 
     private void DrawAreaHandles(SceneView sceneView)
     {
+        if (target && ((ProceduralDecorationPlacer)target).areaMode == ProceduralDecorationPlacer.GenerationAreaMode.Polygon)
+        { DrawPolygonScene((ProceduralDecorationPlacer)target); return; }
         if (areaEditor != this || !target || EditorApplication.isPlayingOrWillChangePlaymode) return;
         var placer = (ProceduralDecorationPlacer)target;
         if (EditorUtility.IsPersistent(placer) || !placer.gameObject.scene.isLoaded) return;
@@ -98,71 +105,19 @@ public sealed class ProceduralDecorationPlacerEditor : Editor
         }
     }
 
-    public override void OnInspectorGUI()
-    {
-        var placer = (ProceduralDecorationPlacer)target;
-        serializedObject.Update();
-        EditorGUILayout.LabelField("Procedural Decoration Placer", EditorStyles.boldLabel);
-        if (!string.IsNullOrEmpty(placer.lastGenerationReport))
-            EditorGUILayout.HelpBox(placer.lastGenerationReport, MessageType.Info);
-        DrawAreaControls(placer);
-        DrawPrefabs();
-        DrawPropertiesExcluding(serializedObject, "m_Script", "rockPrefabs", "rockPrefabPercentages", "terrainLayerRules", "rockContainer", "areaCenter", "areaSize");
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("rockContainer"), new GUIContent("Decoration Container"));
-        var rules = serializedObject.FindProperty("terrainLayerRules");
-        EditorGUILayout.LabelField("Terrain Layers (checked = excluded)", EditorStyles.boldLabel);
-        using (new EditorGUI.DisabledScope(!placer.useTerrainLayerFilter))
-        {
-            for (int i = 0; i < rules.arraySize; i++)
-            {
-                var rule = rules.GetArrayElementAtIndex(i);
-                var layer = rule.FindPropertyRelative("terrainLayer").objectReferenceValue;
-                EditorGUILayout.PropertyField(rule.FindPropertyRelative("excluded"), new GUIContent(layer != null ? layer.name : "Missing layer"));
-            }
-        }
-        serializedObject.ApplyModifiedProperties();
-        var decorations = new List<Transform>();
-        if (placer.rockContainer)
-            foreach (Transform child in placer.rockContainer) decorations.Add(child);
-        DecorationTerrainFollowService.DrawControls(placer.gameObject, decorations, placer.terrain);
-        if (GUILayout.Button("Sync Terrain Layers"))
-        {
-            Undo.RecordObject(placer, "Sync Terrain Layers");
-            placer.SyncTerrainLayers();
-            Save(placer);
-        }
-        EditorGUILayout.HelpBox("The entire decoration bounds must fit inside Generation Area, including Y. Prefab weights are relative chances; actual counts vary.", MessageType.Info);
-        using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode || EditorUtility.IsPersistent(placer) || PrefabStageUtility.GetCurrentPrefabStage() != null))
-        {
-            if (GUILayout.Button("Randomize Seed"))
-            {
-                Undo.RecordObject(placer, "Randomize Decoration Seed");
-                placer.RandomizeSeed();
-                Save(placer);
-            }
-            if (GUILayout.Button("Generate Decorations", GUILayout.Height(36)))
-                Run(placer, false);
-            if (GUILayout.Button("Clear Generated Decorations"))
-            {
-                if (EditorUtility.DisplayDialog("Clear Generated Decorations", "Delete the objects inside the generated container? This can be undone.", "Clear", "Cancel"))
-                    Run(placer, true);
-            }
-        }
-    }
-
     private static void Save(ProceduralDecorationPlacer placer)
     {
         PrefabUtility.RecordPrefabInstancePropertyModifications(placer);
         EditorUtility.SetDirty(placer);
     }
 
-    private static void Run(ProceduralDecorationPlacer placer, bool clear)
+    private static void Run(ProceduralDecorationPlacer placer, bool clear, ProceduralDecorationPlacer.PlacementPlan plan = null)
     {
         Undo.IncrementCurrentGroup();
         int group = Undo.GetCurrentGroup();
         Undo.SetCurrentGroupName(clear ? "Clear Decorations" : "Generate Decorations");
         Undo.RecordObject(placer, clear ? "Clear Decorations" : "Generate Decorations");
-        if (clear) placer.ClearRocks(); else placer.Generate();
+        if (clear) placer.ClearRocks(); else placer.ApplyPlan(plan ?? placer.BuildPlan(placer.randomizeSeedOnGenerate));
         var follower = placer.GetComponent<DecorationTerrainFollower>();
         if (!clear && follower && follower.autoFollow && placer.rockContainer)
         {
@@ -177,12 +132,30 @@ public sealed class ProceduralDecorationPlacerEditor : Editor
 
     private void DrawPrefabs()
     {
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("placementData"), new GUIContent("Placement Data (SO)"));
+        var data = serializedObject.FindProperty("placementData").objectReferenceValue as DecorationPlacementData;
+        if (data)
+        {
+            EditorGUILayout.HelpBox($"Preview / Generate use {data.name} directly ({data.Count} entries). Shared data changes affect every Placer using it. Area and distribution remain on this Placer.", MessageType.Info);
+            if (GUILayout.Button("Edit Data / Browse Assets", GUILayout.Height(28))) DecorationLibraryWindow.OpenData(data);
+            return;
+        }
+        EditorGUILayout.HelpBox("Assign a Placement Data asset to use a reusable set, or keep the local prefab list below.", MessageType.None);
+        if (GUILayout.Button("Save Local List as Placement Data…"))
+        {
+            serializedObject.ApplyModifiedProperties();
+            var saved = DecorationPlacementDataEditor.CreateFromPlacer((ProceduralDecorationPlacer)target);
+            serializedObject.Update();
+            if (saved) serializedObject.FindProperty("placementData").objectReferenceValue = saved;
+        }
         var prefabs = serializedObject.FindProperty("rockPrefabs");
         var weights = serializedObject.FindProperty("rockPrefabPercentages");
         int previous = weights.arraySize;
         weights.arraySize = prefabs.arraySize;
         for (int i = previous; i < weights.arraySize; i++) weights.GetArrayElementAtIndex(i).floatValue = 100f;
         EditorGUILayout.LabelField("Decoration Prefabs", EditorStyles.boldLabel);
+        if (GUILayout.Button("Browse Decorations Library", GUILayout.Height(26)))
+            DecorationLibraryWindow.OpenLibrary(null, (ProceduralDecorationPlacer)target);
         var drop = GUILayoutUtility.GetRect(0, 52, GUILayout.ExpandWidth(true));
         GUI.Box(drop, "Drop prefabs / models / folders here\nDuplicates are skipped; scene instances use their prefab asset.", EditorStyles.helpBox);
         var evt = Event.current;

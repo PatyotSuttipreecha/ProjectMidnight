@@ -6,6 +6,8 @@ public sealed class DecorationTerrainFollower : MonoBehaviour
 {
     public bool autoFollow = true;
     public bool followSlope;
+    [Tooltip("Off: move the outermost prefab root as one object, including its visuals and bake components. On: treat nested prefabs as independent decorations (for level/container prefabs only).")]
+    public bool splitNestedPrefabs;
     [System.Serializable]
     public sealed class Binding
     {

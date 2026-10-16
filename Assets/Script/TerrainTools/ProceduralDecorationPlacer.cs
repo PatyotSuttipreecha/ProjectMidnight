@@ -7,21 +7,23 @@ using UnityEditor;
 
 [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceNamespace: "", sourceAssembly: "Assembly-CSharp", sourceClassName: "ProceduralRockPlacer")]
 [AddComponentMenu("System Modification/TerrainTools/Procedural Decoration Placer")]
-public class ProceduralDecorationPlacer : MonoBehaviour
+public partial class ProceduralDecorationPlacer : MonoBehaviour
 {
     // =========================================================
     // TERRAIN
     // =========================================================
-
-    [Header("Terrain")]
     public Terrain terrain;
 
 
     // =========================================================
     // ROCK PREFABS
     // =========================================================
+    [Tooltip("Optional shared prefab set. When assigned, Preview and Generate read this asset directly. Clear to use the local list.")]
+    public DecorationPlacementData placementData;
+    public int PrefabCount => placementData ? placementData.Count : (rockPrefabs == null ? 0 : rockPrefabs.Length);
+    public GameObject GetPlacementPrefab(int index) => placementData ? placementData.GetPrefab(index) :
+        (rockPrefabs != null && index >= 0 && index < rockPrefabs.Length ? rockPrefabs[index] : null);
 
-    [Header("Decoration Prefabs")]
     public GameObject[] rockPrefabs;
 
     [HideInInspector]
@@ -29,6 +31,7 @@ public class ProceduralDecorationPlacer : MonoBehaviour
 
     public float GetRockPrefabWeight(int index)
     {
+        if (placementData) return placementData.GetWeight(index);
         if (rockPrefabs == null || index < 0 ||
             index >= rockPrefabs.Length || rockPrefabs[index] == null)
             return 0f;
@@ -44,13 +47,13 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     {
         float roll = Random.value * totalWeight;
         GameObject lastEligible = null;
-        for (int i = 0; i < rockPrefabs.Length; i++)
+        for (int i = 0; i < PrefabCount; i++)
         {
             float weight = GetRockPrefabWeight(i);
             if (weight <= 0f)
                 continue;
 
-            lastEligible = rockPrefabs[i];
+            lastEligible = GetPlacementPrefab(i);
             if (roll < weight)
                 return lastEligible;
             roll -= weight;
@@ -65,8 +68,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // GENERATION AREA
     // =========================================================
 
-    [Header("Generation Area")]
-
     [Tooltip("Center of the generation area relative to this GameObject.")]
     public Vector3 areaCenter = Vector3.zero;
 
@@ -77,8 +78,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // =========================================================
     // PLACEMENT
     // =========================================================
-
-    [Header("Placement")]
 
     [Min(1)]
     public int amount = 500;
@@ -91,8 +90,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // =========================================================
     // ROCK SIZE
     // =========================================================
-
-    [Header("Decoration Size")]
 
     public bool randomSize = true;
 
@@ -114,8 +111,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // ROTATION
     // =========================================================
 
-    [Header("Rotation")]
-
     public bool randomRotation = true;
 
     [Tooltip("Rotate the decoration to follow Terrain normal.")]
@@ -126,8 +121,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // SLOPE
     // =========================================================
 
-    [Header("Slope")]
-
     [Range(0f, 90f)]
     public float maxSlope = 35f;
 
@@ -135,8 +128,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // =========================================================
     // HEIGHT
     // =========================================================
-
-    [Header("Height")]
 
     public bool useHeightLimit = false;
 
@@ -148,8 +139,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // =========================================================
     // TERRAIN LAYER FILTER
     // =========================================================
-
-    [Header("Terrain Layer Filter")]
 
     [Tooltip("Enable Terrain Painting Layer filtering.")]
     public bool useTerrainLayerFilter = true;
@@ -176,8 +165,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
         RendererBoundsOnly,
         ColliderAndRendererBounds
     }
-
-    [Header("Scene Object Detection")]
 
     [Tooltip(
         "If enabled, generated decorations will avoid existing GameObjects in the scene."
@@ -222,8 +209,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // RANDOM
     // =========================================================
 
-    [Header("Random")]
-
     public int seed = 12345;
 
     [Tooltip("Choose a new seed each time Generate runs. Disable to repeat the current seed.")]
@@ -240,16 +225,12 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     // CONTAINER
     // =========================================================
 
-    [Header("Container")]
-
     public Transform rockContainer;
 
 
     // =========================================================
     // GIZMOS
     // =========================================================
-
-    [Header("Gizmos")]
 
     public bool showGizmo = true;
 
@@ -296,497 +277,6 @@ public class ProceduralDecorationPlacer : MonoBehaviour
         try { GenerateInternal(); }
         finally { Random.state = previousRandomState; }
     }
-    private void GenerateInternal()
-    {
-        if (terrain == null || terrain.terrainData == null)
-        {
-            Debug.LogError(
-                "ProceduralDecorationPlacer: Terrain is not assigned."
-            );
-
-            return;
-        }
-
-        if (rockPrefabs == null ||
-            rockPrefabs.Length == 0)
-        {
-            Debug.LogError(
-                "ProceduralDecorationPlacer: No Decoration Prefabs assigned."
-            );
-
-            return;
-        }
-
-        if (!IsFinite(areaSize) || !IsFinite(areaCenter) || areaSize.x <= 0f ||
-            areaSize.y <= 0f || areaSize.z <= 0f ||
-            !IsFinite(transform.lossyScale) || Mathf.Abs(transform.localToWorldMatrix.determinant) < 0.000001f)
-        {
-            Debug.LogError(
-                "ProceduralDecorationPlacer: Area Size X/Y/Z must be finite and greater than 0, with a valid center and non-zero transform scale."
-            );
-
-            return;
-        }
-
-        float totalPrefabWeight = 0f;
-        for (int i = 0; i < rockPrefabs.Length; i++)
-            totalPrefabWeight += GetRockPrefabWeight(i);
-
-        if (totalPrefabWeight <= 0f)
-        {
-            Debug.LogWarning("ProceduralDecorationPlacer: Assign at least one prefab with a percentage greater than 0.", this);
-            return;
-        }
-
-        if (amount <= 0 || (useHeightLimit && minHeight > maxHeight))
-        {
-            lastGenerationReport = "Generation stopped: Amount must be positive and Min Height must not exceed Max Height. Existing objects kept.";
-            Debug.LogWarning(lastGenerationReport, this);
-            return;
-        }
-        // Safety for scale values
-        if (maxUniformScale < minUniformScale)
-        {
-            float temp = minUniformScale;
-            minUniformScale = maxUniformScale;
-            maxUniformScale = temp;
-        }
-
-        // =====================================================
-        // CLEAR PREVIOUS ROCKS
-        // =====================================================
-
-        ClearRocks();
-
-
-        // =====================================================
-        // CREATE CONTAINER
-        // =====================================================
-
-        if (rockContainer == null)
-        {
-            GameObject container =
-                new GameObject("Generated Decorations");
-
-            container.transform.SetParent(
-                transform,
-                false
-            );
-
-#if UNITY_EDITOR
-            if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(container, "Create Decoration Container");
-#endif
-            rockContainer =
-                container.transform;
-        }
-
-
-        generatedPositions.Clear();
-
-
-        // =====================================================
-        // CACHE EXISTING SCENE OBJECTS
-        // =====================================================
-
-        Physics.SyncTransforms();
-        CacheSceneObjects();
-
-
-        // =====================================================
-        // RANDOM
-        // =====================================================
-
-        if (randomizeSeedOnGenerate) RandomizeSeed();
-        Random.InitState(seed);
-
-        int placed = 0;
-        int attempts = 0;
-
-        int rejectedBySceneObjects = 0;
-        int rejectedByAreaBounds = 0;
-        int outsideTerrain = 0, heightRejected = 0, slopeRejected = 0, layerRejected = 0, distanceRejected = 0, prefabRejected = 0;
-
-        int maxAttempts =
-             (int)System.Math.Min(1000000L, System.Math.Max((long)amount * Mathf.Max(1, attemptsPerDecoration), 1000L));
-
-
-        // =====================================================
-        // GENERATION LOOP
-        // =====================================================
-
-        while (placed < amount &&
-               attempts < maxAttempts)
-        {
-            attempts++;
-
-
-            // -------------------------------------------------
-            // RANDOM POSITION INSIDE GENERATION AREA
-            // -------------------------------------------------
-
-            float localX =
-                Random.Range(
-                    -areaSize.x * 0.5f,
-                    areaSize.x * 0.5f
-                );
-
-            float localZ =
-                Random.Range(
-                    -areaSize.z * 0.5f,
-                    areaSize.z * 0.5f
-                );
-
-
-            Vector3 localPosition =
-                areaCenter +
-                new Vector3(
-                    localX,
-                    0f,
-                    localZ
-                );
-
-
-            Vector3 position =
-                transform.TransformPoint(
-                    localPosition
-                );
-
-
-            // -------------------------------------------------
-            // TERRAIN COORDINATE
-            // -------------------------------------------------
-
-            Vector3 terrainPosition =
-                terrain.transform.position;
-
-            Vector3 terrainSize =
-                terrain.terrainData.size;
-
-
-            float normalizedX =
-                (position.x - terrainPosition.x)
-                / terrainSize.x;
-
-            float normalizedZ =
-                (position.z - terrainPosition.z)
-                / terrainSize.z;
-
-
-            // Outside Terrain
-            if (normalizedX < 0f ||
-                normalizedX > 1f ||
-                normalizedZ < 0f ||
-                normalizedZ > 1f)
-            {
-                outsideTerrain++;
-                continue;
-            }
-
-
-            // -------------------------------------------------
-            // TERRAIN HEIGHT
-            // -------------------------------------------------
-
-            float terrainHeight =
-                terrain.terrainData.GetInterpolatedHeight(
-                    normalizedX,
-                    normalizedZ
-                );
-
-
-            float worldY =
-                terrainPosition.y +
-                terrainHeight;
-
-
-            position.y =
-                worldY;
-
-
-            // -------------------------------------------------
-            // HEIGHT FILTER
-            // -------------------------------------------------
-
-            if (useHeightLimit)
-            {
-                if (worldY < minHeight ||
-                    worldY > maxHeight)
-                {
-                    heightRejected++;
-                    continue;
-                }
-            }
-
-
-            // -------------------------------------------------
-            // SLOPE FILTER
-            // -------------------------------------------------
-
-            float slope =
-                terrain.terrainData.GetSteepness(
-                    normalizedX,
-                    normalizedZ
-                );
-
-
-            if (slope > maxSlope) { slopeRejected++; continue; }
-
-
-            // -------------------------------------------------
-            // TERRAIN PAINTING LAYER FILTER
-            // -------------------------------------------------
-
-            if (!IsPositionAllowedByTerrainLayer(
-                    normalizedX,
-                    normalizedZ))
-            {
-                layerRejected++;
-                continue;
-            }
-
-
-            // -------------------------------------------------
-            // MINIMUM DISTANCE BETWEEN GENERATED ROCKS
-            // -------------------------------------------------
-
-            bool tooClose = false;
-
-
-            for (int i = 0;
-                 i < generatedPositions.Count;
-                 i++)
-            {
-                // Horizontal distance is normally more useful
-                // for objects placed on Terrain.
-
-                Vector2 currentPosition =
-                    new Vector2(
-                        position.x,
-                        position.z
-                    );
-
-                Vector2 generatedPosition =
-                    new Vector2(
-                        generatedPositions[i].x,
-                        generatedPositions[i].z
-                    );
-
-
-                if (Vector2.Distance(
-                        currentPosition,
-                        generatedPosition
-                    ) < minDistance)
-                {
-                    tooClose = true;
-                    break;
-                }
-            }
-
-
-            if (tooClose) { distanceRejected++; continue; }
-
-
-            // -------------------------------------------------
-            // EXISTING SCENE OBJECT DETECTION
-            // -------------------------------------------------
-
-            if (IsBlockedBySceneObject(position))
-            {
-                rejectedBySceneObjects++;
-
-                // IMPORTANT:
-                //
-                // We do NOT stop generation.
-                //
-                // The while loop simply tries another random
-                // position inside the Generation Area.
-                continue;
-            }
-
-
-            // -------------------------------------------------
-            // RANDOM PREFAB
-            // -------------------------------------------------
-
-            GameObject prefab = SelectRockPrefab(totalPrefabWeight);
-
-
-            if (prefab == null) { prefabRejected++; continue; }
-
-
-            // -------------------------------------------------
-            // CREATE ROCK
-            // -------------------------------------------------
-
-            GameObject rock;
-
-
-#if UNITY_EDITOR
-
-            rock =
-                (GameObject)
-                PrefabUtility.InstantiatePrefab(
-                    prefab
-                );
-
-#else
-
-            rock =
-                Instantiate(prefab);
-
-#endif
-
-
-            if (rock == null) { prefabRejected++; continue; }
-
-
-            // -------------------------------------------------
-            // POSITION
-            // -------------------------------------------------
-
-            rock.transform.position =
-                position;
-
-
-            // -------------------------------------------------
-            // ROTATION
-            // -------------------------------------------------
-
-            float randomY =
-                Random.Range(
-                    0f,
-                    360f
-                );
-
-
-            if (alignToTerrain)
-            {
-                Vector3 normal =
-                    terrain.terrainData.GetInterpolatedNormal(
-                        normalizedX,
-                        normalizedZ
-                    );
-
-
-                Quaternion terrainRotation =
-                    Quaternion.FromToRotation(
-                        Vector3.up,
-                        normal
-                    );
-
-
-                if (randomRotation)
-                {
-                    rock.transform.rotation =
-                        terrainRotation *
-                        Quaternion.Euler(
-                            0f,
-                            randomY,
-                            0f
-                        );
-                }
-                else
-                {
-                    rock.transform.rotation =
-                        terrainRotation;
-                }
-            }
-            else if (randomRotation)
-            {
-                rock.transform.rotation =
-                    Quaternion.Euler(
-                        0f,
-                        randomY,
-                        0f
-                    );
-            }
-
-
-            // -------------------------------------------------
-            // RANDOM SIZE
-            // -------------------------------------------------
-
-            ApplyRandomScale(rock);
-
-
-            // -------------------------------------------------
-            // PARENT
-            // -------------------------------------------------
-
-            rock.transform.SetParent(
-                rockContainer,
-                true
-            );
-
-            // Test final geometry, not just the pivot. Parenting can also affect bounds
-            // under rotated/non-uniformly scaled ancestors, so validate after it.
-            if (!IsRockInsideGenerationArea(rock))
-            {
-                rejectedByAreaBounds++;
-                if (Application.isPlaying)
-                {
-                    rock.SetActive(false);
-                    Destroy(rock);
-                }
-                else DestroyImmediate(rock);
-                continue;
-            }
-
-
-            // -------------------------------------------------
-            // SAVE GENERATED POSITION
-            // -------------------------------------------------
-
-            generatedPositions.Add(
-                position
-            );
-
-
-#if UNITY_EDITOR
-            if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(rock, "Generate Decoration");
-#endif
-            placed++;
-        }
-
-
-        // =====================================================
-        // RESULT
-        // =====================================================
-
-        lastGenerationReport = $"Placed: {placed}/{amount} | Attempts: {attempts}/{maxAttempts}\n" +
-            $"Outside Terrain: {outsideTerrain}\nHeight limit: {heightRejected}\nSlope: {slopeRejected}\n" +
-            $"Excluded Terrain layers: {layerRejected}\nMin Distance: {distanceRejected}\n" +
-            $"Scene objects: {rejectedBySceneObjects}\nArea bounds / missing geometry: {rejectedByAreaBounds}\nInvalid prefab: {prefabRejected}";
-        if (placed < amount)
-        {
-            int[] counts = { outsideTerrain, heightRejected, slopeRejected, layerRejected, distanceRejected, rejectedBySceneObjects, rejectedByAreaBounds };
-            string[] tips = {
-                "Move/resize the box so more of it overlaps the assigned Terrain.",
-                "Adjust Min/Max Height; these use world-space Terrain height.",
-                "Increase Max Slope or choose flatter ground.",
-                "Review excluded Terrain layers and Exclude Threshold.",
-                "Reduce Min Distance, enlarge the area, or request fewer decorations.",
-                "Review Scene Object Layers, Check Radius and Padding; large renderer bounds can block empty-looking space.",
-                "The whole object must fit inside the box, including Y. Increase area height, move its center, or reduce Decoration Size."
-            };
-            int largest = 0;
-            for (int i = 1; i < counts.Length; i++) if (counts[i] > counts[largest]) largest = i;
-            lastGenerationReport += "\nMost frequent rejection: " + tips[largest] + "\nIncreasing Attempts Per Decoration helps only when valid space remains.";
-        }
-        Debug.Log(lastGenerationReport, this);
-        if (placed < amount)
-        {
-            Debug.LogWarning(
-                "ProceduralDecorationPlacer could not place all decorations. " +
-                "The Generation Area may be too crowded, " +
-                "Min Distance may be too large, or too many " +
-                "Terrain/Scene filters are blocking placement. " +
-                "If Area Bounds rejects decorations, expand/reposition the box (including Y) or reduce Decoration Size."
-            );
-        }
-    }
-
-
     // =========================================================
     // FINAL ROCK CONTAINMENT
     // =========================================================
@@ -800,9 +290,7 @@ public class ProceduralDecorationPlacer : MonoBehaviour
 
     public bool IsRockInsideGenerationArea(GameObject rock)
     {
-        if (rock == null || !IsFinite(areaCenter) || !IsFinite(areaSize) ||
-            areaSize.x <= 0 || areaSize.y <= 0 || areaSize.z <= 0 ||
-            Mathf.Abs(transform.localToWorldMatrix.determinant) < 0.000001f) return false;
+        if (rock == null || ValidateGenerationArea() != null) return false;
 
         Matrix4x4 worldToArea = transform.worldToLocalMatrix;
         bool foundBounds = false;
@@ -831,16 +319,23 @@ public class ProceduralDecorationPlacer : MonoBehaviour
     private bool ContainsBounds(Bounds bounds, Matrix4x4 toArea)
     {
         if (!IsFinite(bounds.center) || !IsFinite(bounds.extents)) return false;
+        var footprint = areaMode == GenerationAreaMode.Polygon ? new Vector2[8] : null;
         Vector3 min = areaCenter - areaSize * 0.5f, max = areaCenter + areaSize * 0.5f;
         for (int i = 0; i < 8; i++)
         {
             Vector3 corner = bounds.center + Vector3.Scale(bounds.extents,
                 new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
             Vector3 point = toArea.MultiplyPoint3x4(corner);
+            if (footprint != null)
+            {
+                if (!IsFinite(point)) return false;
+                footprint[i] = new Vector2(point.x, point.z);
+                continue;
+            }
             if (!IsFinite(point) || point.x < min.x || point.x > max.x ||
                 point.y < min.y || point.y > max.y || point.z < min.z || point.z > max.z) return false;
         }
-        return true;
+        return footprint == null || DecorationPolygon.ContainsFootprint(footprint, areaPoints);
     }
 
     // =========================================================
@@ -1470,6 +965,26 @@ public class ProceduralDecorationPlacer : MonoBehaviour
             fillColor;
 
 
+        if (areaMode == GenerationAreaMode.Polygon)
+        {
+            Gizmos.color = gizmoColor;
+            Gizmos.matrix = Matrix4x4.identity;
+            if (areaPoints != null) for (int i = 0; i < areaPoints.Count; i++)
+            {
+                var a = areaPoints[i]; var b = areaPoints[(i + 1) % areaPoints.Count];
+                Vector3 last = Vector3.zero;
+                for (int step = 0; step <= 24; step++)
+                {
+                    var p = Vector2.Lerp(a, b, step / 24f);
+                    var world = transform.TransformPoint(new Vector3(p.x, 0, p.y));
+                    if (terrain && terrain.terrainData) world.y = terrain.SampleHeight(world) + terrain.transform.position.y + .1f;
+                    if (step > 0) Gizmos.DrawLine(last, world);
+                    last = world;
+                }
+            }
+            Gizmos.matrix = oldMatrix;
+            return;
+        }
         Gizmos.DrawCube(
             areaCenter,
             areaSize

@@ -14,7 +14,7 @@ public sealed class ProceduralDecorationPlacerWindow : EditorWindow
     public static void Open()
     {
         var window = GetWindow<ProceduralDecorationPlacerWindow>("Procedural Decoration Placer");
-        window.minSize = new Vector2(300, 360);
+        window.minSize = new Vector2(380, 420);
         window.Show();
     }
 
@@ -45,7 +45,7 @@ public sealed class ProceduralDecorationPlacerWindow : EditorWindow
 
     private void OnGUI()
     {
-        EditorGUILayout.HelpBox("Drag prefabs or folders into Decoration Prefabs, then Generate Decorations. Settings stay available while you select assets.", MessageType.Info);
+        EditorGUILayout.HelpBox("Add prefabs, set groups or painted-layer edges, then Build Preview → Generate This Preview. Settings stay available while you select assets.", MessageType.Info);
         var chosen = (ProceduralDecorationPlacer)EditorGUILayout.ObjectField("Scene Tool", snapper, typeof(ProceduralDecorationPlacer), true);
         if (chosen != snapper && (chosen == null || IsSceneTool(chosen))) snapper = chosen;
         if (!IsSceneTool(snapper))
