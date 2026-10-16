@@ -83,7 +83,11 @@ public class CheatMenu : MonoBehaviour
         GUILayout.BeginVertical(card);
         GUILayout.Label("ENEMY DEBUG", heading);
         EnemyStateDisplay.Enabled = GUILayout.Toggle(EnemyStateDisplay.Enabled, "Show Enemy States (F8)");
-        EnemyStateDisplay.ShowDetails = GUILayout.Toggle(EnemyStateDisplay.ShowDetails, "Show behaviour and attack permission");
+        EnemyStateDisplay.ShowDetails = GUILayout.Toggle(EnemyStateDisplay.ShowDetails, "Show focused enemy details (aim near its head)");
+        GUILayout.Label("Compact labels: " + EnemyStateDisplay.MaxLabels + " | Others keep head markers", muted);
+        EnemyStateDisplay.MaxLabels = Mathf.RoundToInt(GUILayout.HorizontalSlider(EnemyStateDisplay.MaxLabels, 1, 20));
+        GUILayout.Label("Head offset: " + EnemyStateDisplay.HeadOffset.ToString("0.00") + " m", muted);
+        EnemyStateDisplay.HeadOffset = GUILayout.HorizontalSlider(EnemyStateDisplay.HeadOffset, 0, .5f);
         GUILayout.Label("Label range: " + EnemyStateDisplay.MaxDistance.ToString("0") + " m", muted);
         EnemyStateDisplay.MaxDistance = GUILayout.HorizontalSlider(EnemyStateDisplay.MaxDistance, 5, 100);
         GUILayout.Label("Text size: " + EnemyStateDisplay.FontSize, muted);

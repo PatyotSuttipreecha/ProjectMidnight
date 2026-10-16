@@ -114,6 +114,9 @@ public class PlayerController : MonoBehaviour
 
     private EnemyController enemy;
     private CharacterController controller;
+    // Expose actual movement, not the Shift key, to encounter pacing.
+    public bool IsSprinting { get; private set; }
+    public Vector3 PlanarVelocity { get; private set; }
     private Animator animator;
     private int aimingLayerIndex;
     private int GunHoldingLayerIndex;
@@ -214,6 +217,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        IsSprinting = false;
+        PlanarVelocity = Vector3.zero;
         // Timeline owns character pose/placement while a cutscene lock is held.
         if (IsCutsceneInputLocked) { isAiming = false; return; }
         if (modalDepth > 0)
@@ -300,6 +305,9 @@ public class PlayerController : MonoBehaviour
         var enemyEffects = GetComponent<EnemyPlayerEffects>();
         if (enemyEffects != null) currentSpeed *= enemyEffects.MovementMultiplier;
         ApplyGravity(move.normalized * currentSpeed);
+        PlanarVelocity = controller != null && controller.enabled
+            ? Vector3.ProjectOnPlane(controller.velocity, Vector3.up) : Vector3.zero;
+        IsSprinting = isRunning && currentHealth > 0 && PlanarVelocity.sqrMagnitude > .04f;
         if (currentHealth > 0 && controller.isGrounded &&
             Vector3.ProjectOnPlane(controller.velocity, Vector3.up).sqrMagnitude > .01f && Time.time >= nextMovementNoise)
         {
@@ -782,6 +790,8 @@ public class PlayerController : MonoBehaviour
     }
     private void OnDisable()
     {
+        IsSprinting = false;
+        PlanarVelocity = Vector3.zero;
         if (inputLockOwners.Count == 0) RestoreCameraLook();
         if (healingRoutine != null) StopCoroutine(healingRoutine);
         healingRoutine = null; IsHealingOverTime = false;

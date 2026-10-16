@@ -1993,7 +1993,7 @@ PrefabInstance:
     - target: {fileID: 7136153653656253471, guid: 6d2ccd87663277749a7cad3572c026c6, type: 3}
       propertyPath: enemyData
       value: 
-      objectReference: {fileID: 11400000, guid: 2e381be4deb24167aa8a9a87a7d2b9ba, type: 2}
+      objectReference: {fileID: 11400000, guid: f9b41e4339fc43a89605604700f95c46, type: 2}
     - target: {fileID: 7136153653656253471, guid: 6d2ccd87663277749a7cad3572c026c6, type: 3}
       propertyPath: lootPrefab
       value: 

@@ -7,7 +7,7 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
     public enum PatrolMode { Random, Loop, PingPong }
-    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure, Detect, Preparation, Recovery, Approach, Retreat, ChaseBurst }
+    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure, Detect, Preparation, Recovery, Approach, Retreat, ChaseBurst, Rush, EscapeWalk }
     private float chasePhaseDeadline;
     private bool chaseRhythmActive;
     public bool IsChaseBoosting { get; private set; }
@@ -49,7 +49,36 @@ public class EnemyController : MonoBehaviour
     public float AttackReach => CurrentWeapon != null ? Mathf.Max(.1f, CurrentWeapon.range) : enemyData != null ? enemyData.attackRange : 0;
     public enum ApproachStyle { Direct, Flank, Burst }
     public ApproachStyle CurrentApproach { get; private set; }
-    public bool HasAttackTurn => enemyData != null && (!enemyData.coordinateAttacks || EnemyAttackCoordinator.HasTurn(this, player));
+    public bool HasAttackTurn => enemyData != null && (!EnemyCombatSettings.RushEnabled || HasRushSlot) &&
+        (!enemyData.coordinateAttacks || EnemyAttackCoordinator.HasTurn(this, player));
+    public float AttackStartDelay => EnemyAttackCoordinator.StartDelay(ResolveTargetTransform(player));
+    private float RushStopDistance => Mathf.Max(AttackReach, enemyData != null ? enemyData.chaseSlowdownDistance : 0);
+    public Transform RushTarget => player;
+    public bool RushEncounterActive => enemyData != null && isActiveAndEnabled && !IsDead && IsPatrolRunning &&
+        AgentReady && isAlert && player != null;
+    public bool CanHoldPressure => EnemyCombatSettings.RushEnabled && RushEncounterActive &&
+        (playerDetected || isAttacking) && staggerRemaining <= 0 && knockbackRemaining <= 0 && Time.time >= retreatUntil;
+    public bool CanRush => CanHoldPressure && !isAttacking &&
+        Vector3.Distance(transform.position, player.position) > RushStopDistance;
+    public bool HasRushSlot => EnemyRushCoordinator.HasSlot(this, ResolveTargetTransform(player));
+    public bool IsRushRunning => EnemyRushCoordinator.ShouldRun(this, RushTarget);
+    public bool WaitingForPressureSlot => EnemyRushCoordinator.IsWaiting(this, RushTarget);
+    public string RushStatus => EnemyRushCoordinator.Describe(this, RushTarget);
+    public bool CanReachRushTarget(NavMeshPath path)
+    {
+        if (!CanHoldPressure) return false;
+        var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+        return NavMesh.SamplePosition(player.position, out var hit, 2f, filter) &&
+            agent.CalculatePath(hit.position, path) && path.status == NavMeshPathStatus.PathComplete;
+    }
+    public Vector3 GameplayDebugHeadPosition
+    {
+        get
+        {
+            Transform head = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Head) : null;
+            return head != null ? head.position : transform.position + Vector3.up * 1.7f;
+        }
+    }
     private float nextApproachDecision, turnDeadline, nextTurnRequest;
     private Vector3 committedApproachDirection;
     public EnemyState CurrentState { get; private set; }
@@ -103,6 +132,7 @@ public class EnemyController : MonoBehaviour
     private float nextChaseRepath;
     private NavMeshPath approachPath;
     private static readonly HashSet<EnemyController> activeEnemies = new HashSet<EnemyController>();
+    public static IEnumerable<EnemyController> ActiveEnemies => activeEnemies;
     private bool returningToPatrol;
     private readonly List<int> validPatrolIndices = new List<int>();
 
@@ -376,6 +406,7 @@ public class EnemyController : MonoBehaviour
     public void PausePatrol()
     {
         if (IsDead) return;
+        EnemyRushCoordinator.Release(this);
         pressureOrbitActive = false;
         ResetChaseRhythm();
         ReleaseAttackTurn();
@@ -406,11 +437,12 @@ public class EnemyController : MonoBehaviour
             return;
         }
         attackTimer = Mathf.Max(0f, attackTimer - Time.deltaTime);
-        if (enemyData == null || !AgentReady) return;
+        if (enemyData == null || !AgentReady) { EnemyRushCoordinator.Release(this); return; }
         agent.updateRotation = true;
         agent.stoppingDistance = Mathf.Max(0, enemyData.stoppingDistance);
         if (staggerRemaining > 0f || knockbackRemaining > 0f)
         {
+            EnemyRushCoordinator.Release(this);
             pressureOrbitActive = false;
             ResetChaseRhythm();
             staggerRemaining = Mathf.Max(0f, staggerRemaining - Time.deltaTime);
@@ -476,6 +508,27 @@ public class EnemyController : MonoBehaviour
             }
         }
 
+        if (!CanHoldPressure) EnemyRushCoordinator.Release(this);
+        EnemyRushCoordinator.Tick(RushTarget);
+        if (!isAttacking && isAlert && EnemyRushCoordinator.IsEscapePaused(RushTarget))
+        {
+            // Escape suspends running, not pursuit. Owners and waiters continue
+            // walking without starting another rush or a new attack.
+            if (EnemyAttackCoordinator.HasTurn(this, player)) ReleaseAttackTurn();
+            pressureOrbitActive = false;
+            pressureWaitTime = 0;
+            ResetChaseRhythm();
+            agent.isStopped = false;
+            agent.speed = Mathf.Max(0, enemyData.walkSpeed);
+            CurrentState = EnemyState.EscapeWalk;
+            if (!agent.pathPending && (!agent.hasPath || Time.time >= nextChaseRepath))
+            {
+                nextChaseRepath = Time.time + Mathf.Max(.05f, enemyData.chaseRepathInterval);
+                SetChaseDestination();
+            }
+            PlayLocomotion(agent.pathPending || agent.remainingDistance > agent.stoppingDistance + .1f);
+            return;
+        }
         UpdateApproachAndTurn();
         if (isAttacking) { pressureOrbitActive = false; ResetChaseRhythm(); return; }
         agent.isStopped = false;
@@ -486,13 +539,18 @@ public class EnemyController : MonoBehaviour
             if (playerDetected && enemyData.coordinateAttacks)
                 CurrentState = HasAttackTurn ? targetDistance <= Mathf.Max(AttackReach, enemyData.chaseSlowdownDistance) ? EnemyState.Approach : EnemyState.Chase :
                     targetDistance <= Mathf.Max(enemyData.engagementDistance, PressureRadius + 1f) ? EnemyState.Pressure : EnemyState.Chase;
+            if (EnemyCombatSettings.RushEnabled && playerDetected && !HasRushSlot)
+                CurrentState = WaitingForPressureSlot && targetDistance <= Mathf.Max(enemyData.engagementDistance, PressureRadius + 1f)
+                    ? EnemyState.Pressure : EnemyState.Chase;
+            if (IsRushRunning) CurrentState = EnemyState.Rush;
             UpdateMovementSpeed();
             if (CurrentState == EnemyState.Pressure)
             {
                 UpdatePressureDirection();
                 pressureWaitTime += Time.deltaTime;
-                if (!IsAggressive && enemyData.pressureWaitTimeout > 0 && pressureWaitTime >= enemyData.pressureWaitTimeout)
+                if (!HasRushSlot && !IsAggressive && enemyData.pressureWaitTimeout > 0 && pressureWaitTime >= enemyData.pressureWaitTimeout)
                 {
+                    EnemyRushCoordinator.Release(this);
                     ReleaseAttackTurn();
                     pressureWaitTime = 0;
                     retreatUntil = Time.time + Mathf.Max(.5f, enemyData.pressureRetreatCooldown);
@@ -565,7 +623,15 @@ public class EnemyController : MonoBehaviour
             float outer = Mathf.Max(range + .01f, enemyData.chaseSlowdownDistance);
             float blend = Mathf.InverseLerp(range, outer, distance);
             bool rhythm = enemyData.useChaseRhythm && CurrentState == EnemyState.Chase && distance > outer;
-            if (rhythm)
+            bool rushMode = EnemyCombatSettings.RushEnabled;
+            if (rushMode)
+            {
+                ResetChaseRhythm();
+                speed = IsRushRunning ? Mathf.Max(0, enemyData.chaseSpeed) * Mathf.Max(1, enemyData.burstSpeedMultiplier) :
+                    distance > outer ? Mathf.Max(0, enemyData.walkSpeed) :
+                    Mathf.Lerp(Mathf.Max(0, enemyData.closeApproachSpeed), Mathf.Max(0, enemyData.walkSpeed), blend);
+            }
+            else if (rhythm)
             {
                 if (!chaseRhythmActive)
                 {
@@ -586,16 +652,18 @@ public class EnemyController : MonoBehaviour
                 ResetChaseRhythm();
                 speed = Mathf.Lerp(Mathf.Max(0f, enemyData.closeApproachSpeed), Mathf.Max(0f, enemyData.chaseSpeed), blend);
             }
-            if (!rhythm && enemyData.useApproachDecisions)
+            if (!rushMode && !rhythm && enemyData.useApproachDecisions)
             {
                 float multiplier = CurrentApproach == ApproachStyle.Burst ? enemyData.burstSpeedMultiplier :
                     CurrentApproach == ApproachStyle.Direct ? enemyData.pressureSpeedMultiplier : 1f;
                 speed *= Mathf.Lerp(1f, Mathf.Max(.1f, multiplier), blend);
             }
-            if (enemyData.coordinateAttacks && !HasAttackTurn && distance <= Mathf.Max(enemyData.engagementDistance, AttackReach))
+            if (!rushMode && enemyData.coordinateAttacks && !HasAttackTurn && distance <= Mathf.Max(enemyData.engagementDistance, AttackReach))
                 speed = Mathf.Min(speed, Mathf.Max(enemyData.walkSpeed, enemyData.closeApproachSpeed));
         }
-        agent.speed = Mathf.MoveTowards(agent.speed, speed, Mathf.Max(.1f, enemyData.speedChangeRate) * Time.deltaTime);
+        // A full pressure group or an escaping player must slow waiters immediately.
+        agent.speed = EnemyCombatSettings.RushEnabled && !IsRushRunning && speed < agent.speed ? speed :
+            Mathf.MoveTowards(agent.speed, speed, Mathf.Max(.1f, enemyData.speedChangeRate) * Time.deltaTime);
     }
     private static float SampleChaseDuration(Vector2 duration)
     {
@@ -630,6 +698,11 @@ public class EnemyController : MonoBehaviour
             EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers);
             return;
         }
+        if (EnemyCombatSettings.RushEnabled && !HasRushSlot)
+        {
+            if (reserved) ReleaseAttackTurn();
+            return;
+        }
         if (!isAlert || !playerDetected || player == null || attackTimer > 0f || !TargetAvailableForLostHit() ||
             reserved && Time.time >= turnDeadline)
         {
@@ -647,7 +720,8 @@ public class EnemyController : MonoBehaviour
         nextTurnRequest = Time.time + (enemyData != null ? Mathf.Max(.1f, enemyData.attackTurnRest) : 1f);
     }
 
-    private float PressureRadius => Mathf.Max(enemyData.pressureRingRadius, agent.radius + .5f);
+    private float PressureRadius => Mathf.Max(enemyData.pressureRingRadius, agent.radius + .5f,
+        WaitingForPressureSlot ? EnemyCombatSettings.PressureDistance + .5f : 0);
     private void UpdatePressureDirection()
     {
         if (enemyData.pressureOrbitMode != EnemyDataSO.PressureOrbitMode.Random)
@@ -665,7 +739,7 @@ public class EnemyController : MonoBehaviour
     }
     private bool SetPressureDestination()
     {
-        if (!enemyData.coordinateAttacks || HasAttackTurn || !playerDetected || player == null) return false;
+        if ((!enemyData.coordinateAttacks && !EnemyCombatSettings.RushEnabled) || HasAttackTurn || !playerDetected || player == null) return false;
         if (CurrentState != EnemyState.Pressure) return false;
         float radius = PressureRadius;
         float distance = Vector3.Distance(transform.position, lastKnownPlayerPosition);
@@ -854,6 +928,9 @@ public class EnemyController : MonoBehaviour
 
     private IEnumerator PerformAttack()
     {
+        if (EnemyRushCoordinator.IsEscapePaused(RushTarget)) yield break;
+        // The turn permits approaching; the shared target clock permits starting.
+        if (!EnemyAttackCoordinator.TryStartAttack(this, ResolveTargetTransform(player))) yield break;
         if (enemyData.useLostCombat)
         {
             yield return PerformLostAttack();
@@ -977,6 +1054,7 @@ public class EnemyController : MonoBehaviour
     }
     private void InterruptLostAttack()
     {
+        EnemyRushCoordinator.Release(this);
         if (activeStone != null) activeStone.Cancel();
         activeStone = null;
         if (attackRoutine != null) StopCoroutine(attackRoutine);
@@ -1002,6 +1080,7 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        EnemyRushCoordinator.Release(this);
         if (activeStone != null) activeStone.Cancel();
         activeStone = null;
         ReleaseAttackTurn();
@@ -1020,6 +1099,7 @@ public class EnemyController : MonoBehaviour
     public void BeginDeath()
     {
         if (IsDead) return;
+        EnemyRushCoordinator.Release(this);
         if (activeStone != null) activeStone.Cancel();
         activeStone = null;
         if (weaponRuntime != null) weaponRuntime.Drop();
@@ -1205,6 +1285,7 @@ public class EnemyController : MonoBehaviour
             float push = Mathf.Max(0f, enemyData.hitKnockbackDistance);
             if (stagger > 0f || push > 0f)
             {
+                EnemyRushCoordinator.Release(this);
                 if (activeStone != null) activeStone.Cancel();
                 activeStone = null;
                 ReleaseAttackTurn();
@@ -1260,8 +1341,10 @@ public class EnemyController : MonoBehaviour
                 case EnemyState.Patrol: return new Color(0.15f, 1f, 0.25f);
                 case EnemyState.Waiting: return Color.yellow;
                 case EnemyState.Chase: return new Color(1f, 0.4f, 0f);
+                case EnemyState.Rush:
                 case EnemyState.ChaseBurst: return new Color(1f, .15f, .05f);
                 case EnemyState.Pressure: return new Color(1f, .75f, .2f);
+                case EnemyState.EscapeWalk: return new Color(.2f, .8f, 1f);
                 case EnemyState.Approach: return new Color(1f, .5f, .1f);
                 case EnemyState.Retreat: return new Color(.4f, .65f, .9f);
                 case EnemyState.Search: return new Color(0.75f, 0.3f, 1f);

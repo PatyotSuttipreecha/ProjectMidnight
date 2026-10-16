@@ -20,3 +20,9 @@ On Enemy Spawned supplies the successful live EnemyController. For a finite grou
 Set Mode = Continuous, Initial Count = 2, Max Alive = 5, Randomize Interval = true, Minimum = 2, Maximum = 4, Spawn Radius = 3. Disable Spawn On Start and call StartSpawning when the player enters the encounter. At the rear escape exit, call StopSpawning on every participating spawn point. These are starting tuning values; test against player speed, available ammunition and path length.
 
 Provide a reachable escape path and bake NavMesh for each spawn area. Continuous arrival does not itself guarantee ammunition depletion or cause pursuit: assign the appropriate Enemy Prefab/profile/target and test its detection or alert behavior. This change does not alter ammunition, enemy AI, scene placement, or existing saved encounters automatically.
+
+## สุ่ม Enemy Prefab หลายชนิด
+
+เลือก Spawn Point ผ่าน Inspector หรือ Enemy Lab → Spawns แล้วตั้ง Prefab Selection เป็น Random เพิ่ม Machete/Torch หรือ Variant อื่นใน Enemy Prefabs แต่ละช่องมีโอกาสเท่ากันและสุ่มใหม่ทุกตัว (จึงสุ่มซ้ำได้) ระบบใช้ Profile และ Starting Weapon ของ Prefab ที่เลือกเอง ไม่เขียนค่าใส่ Prefab ร่วม ช่องว่างหรือ Prefab ที่ไม่มี Profile จะถูกข้าม ถ้าไม่มีตัวที่ใช้ได้จะไม่เกิดศัตรูและแจ้งเตือน โหมด Single ยังคงอ่าน Enemy Prefab เดิมของฉากเก่า
+
+ตำแหน่งเกิดและ NavMesh จะตรวจจาก Agent ของตัวที่สุ่มได้ จุด Preview ใช้ Prefab ตัวแรกที่ใช้ได้ ถ้าใช้ Patrol Route ร่วม ควรใช้ Agent Type/Area Mask ที่ตรงกัน เครื่องมือ Validate จะแจ้งหากค่าแตกต่างกัน Random Pool ต้องใส่ Prefab ที่ต่างกันจริง ไม่ใช่ Prefab เดิมสองช่อง เพราะการเพิ่มซ้ำทำให้ Prefab นั้นมีโอกาสมากขึ้น

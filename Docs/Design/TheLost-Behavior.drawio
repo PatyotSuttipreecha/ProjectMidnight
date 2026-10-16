@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" pages="4">
+<mxfile host="app.diagrams.net" pages="5">
   <diagram name="01 — The Lost: Behavior" id="01-—-The-Lost:-Behavior">
     <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1200" pageHeight="1400" math="0" shadow="0">
       <root>
@@ -379,6 +379,139 @@
               <mxPoint x="1211" y="703.2000122070312" />
             </Array>
           </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="05 — Rush &amp; Pressure" id="the-lost-rush-pressure-2026-10-15">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1720" pageHeight="1360" math="0" shadow="0" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" value="THE LOST  /  RUSH &amp; PRESSURE CONTROL" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=30;fontColor=#102c44;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;fontStyle=1;shape=text;strokeColor=none;fillColor=none;align=left;spacing=0;" vertex="1">
+          <mxGeometry x="40" y="26" width="1640" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" value="Shared per player  |  Pressure ownership and attack permission are independent  |  16 Oct 2026" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#526577;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;shape=text;strokeColor=none;fillColor=none;align=left;spacing=0;" vertex="1">
+          <mxGeometry x="40" y="82" width="1640" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="lane1" parent="1" value="" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#f7f9fc;strokeColor=#e0e6ee;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="40" y="150" width="520" height="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="header1" parent="1" value="1  APPROACH &amp; PRESSURE" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=21;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#e7f1ff;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;fontStyle=1;" vertex="1">
+          <mxGeometry x="58" y="170" width="484" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="lane2" parent="1" value="" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#f7f9fc;strokeColor=#e0e6ee;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="600" y="150" width="520" height="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="header2" parent="1" value="2  INTERRUPT &amp; REPLACE" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=21;fontColor=#15283b;fillColor=#fff2e6;strokeColor=#fff2e6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;fontStyle=1;" vertex="1">
+          <mxGeometry x="618" y="170" width="484" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="lane3" parent="1" value="" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#f7f9fc;strokeColor=#e0e6ee;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1160" y="150" width="520" height="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="header3" parent="1" value="3  PLAYER ESCAPE" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=21;fontColor=#15283b;fillColor=#e8f7f2;strokeColor=#e8f7f2;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;fontStyle=1;" vertex="1">
+          <mxGeometry x="1178" y="170" width="484" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="confirmed" parent="1" value="TARGET CONFIRMED&#10;Player is not escaping" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="90" y="250" width="420" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="initial" parent="1" value="INITIAL APPROACH&#10;All eligible distant enemies run&#10;until the pressure group fills" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="90" y="360" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="admit" parent="1" value="ENTER THE ENGAGEMENT RADIUS&#10;Nearest eligible enemies claim places&#10;Default: 4.5 m / maximum 3 owners" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="90" y="520" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="established" parent="1" value="PRESSURE GROUP ESTABLISHED&#10;Owners keep the right to pursue&#10;Other enemies walk / wait outside" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#d9ece5;strokeColor=#79ab94;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="90" y="680" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="combat" parent="1" value="APPROACH / PRESSURE&#10;PREPARATION → ATTACK → RECOVERY&#10;Ownership persists through every phase&#10;Attack slots + start timing still apply" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#d9ece5;strokeColor=#79ab94;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="90" y="845" width="420" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="keep-note" parent="1" value="Reaching the player, preparing, or&#10;finishing an attack does not free a place.&#10;The group stays established after a hit." style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#ffffff;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="70" y="1035" width="460" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="invalid" parent="1" value="OWNER INTERRUPTED / INVALID&#10;Hit or stagger / death / paused AI&#10;Target lost / pursuit path fails" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="650" y="250" width="420" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="release" parent="1" value="FREE ONLY THIS PLACE&#10;Keep the remaining owners&#10;Keep the established-group latch" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="650" y="420" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="replacement-wait" parent="1" value="REPLACEMENT INTERVAL&#10;Wait 0.6 s between replacements&#10;Released owner rests for 2 s" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="650" y="574" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="nearest" parent="1" value="NEAREST ELIGIBLE REPLACEMENT&#10;Alive, active and able to reach the target&#10;Admit one vacancy at a time" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="650" y="730" width="420" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="refill" parent="1" value="REJOIN THE PRESSURE GROUP&#10;Fill only the vacant places&#10;No new all-enemy rush wave" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#d9ece5;strokeColor=#79ab94;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="650" y="900" width="420" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="stall-note" parent="1" value="Stall timeout applies to active pursuit.&#10;Do not expire deliberate circling,&#10;attacking, recovery or an escape pause." style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#ffffff;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="630" y="1035" width="460" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="escape" parent="1" value="PLAYER SPRINTS AWAY&#10;Actual movement takes the player away&#10;from an engaged threat" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e3f4ee;strokeColor=#7eaf9e;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1210" y="250" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="pause" parent="1" value="ESCAPE PAUSE&#10;Walk after player / no Rush&#10;Pause new admissions / replacements&#10;Keep the current owners" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e3f4ee;strokeColor=#7eaf9e;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1210" y="400" width="420" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="resume-wait" parent="1" value="SPRINTING STOPS&#10;Wait 0.8 s before running resumes&#10;Keep paused while sprinting continues" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e3f4ee;strokeColor=#7eaf9e;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1210" y="572" width="420" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="owners" parent="1" value="CLEAR OLD PRESSURE OWNERS&#10;Reset the established group&#10;No reentry penalty for this reset" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=19;fontColor=#15283b;fillColor=#fff5d6;strokeColor=#ccb16c;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1210" y="740" width="420" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="escape-note" parent="1" value="Keep walking; current attacks may finish.&#10;This opens a chance to escape;&#10;existing attacks can still hit." style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#ffffff;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1190" y="1070" width="460" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="footer" parent="1" value="SHARED COMBAT SETTINGS  /  System Modification → Enemy Lab → Shared Combat Settings&#10;Owners: 3   •   Engagement: 4.5 m   •   Replacement: 0.6 s   •   Reentry: 2 s   •   Pursuit stall: 2 s&#10;Pause Rush While Escaping: ON   •   Escape resume: 0.8 s   •   Attack Start Interval: 0.8 s" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#eef3f9;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="40" y="1210" width="1640" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="restart" parent="1" value="RESTART INITIAL APPROACH&#10;All eligible distant enemies rush&#10;Claim fresh slots on entering the radius" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+          <mxGeometry x="1210" y="950" width="420" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="a" edge="1" parent="1" source="confirmed" target="initial" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b" edge="1" parent="1" source="initial" target="admit" value="Close enough to join" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c" edge="1" parent="1" source="admit" target="established" value="Capacity reached" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d" edge="1" parent="1" source="established" target="combat" value="Choose the next action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e" edge="1" parent="1" source="invalid" target="release" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f" edge="1" parent="1" source="release" target="replacement-wait" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g" edge="1" parent="1" source="replacement-wait" target="nearest" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="h" edge="1" parent="1" source="nearest" target="refill" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i" edge="1" parent="1" source="refill" target="established" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#4d9374;exitX=0;exitY=0.5;entryX=1;entryY=0.5;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="945" />
+              <mxPoint x="580" y="728" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j" edge="1" parent="1" source="escape" target="pause" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k" edge="1" parent="1" source="pause" target="resume-wait" value="Actual sprinting stops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l" edge="1" parent="1" source="resume-wait" target="owners" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m" edge="1" parent="1" source="owners" target="restart" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

@@ -150,6 +150,9 @@ public class EnemySpawnPointEditor : Editor
         while (property.NextVisible(enterChildren))
         {
             enterChildren = false;
+            var selection = (EnemySpawnPoint.PrefabSelection)serializedObject.FindProperty("prefabSelection").enumValueIndex;
+            if (property.propertyPath == "enemyPrefab" && selection != EnemySpawnPoint.PrefabSelection.Single) continue;
+            if (property.propertyPath == "enemyPrefabs" && selection != EnemySpawnPoint.PrefabSelection.Random) continue;
             var mode = (EnemySpawnPoint.SpawnMode)serializedObject.FindProperty("spawnMode").enumValueIndex;
             if (property.propertyPath == "enemyCount" && mode != EnemySpawnPoint.SpawnMode.FixedCount) continue;
             if ((property.propertyPath == "randomizeInterval" || property.propertyPath == "minimumInterval" || property.propertyPath == "maximumInterval") &&
@@ -172,7 +175,11 @@ public class EnemySpawnPointEditor : Editor
             EditorGUILayout.HelpBox("Once creates one batch only. Initial Count is capped by Max Alive; increase Max Alive to spawn the whole batch.", MessageType.Warning);
         EditorGUILayout.HelpBox("The profile comes from the Enemy Prefab. Target is optional: leave empty to use the prefab target, or automatically find the object tagged Player.", MessageType.Info);
         using (new EditorGUI.DisabledScope(true))
-            EditorGUILayout.ObjectField("Prefab Profile", spawn.EffectiveProfile, typeof(EnemyDataSO), false);
+            foreach (var candidate in spawn.ConfiguredPrefabs)
+                if (candidate != null)
+                    EditorGUILayout.ObjectField(candidate.name + " Profile", candidate.enemyData, typeof(EnemyDataSO), false);
+        if (spawn.prefabSelection == EnemySpawnPoint.PrefabSelection.Random)
+            EditorGUILayout.HelpBox("Each valid array entry has equal chance on every spawn. Null entries and prefabs without profiles are skipped. Path gizmos preview the first valid prefab; validation checks all entries.", MessageType.Info);
         if (spawn.EffectiveProfile == null)
             EditorGUILayout.HelpBox("Assign a Profile on the Enemy Prefab.", MessageType.Warning);
         using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode || EditorUtility.IsPersistent(spawn) || UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage() != null))
@@ -238,7 +245,7 @@ public static class PatrolPathPreview
 {
     public static NavMeshQueryFilter Filter(EnemySpawnPoint spawn)
     {
-        NavMeshAgent agent = spawn.enemyPrefab != null ? spawn.enemyPrefab.GetComponent<NavMeshAgent>() : null;
+        NavMeshAgent agent = spawn.PreviewPrefab != null ? spawn.PreviewPrefab.GetComponent<NavMeshAgent>() : null;
         return new NavMeshQueryFilter { agentTypeID = agent != null ? agent.agentTypeID : 0, areaMask = agent != null ? agent.areaMask : NavMesh.AllAreas };
     }
     private static bool Path(Vector3 from, Vector3 to, NavMeshQueryFilter filter, out NavMeshPath path)
@@ -269,10 +276,18 @@ public static class PatrolPathPreview
     public static List<string> Validate(EnemySpawnPoint spawn)
     {
         List<string> issues = new List<string>();
-        if (spawn.enemyPrefab == null) issues.Add("Enemy Prefab is missing.");
+        if (spawn.PreviewPrefab == null) issues.Add("No valid Enemy Prefab with a Profile in the selected mode.");
         PatrolRoute route = spawn.patrolRoute;
         if (route == null || route.points == null || route.points.Length == 0) { issues.Add("Assign a Route and place its patrol points."); return issues; }
         NavMeshQueryFilter filter = Filter(spawn);
+        foreach (var candidate in spawn.ConfiguredPrefabs)
+        {
+            if (candidate == null) { issues.Add("Empty prefab entry will be skipped."); continue; }
+            if (candidate.enemyData == null) issues.Add(candidate.name + " has no Enemy Profile and will be skipped.");
+            var agent = candidate.GetComponent<NavMeshAgent>();
+            if (agent != null && (agent.agentTypeID != filter.agentTypeID || agent.areaMask != filter.areaMask))
+                issues.Add(candidate.name + " has different NavMesh settings. Use matching agent types/area masks for a shared route; preview uses the first valid prefab.");
+        }
         if (route.agentTypeId != filter.agentTypeID || route.areaMask != filter.areaMask) issues.Add("Route NavMesh settings differ from the Enemy Prefab. Set matching agent type and area mask.");
         for (int i = 0; i < route.points.Length; i++)
         {

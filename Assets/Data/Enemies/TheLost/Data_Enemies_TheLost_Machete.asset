@@ -69,8 +69,8 @@ MonoBehaviour:
   burstSpeedMultiplier: 1.2
   aggressiveOnStart: 0
   coordinateAttacks: 1
-  maxConcurrentAttackers: 1
-  engagementDistance: 6
+  maxConcurrentAttackers: 2
+  engagementDistance: 2
   pressureRingRadius: 1.8
   pressureOrbitSpeed: 0.6
   pressureOrbitStep: 25
@@ -92,7 +92,7 @@ MonoBehaviour:
   minAttack: 8
   maxAttack: 12
   attackRange: 1.5
-  attackPreparationTime: 0.35
+  attackPreparationTime: 0.5
   attackWindup: 0.5
   attackCooldown: 2
   eyeHeight: 1

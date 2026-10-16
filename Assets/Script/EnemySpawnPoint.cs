@@ -9,6 +9,27 @@ public class EnemySpawnPoint : MonoBehaviour
     public enum SpawnMode { ExistingSettings, Once, Continuous, FixedCount }
     [System.Serializable] public class EnemySpawnedEvent : UnityEvent<EnemyController> { }
     public EnemyController enemyPrefab;
+    public enum PrefabSelection { Single, Random }
+    [Tooltip("Single uses Enemy Prefab. Random selects a valid entry each time an enemy spawns; repeated types are allowed across spawns.")]
+    public PrefabSelection prefabSelection;
+    [Tooltip("Random selection pool. Each entry has equal chance. Every prefab uses its own Enemy Profile and Starting Weapon. Empty entries or prefabs without profiles are skipped.")]
+    public EnemyController[] enemyPrefabs = new EnemyController[0];
+    public IEnumerable<EnemyController> ConfiguredPrefabs => prefabSelection == PrefabSelection.Single
+        ? new[] { enemyPrefab } : enemyPrefabs ?? new EnemyController[0];
+    public EnemyController PreviewPrefab
+    {
+        get { foreach (var candidate in ConfiguredPrefabs) if (candidate != null && candidate.enemyData != null) return candidate; return null; }
+    }
+    public EnemyController SelectPrefab()
+    {
+        if (prefabSelection == PrefabSelection.Single) return PreviewPrefab;
+        // Reservoir sampling: equal chance per valid entry, with no temporary list.
+        EnemyController selected = null;
+        int count = 0;
+        foreach (var candidate in ConfiguredPrefabs)
+            if (candidate != null && candidate.enemyData != null && Random.Range(0, ++count) == 0) selected = candidate;
+        return selected;
+    }
     public PatrolRoute patrolRoute;
     public enum AggressionMode { UseProfile, Aggressive, Normal }
     [Header("Encounter Behaviour")]
@@ -19,7 +40,7 @@ public class EnemySpawnPoint : MonoBehaviour
     [UnityEngine.Serialization.FormerlySerializedAs("player")]
     [Tooltip("Optional target. Leave empty to use the prefab target or automatically find the object tagged Player.")]
     public Transform target;
-    public EnemyDataSO EffectiveProfile => enemyPrefab != null ? enemyPrefab.enemyData : null;
+    public EnemyDataSO EffectiveProfile => PreviewPrefab != null ? PreviewPrefab.enemyData : null;
     [Header("Schedule")]
     [Tooltip("Existing Settings preserves old scene/prefab behavior. Choose one of the other modes for a new encounter.")]
     public SpawnMode spawnMode = SpawnMode.ExistingSettings;
@@ -119,14 +140,15 @@ public class EnemySpawnPoint : MonoBehaviour
     public EnemyController SpawnOne()
     {
         if (!Application.isPlaying) return null;
-        if (enemyPrefab == null || AliveCount >= Mathf.Max(1, maxAlive) || !HasBudget) return null;
-        EnemyDataSO resolvedProfile = EffectiveProfile;
-        if (resolvedProfile == null)
+        if (AliveCount >= Mathf.Max(1, maxAlive) || !HasBudget) return null;
+        EnemyController selectedPrefab = SelectPrefab();
+        if (selectedPrefab == null)
         {
-            Debug.LogWarning("Assign an Enemy Profile on the Enemy Prefab.", this);
+            Debug.LogWarning("No valid enemy prefab. Assign a prefab with an Enemy Profile in the selected Single/Random mode.", this);
             return null;
         }
-        NavMeshAgent templateAgent = enemyPrefab.GetComponent<NavMeshAgent>();
+        EnemyDataSO resolvedProfile = selectedPrefab.enemyData;
+        NavMeshAgent templateAgent = selectedPrefab.GetComponent<NavMeshAgent>();
         NavMeshQueryFilter filter = new NavMeshQueryFilter {
             agentTypeID = templateAgent != null ? templateAgent.agentTypeID : 0,
             areaMask = templateAgent != null ? templateAgent.areaMask : NavMesh.AllAreas };
@@ -153,7 +175,7 @@ public class EnemySpawnPoint : MonoBehaviour
         GameObject staging = new GameObject("Enemy Spawn Staging");
         staging.SetActive(false);
         SceneManager.MoveGameObjectToScene(staging, gameObject.scene);
-        EnemyController instance = Instantiate(enemyPrefab, spawnPosition, transform.rotation, staging.transform);
+        EnemyController instance = Instantiate(selectedPrefab, spawnPosition, transform.rotation, staging.transform);
         instance.gameObject.SetActive(false);
         instance.ConfigureSpawn(resolvedProfile, patrolRoute, target);
         instance.transform.SetParent(null, true);

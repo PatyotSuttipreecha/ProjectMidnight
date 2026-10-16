@@ -51,7 +51,7 @@ MonoBehaviour:
   pressureSpeedMultiplier: 0.8
   burstSpeedMultiplier: 1.2
   coordinateAttacks: 1
-  maxConcurrentAttackers: 1
+  maxConcurrentAttackers: 2
   engagementDistance: 6
   pressureRingRadius: 1.8
   attackTurnTimeout: 4

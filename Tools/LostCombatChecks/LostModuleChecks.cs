@@ -50,6 +50,219 @@ public static class LostModuleChecks
         enemy.AlertTo(GameObject.FindWithTag("Player").transform);
         Call(enemy, "Update");
     }
+    private static int PressureOwners(EnemyController[] enemies) => Array.FindAll(enemies, candidate => candidate.HasRushSlot).Length;
+    private static void PlacePressureScenario(EnemyController[] enemies, Vector3[] positions)
+    {
+        foreach (var candidate in enemies) candidate.PausePatrol();
+        typeof(EnemyRushCoordinator).GetMethod("Reset", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+        for (int index = 0; index < enemies.Length; index++)
+        {
+            var candidate = enemies[index];
+            candidate.GetComponent<NavMeshAgent>().Warp(positions[index]);
+            candidate.StartPatrol(); candidate.SetAggressive(true);
+            // Publish all candidates before the next frame's shared scan; attack scheduling
+            // is tested separately so these movement scenarios can keep stable ownership.
+            typeof(EnemyController).GetField("playerDetected", Hidden).SetValue(candidate, true);
+            typeof(EnemyController).GetField("attackTimer", Hidden).SetValue(candidate, 100f);
+            typeof(EnemyController).GetField("nextTurnRequest", Hidden).SetValue(candidate, Time.time + 100f);
+        }
+    }
+    private static IEnumerator PressureChecks(EnemyCombatSettings settings, PlayerController player, EnemyDataSO originalProfile, EnemyController[] enemies)
+    {
+        var profile = UnityEngine.Object.Instantiate(originalProfile);
+        profile.separateNearbyEnemies = false;
+        profile.pressureOrbitSpeed = 0; profile.pressureWaitTimeout = 0;
+        profile.chaseSlowdownDistance = 3.5f;
+        profile.maxConcurrentAttackers = 1;
+        profile.hitStaggerDuration = .35f; profile.hitKnockbackDistance = 0;
+        foreach (var candidate in enemies) { candidate.PausePatrol(); candidate.enemyData = profile; }
+        settings.useRushSlots = true; settings.maxRushers = 3;
+        settings.pressureDistance = 4.5f; settings.replacementInterval = .2f;
+        settings.rushReentryDelay = .8f; settings.rushStallTimeout = .5f;
+        settings.pauseRushWhileEscaping = true; settings.escapeResumeDelay = .3f;
+        player.transform.position = Vector3.zero;
+        player.currentHealth = 1000;
+        player.IsSprinting = false; player.PlanarVelocity = Vector3.zero;
+        var distant = new[] { new Vector3(-3, 0, -9), new Vector3(-1, 0, -9), new Vector3(1, 0, -9), new Vector3(3, 0, -9) };
+        // Deliberately register the farthest candidate first: nearest admission must not
+        // depend on HashSet iteration, Update order, prefab or spawning order.
+        var close = new[] { Vector3.left * 3.8f, Vector3.left * 1.8f, Vector3.back * 2.8f, Vector3.back * 1.2f };
+        PlacePressureScenario(enemies, distant);
+        yield return Wait(.08f);
+        Check(PressureOwners(enemies) == 0 && Array.TrueForAll(enemies, candidate => candidate.IsRushRunning),
+            "Initial distant approach lets all pursuers run before the pressure group forms");
+        Check(Array.TrueForAll(enemies, candidate => candidate.CurrentState == EnemyController.EnemyState.Rush && !candidate.IsChaseBoosting),
+            "Initial rush is independent of per-enemy timed ChaseBurst phases");
+
+        PlacePressureScenario(enemies, close);
+        yield return Wait(.08f);
+        Check(!enemies[0].HasRushSlot && enemies[1].HasRushSlot && enemies[2].HasRushSlot && enemies[3].HasRushSlot,
+            "The three nearest reachable enemies claim initial pressure ownership regardless of registration order");
+        Check(!enemies[0].IsRushRunning && !enemies[0].HasAttackTurn && enemies[0].GetComponent<NavMeshAgent>().speed <= profile.walkSpeed + .01f,
+            "A full pressure group immediately slows its waiting enemy and prevents another attack admission");
+        yield return Wait(.65f);
+        Check(PressureOwners(enemies) == 3 && enemies[1].HasRushSlot && enemies[2].HasRushSlot && enemies[3].HasRushSlot,
+            "Stationary close pressure retains ownership beyond the distant-pursuit stall timeout");
+
+        var attackModule = Weapon(EnemyWeaponSO.Loadout.Machete);
+        attackModule.preparation = .12f; attackModule.windup = .12f; attackModule.recovery = 1f;
+        enemies[3].GetComponent<EnemyWeaponRuntime>().Equip(attackModule);
+        typeof(EnemyController).GetField("attackTimer", Hidden).SetValue(enemies[3], 0f);
+        typeof(EnemyController).GetField("nextTurnRequest", Hidden).SetValue(enemies[3], 0f);
+        yield return Wait(.05f);
+        Check(enemies[3].CurrentState == EnemyController.EnemyState.Preparation && enemies[3].HasRushSlot && PressureOwners(enemies) == 3,
+            "Entering real attack preparation retains pressure ownership instead of admitting another runner");
+        yield return Wait(.3f);
+        Check(enemies[3].CurrentState == EnemyController.EnemyState.Recovery && enemies[3].HasRushSlot,
+            "The real attack coroutine retains its pressure ownership through damage and recovery");
+        yield return Wait(.55f);
+        Check(enemies[3].HasRushSlot && !enemies[0].HasRushSlot && !enemies[0].IsRushRunning,
+            "A recovery longer than the stall timeout does not refill the pressure group");
+
+        enemies[1].PausePatrol();
+        Check(PressureOwners(enemies) == 2 && !enemies[0].IsRushRunning,
+            "Pausing one owner releases exactly one place without restarting the mass approach");
+        yield return Wait(.1f);
+        Check(!enemies[0].HasRushSlot, "Replacement respects the configured delay after an owner pauses");
+        yield return Wait(.15f);
+        Check(enemies[0].HasRushSlot && PressureOwners(enemies) == 3 && !enemies[1].HasRushSlot,
+            "One eligible waiting enemy replaces the paused owner after the delay");
+
+        PlacePressureScenario(enemies, close);
+        yield return Wait(.08f);
+        typeof(EnemyController).GetField("enableHitReaction", Hidden).SetValue(enemies[2], true);
+        var impactCollider = enemies[2].GetComponent<BoxCollider>();
+        enemies[2].ReceiveBulletImpact(impactCollider, enemies[2].transform.position, Vector3.right);
+        Check(!enemies[2].HasRushSlot && PressureOwners(enemies) == 2 && !enemies[0].IsRushRunning,
+            "A production bullet stagger releases only its victim's pressure ownership");
+        yield return Wait(.25f);
+        Check(enemies[0].HasRushSlot && !enemies[2].HasRushSlot && PressureOwners(enemies) == 3,
+            "Bullet interruption fills one vacancy while the hit owner rests on reentry cooldown");
+        typeof(EnemyController).GetField("enableHitReaction", Hidden).SetValue(enemies[2], false);
+
+        PlacePressureScenario(enemies, close);
+        yield return Wait(.08f);
+        EnemyAttackCoordinator.Request(enemies[1], player.transform, 3);
+        Check(enemies[1].HasAttackTurn, "Escape regression starts with an actual attack-turn owner");
+        enemies[0].GetComponent<NavMeshAgent>().Warp(Vector3.forward * .6f);
+        player.IsSprinting = true; player.PlanarVelocity = Vector3.forward * 4;
+        yield return Wait(.05f);
+        Check(EnemyRushCoordinator.IsEscapePaused(player.transform) && PressureOwners(enemies) == 3,
+            "Sprinting away pauses new rush decisions while preserving existing pressure ownership");
+        Check(!enemies[1].HasAttackTurn && enemies[1].CurrentState == EnemyController.EnemyState.EscapeWalk,
+            "An enemy ahead cannot mask escape from another threat; an attack-turn owner releases its approach turn");
+        for (int index = 0; index < enemies.Length; index++) enemies[index].GetComponent<NavMeshAgent>().Warp(distant[index]);
+        yield return Wait(.05f);
+        Check(Array.TrueForAll(enemies, candidate => !candidate.IsRushRunning && !candidate.GetComponent<NavMeshAgent>().isStopped &&
+            candidate.CurrentState == EnemyController.EnemyState.EscapeWalk && candidate.GetComponent<NavMeshAgent>().hasPath &&
+            Mathf.Abs(candidate.GetComponent<NavMeshAgent>().speed - profile.walkSpeed) < .01f),
+            "Escape keeps pursuit paths at profile Walk Speed for owners and waiting enemies");
+        Vector3 heldPosition = enemies[1].transform.position;
+        player.PlanarVelocity = Vector3.back * 4;
+        yield return Wait(.4f);
+        Check(EnemyRushCoordinator.IsEscapePaused(player.transform) &&
+            Vector3.Distance(heldPosition, enemies[1].transform.position) > .03f && !enemies[1].isAttacking &&
+            Mathf.Abs(enemies[1].GetComponent<NavMeshAgent>().speed - profile.walkSpeed) < .01f,
+            "Changing sprint direction keeps actual walking pursuit without restarting Rush or a fresh attack");
+        player.PlanarVelocity = Vector3.forward * 4;
+        enemies[3].PausePatrol();
+        yield return Wait(.25f);
+        Check(PressureOwners(enemies) == 2 && !enemies[0].HasRushSlot && !enemies[0].IsRushRunning,
+            "An escape pause blocks replacement even after the replacement timer expires");
+        player.IsSprinting = false; player.PlanarVelocity = Vector3.zero;
+        yield return Wait(.1f);
+        Check(EnemyRushCoordinator.IsEscapePaused(player.transform) && PressureOwners(enemies) == 2,
+            "A brief pause in sprinting does not restart rushing or immediately grant a vacancy");
+        yield return Wait(.25f);
+        Check(!EnemyRushCoordinator.IsEscapePaused(player.transform) && PressureOwners(enemies) == 0 &&
+            enemies[0].IsRushRunning && enemies[1].IsRushRunning && enemies[2].IsRushRunning && !enemies[3].IsRushRunning,
+            "Settling after escape clears distant old owners and restarts the initial rush for all active pursuers");
+        enemies[0].GetComponent<NavMeshAgent>().Warp(Vector3.right * 2);
+        enemies[1].GetComponent<NavMeshAgent>().Warp(Vector3.left * 3);
+        yield return Wait(.08f);
+        Check(enemies[0].HasRushSlot && enemies[1].HasRushSlot && !enemies[2].HasRushSlot && PressureOwners(enemies) == 2,
+            "A former waiter earns a fresh close-range slot while a distant former owner has no retained priority");
+
+        PlacePressureScenario(enemies, close);
+        player.IsSprinting = true; player.PlanarVelocity = Vector3.zero;
+        yield return Wait(.05f);
+        Check(!EnemyRushCoordinator.IsEscapePaused(player.transform),
+            "Holding sprint without actual movement does not pause enemy pressure");
+        player.PlanarVelocity = Vector3.back * 4;
+        yield return Wait(.05f);
+        Check(!EnemyRushCoordinator.IsEscapePaused(player.transform),
+            "Sprinting toward the nearest engaged enemy is not treated as escaping");
+        player.IsSprinting = false; player.PlanarVelocity = Vector3.zero;
+
+        PlacePressureScenario(enemies, close);
+        yield return Wait(.08f);
+        var stalledAgent = enemies[3].GetComponent<NavMeshAgent>();
+        stalledAgent.Warp(Vector3.forward * 10);
+        stalledAgent.updatePosition = false;
+        yield return Wait(.6f);
+        Check(!enemies[3].HasRushSlot && !enemies[3].IsRushRunning,
+            "A genuinely stalled distant pursuer releases ownership instead of holding it forever");
+        stalledAgent.updatePosition = true;
+        stalledAgent.Warp(Vector3.forward * 10);
+
+        // Multiple waiters: select by actual proximity, then stagger a second vacancy.
+        PlacePressureScenario(enemies, close);
+        yield return Wait(.08f);
+        var replacementObject = UnityEngine.Object.Instantiate(enemies[0].gameObject);
+        var nearestReplacement = replacementObject.GetComponent<EnemyController>();
+        nearestReplacement.PausePatrol();
+        nearestReplacement.GetComponent<NavMeshAgent>().Warp(Vector3.right * 5.5f);
+        nearestReplacement.StartPatrol(); nearestReplacement.SetAggressive(true);
+        typeof(EnemyController).GetField("attackTimer", Hidden).SetValue(nearestReplacement, 100f);
+        typeof(EnemyController).GetField("nextTurnRequest", Hidden).SetValue(nearestReplacement, Time.time + 100f);
+        enemies[0].GetComponent<NavMeshAgent>().Warp(Vector3.back * 9);
+        yield return Wait(.05f);
+        enemies[1].PausePatrol(); enemies[2].PausePatrol();
+        yield return Wait(.24f);
+        Check(nearestReplacement.HasRushSlot && !enemies[0].HasRushSlot && nearestReplacement.IsRushRunning,
+            "Nearest waiting replacement outside the initial radius runs in before the earlier registered farther candidate");
+        yield return Wait(.22f);
+        Check(enemies[0].HasRushSlot && nearestReplacement.HasRushSlot && enemies[3].HasRushSlot,
+            "Two simultaneous vacancies refill one at a time rather than admitting both on the first interval");
+
+        // The same static coordinator must not let another player's group consume this budget.
+        var secondPlayerObject = new GameObject("Independent pressure player");
+        secondPlayerObject.transform.position = Vector3.right * 10;
+        secondPlayerObject.AddComponent<PlayerController>();
+        var independentObject = UnityEngine.Object.Instantiate(enemies[0].gameObject);
+        var independentEnemy = independentObject.GetComponent<EnemyController>();
+        independentEnemy.PausePatrol();
+        independentEnemy.GetComponent<NavMeshAgent>().Warp(Vector3.right * 10 + Vector3.back * 2);
+        independentEnemy.StartPatrol(); independentEnemy.SetAggressive(true); independentEnemy.AlertTo(secondPlayerObject.transform);
+        typeof(EnemyController).GetField("attackTimer", Hidden).SetValue(independentEnemy, 100f);
+        yield return Wait(.06f);
+        Check(independentEnemy.HasRushSlot && enemies[0].HasRushSlot && nearestReplacement.HasRushSlot && enemies[3].HasRushSlot,
+            "Pressure ownership is independent per actual player even when another target's group is full");
+        independentEnemy.PausePatrol(); nearestReplacement.PausePatrol();
+        UnityEngine.Object.Destroy(independentObject); UnityEngine.Object.Destroy(replacementObject);
+        UnityEngine.Object.Destroy(secondPlayerObject);
+
+        PlacePressureScenario(enemies, distant);
+        settings.useRushSlots = false;
+        yield return Wait(.08f);
+        Check(Array.TrueForAll(enemies, candidate => !candidate.HasRushSlot && !candidate.IsRushRunning &&
+            (candidate.CurrentState == EnemyController.EnemyState.Chase || candidate.CurrentState == EnemyController.EnemyState.ChaseBurst)),
+            "Disabling shared pressure restores the existing legacy chase and boost state flow");
+
+        settings.useRushSlots = true;
+        PlacePressureScenario(enemies, close);
+        yield return Wait(.08f);
+        enemies[2].BeginDeath();
+        Check(!enemies[2].HasRushSlot && PressureOwners(enemies) == 2 && !enemies[0].IsRushRunning,
+            "Death releases one pressure place without allowing all waiting enemies to rush");
+        yield return Wait(.25f);
+        Check(enemies[0].HasRushSlot && PressureOwners(enemies) == 3,
+            "The nearest surviving eligible candidate replaces a dead owner after the delay");
+        foreach (var candidate in enemies) { candidate.PausePatrol(); candidate.enemyData = originalProfile; }
+        player.IsSprinting = false; player.PlanarVelocity = Vector3.zero;
+        settings.useRushSlots = false;
+        UnityEngine.Object.Destroy(profile);
+    }
     private static EnemyWeaponSO Weapon(EnemyWeaponSO.Loadout type)
     {
         var weapon = ScriptableObject.CreateInstance<EnemyWeaponSO>();
@@ -61,6 +274,11 @@ public static class LostModuleChecks
     }
     private static IEnumerator Run()
     {
+        var timingSettings = ScriptableObject.CreateInstance<EnemyCombatSettings>();
+        timingSettings.useRushSlots = false;
+        timingSettings.attackStartInterval = 0; // Existing module tests isolate damage timing from shared cadence.
+        typeof(EnemyCombatSettings).GetField("cached", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, timingSettings);
+
         var schemaFields = new List<string>();
         foreach (var groupFields in EnemyProfileGUI.Fields) schemaFields.AddRange(groupFields);
         Check(new HashSet<string>(schemaFields).Count == schemaFields.Count, "Canonical Enemy Profile editor has no duplicate setting paths");
@@ -200,7 +418,7 @@ public static class LostModuleChecks
         foreach (string name in new[] { "Unarmed", "Machete", "Log", "HeavyAxe", "Stone", "Torch" })
         {
             var imported = AssetDatabase.LoadAssetAtPath<EnemyDataSO>("Assets/TheLostPresets/Data_Enemies_TheLost_" + name + ".asset");
-            Check(imported != null && imported.useLostCombat && imported.maxConcurrentAttackers == 1, "Imported " + name + " prototype profile");
+            Check(imported != null && imported.useLostCombat && imported.maxConcurrentAttackers == 2, "Imported " + name + " prototype profile");
             Check(name == "Unarmed" ? imported.startingWeapon == null : imported.startingWeapon != null && imported.startingWeapon.loadout.ToString() == name,
                 "Imported " + name + " module reference");
             Check(imported.locomotionBlendParameter == speedTree.blendParameter, name + " profile matches actual controller speed parameter");
@@ -420,6 +638,29 @@ public static class LostModuleChecks
         pointObject.transform.position = Vector3.left * 5;
         var point = pointObject.AddComponent<EnemySpawnPoint>();
         point.spawnOnStart = false; point.spawnRadius = 0; point.enemyPrefab = enemy;
+        Check(point.SelectPrefab() == enemy, "Existing spawn points keep single-prefab selection");
+        var alternateObject = new GameObject("Alternate random prefab"); alternateObject.SetActive(false);
+        var alternate = alternateObject.AddComponent<EnemyController>();
+        var alternateProfile = ScriptableObject.CreateInstance<EnemyDataSO>(); alternate.enemyData = alternateProfile;
+        point.prefabSelection = EnemySpawnPoint.PrefabSelection.Random;
+        point.enemyPrefabs = new[] { enemy, alternate, null };
+        var selectionRandomState = UnityEngine.Random.state; UnityEngine.Random.InitState(719);
+        bool selectedOriginal = false, selectedAlternate = false;
+        for (int index = 0; index < 64; index++)
+        {
+            var chosen = point.SelectPrefab();
+            Check(chosen == enemy || chosen == alternate, "Random selection returns a valid configured prefab");
+            selectedOriginal |= chosen == enemy; selectedAlternate |= chosen == alternate;
+        }
+        UnityEngine.Random.state = selectionRandomState;
+        Check(selectedOriginal && selectedAlternate && alternate.enemyData == alternateProfile && enemy.enemyData == profile,
+            "Random pool selects both variants without changing their profiles");
+        alternate.enemyData = null;
+        point.enemyPrefabs = new[] { null, alternate };
+        Check(point.SelectPrefab() == null, "Invalid random pool does not silently use the hidden Single prefab");
+        point.enemyPrefabs = new[] { null, alternate, enemy };
+        Check(point.SelectPrefab() == enemy, "Random pool skips entries missing profiles");
+        UnityEngine.Object.Destroy(alternateObject); UnityEngine.Object.Destroy(alternateProfile);
         point.enemyGroup = group; point.aggressionMode = EnemySpawnPoint.AggressionMode.Normal;
         var spawned = point.SpawnOne();
         Check(spawned != null && spawned.IsAggressive && !profile.aggressiveOnStart,
@@ -468,6 +709,27 @@ public static class LostModuleChecks
             Mathf.Abs(go.GetComponent<NavMeshAgent>().speed - profile.pressureOrbitSpeed) < .05f,
             "Close Pressure keeps its orbit speed and clears chase boost");
         enemy.PausePatrol();
+        var rushOwners = new[] { enemy, spawned, standaloneSpawn, profileSpawn };
+        yield return PressureChecks(timingSettings, player, profile, rushOwners);
+        // Two eligible owners may approach, but cannot start Preparation together.
+        moving.transform.position = Vector3.forward * 20;
+        enemy.StartPatrol(); spawned.StartPatrol();
+        timingSettings.attackStartInterval = .8f;
+        var timingTarget = new GameObject("Shared cadence target");
+        var independentTarget = new GameObject("Independent cadence target");
+        Check(EnemyAttackCoordinator.TryStartAttack(enemy, timingTarget.transform), "First attacker reserves the shared start timestamp");
+        Check(!EnemyAttackCoordinator.TryStartAttack(spawned, timingTarget.transform) && EnemyAttackCoordinator.StartDelay(timingTarget.transform) > .7f,
+            "Second attacker cannot start in the same frame even with another turn slot");
+        EnemyAttackCoordinator.Release(enemy);
+        Check(!EnemyAttackCoordinator.TryStartAttack(spawned, timingTarget.transform), "Turn release or cancellation cannot bypass the start gap");
+        Check(EnemyAttackCoordinator.TryStartAttack(spawned, independentTarget.transform), "Separate targets do not block one another's attack starts");
+        yield return Wait(.82f);
+        Check(EnemyAttackCoordinator.TryStartAttack(spawned, timingTarget.transform), "Another attacker may start after the shared interval expires");
+        timingSettings.attackStartInterval = 0;
+        Check(EnemyAttackCoordinator.TryStartAttack(enemy, independentTarget.transform) && EnemyAttackCoordinator.TryStartAttack(spawned, independentTarget.transform),
+            "Zero interval allows back-to-back starts once the prior deadline has expired");
+        enemy.PausePatrol(); spawned.PausePatrol();
+        UnityEngine.Object.Destroy(timingTarget); UnityEngine.Object.Destroy(independentTarget);
         enemy.BeginDeath();
         Check(enemy.IsDead && !enemy.HasAttackTurn && runtime.Current == null, "Death clears module and group reservation");
     }

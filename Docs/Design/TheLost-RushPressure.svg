@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="1360" viewBox="0 0 1720 1360" role="img" aria-label="The Lost shared rush and pressure behavior flowchart">
+  <title>The Lost — Rush and Pressure Control</title>
+  <rect width="1720" height="1360" fill="#ffffff" />
+  <rect x="40" y="150" width="520" height="1030" rx="10" fill="#f7f9fc" stroke="#e0e6ee" stroke-width="1.5" />
+  <rect x="600" y="150" width="520" height="1030" rx="10" fill="#f7f9fc" stroke="#e0e6ee" stroke-width="1.5" />
+  <rect x="1160" y="150" width="520" height="1030" rx="10" fill="#f7f9fc" stroke="#e0e6ee" stroke-width="1.5" />
+  <polyline points="300,314 300,360" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="300,360 295.215,350.095 304.785,350.095" fill="#64748b" />
+  <polyline points="300,456 300,520" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="300,520 295.215,510.095 304.785,510.095" fill="#64748b" />
+  <rect x="224.75" y="476" width="150.5" height="24" fill="#f7f9fc" />
+  <text x="300" y="488" font-family="Arial, sans-serif" font-size="15" fill="#526577" text-anchor="middle" dominant-baseline="central">Close enough to join</text>
+  <polyline points="300,616 300,680" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="300,680 295.215,670.095 304.785,670.095" fill="#64748b" />
+  <rect x="235.0" y="636" width="130.0" height="24" fill="#f7f9fc" />
+  <text x="300" y="648" font-family="Arial, sans-serif" font-size="15" fill="#526577" text-anchor="middle" dominant-baseline="central">Capacity reached</text>
+  <polyline points="300,776 300,845" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="300,845 295.215,835.095 304.785,835.095" fill="#64748b" />
+  <rect x="216.75" y="798" width="166.5" height="24" fill="#f7f9fc" />
+  <text x="300" y="810" font-family="Arial, sans-serif" font-size="15" fill="#526577" text-anchor="middle" dominant-baseline="central">Choose the next action</text>
+  <polyline points="860,362 860,420" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="860,420 855.215,410.095 864.785,410.095" fill="#64748b" />
+  <polyline points="860,516 860,574" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="860,574 855.215,564.095 864.785,564.095" fill="#64748b" />
+  <polyline points="860,670 860,730" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="860,730 855.215,720.095 864.785,720.095" fill="#64748b" />
+  <polyline points="860,842 860,900" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="860,900 855.215,890.095 864.785,890.095" fill="#64748b" />
+  <polyline points="650,945 580,945 580,728 510,728" fill="none" stroke="#4d9374" stroke-width="2" />
+  <polygon points="510,728 519.905,723.215 519.905,732.785" fill="#4d9374" />
+  <polyline points="1420,346 1420,400" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="1420,400 1415.22,390.095 1424.78,390.095" fill="#64748b" />
+  <polyline points="1420,512 1420,572" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="1420,572 1415.22,562.095 1424.78,562.095" fill="#64748b" />
+  <rect x="1342.0" y="530" width="156.0" height="24" fill="#f7f9fc" />
+  <text x="1420" y="542" font-family="Arial, sans-serif" font-size="15" fill="#526577" text-anchor="middle" dominant-baseline="central">Actual sprinting stops</text>
+  <polyline points="1420,668 1420,740" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="1420,740 1415.22,730.095 1424.78,730.095" fill="#64748b" />
+  <polyline points="1420,860 1420,950" fill="none" stroke="#64748b" stroke-width="2" />
+  <polygon points="1420,950 1415.22,940.095 1424.78,940.095" fill="#64748b" />
+  <text x="40" y="50.0" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#102c44" text-anchor="start" dominant-baseline="central">THE LOST  /  RUSH &amp; PRESSURE CONTROL</text>
+  <text x="40" y="101.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#526577" text-anchor="start" dominant-baseline="central">Shared per player  |  Pressure ownership and attack permission are independent  |  16 Oct 2026</text>
+  <rect x="58" y="170" width="484" height="54" rx="10" fill="#e7f1ff" stroke="#e7f1ff" stroke-width="1.5" />
+  <text x="300.0" y="197.0" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#15283b" text-anchor="middle" dominant-baseline="central">1  APPROACH &amp; PRESSURE</text>
+  <rect x="618" y="170" width="484" height="54" rx="10" fill="#fff2e6" stroke="#fff2e6" stroke-width="1.5" />
+  <text x="860.0" y="197.0" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#15283b" text-anchor="middle" dominant-baseline="central">2  INTERRUPT &amp; REPLACE</text>
+  <rect x="1178" y="170" width="484" height="54" rx="10" fill="#e8f7f2" stroke="#e8f7f2" stroke-width="1.5" />
+  <text x="1420.0" y="197.0" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#15283b" text-anchor="middle" dominant-baseline="central">3  PLAYER ESCAPE</text>
+  <rect x="90" y="250" width="420" height="64" rx="10" fill="#e7f1ff" stroke="#8aabd6" stroke-width="1.5" />
+  <text x="300.0" y="268.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">TARGET CONFIRMED</text>
+  <text x="300.0" y="295.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Player is not escaping</text>
+  <rect x="90" y="360" width="420" height="96" rx="10" fill="#e7f1ff" stroke="#8aabd6" stroke-width="1.5" />
+  <text x="300.0" y="381.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">INITIAL APPROACH</text>
+  <text x="300.0" y="408.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">All eligible distant enemies run</text>
+  <text x="300.0" y="435.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">until the pressure group fills</text>
+  <rect x="90" y="520" width="420" height="96" rx="10" fill="#e7f1ff" stroke="#8aabd6" stroke-width="1.5" />
+  <text x="300.0" y="541.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">ENTER THE ENGAGEMENT RADIUS</text>
+  <text x="300.0" y="568.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Nearest eligible enemies claim places</text>
+  <text x="300.0" y="595.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Default: 4.5 m / maximum 3 owners</text>
+  <rect x="90" y="680" width="420" height="96" rx="10" fill="#d9ece5" stroke="#79ab94" stroke-width="1.5" />
+  <text x="300.0" y="701.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">PRESSURE GROUP ESTABLISHED</text>
+  <text x="300.0" y="728.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Owners keep the right to pursue</text>
+  <text x="300.0" y="755.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Other enemies walk / wait outside</text>
+  <rect x="90" y="845" width="420" height="132" rx="10" fill="#d9ece5" stroke="#79ab94" stroke-width="1.5" />
+  <text x="300.0" y="870.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">APPROACH / PRESSURE</text>
+  <text x="300.0" y="897.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">PREPARATION → ATTACK → RECOVERY</text>
+  <text x="300.0" y="924.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Ownership persists through every phase</text>
+  <text x="300.0" y="951.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Attack slots + start timing still apply</text>
+  <rect x="70" y="1035" width="460" height="110" rx="10" fill="#ffffff" stroke="#d9e1ea" stroke-width="1.5" />
+  <text x="300.0" y="1064.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Reaching the player, preparing, or</text>
+  <text x="300.0" y="1090.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">finishing an attack does not free a place.</text>
+  <text x="300.0" y="1116.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">The group stays established after a hit.</text>
+  <rect x="650" y="250" width="420" height="112" rx="10" fill="#fff0df" stroke="#d2a272" stroke-width="1.5" />
+  <text x="860.0" y="279.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">OWNER INTERRUPTED / INVALID</text>
+  <text x="860.0" y="306.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Hit or stagger / death / paused AI</text>
+  <text x="860.0" y="333.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Target lost / pursuit path fails</text>
+  <rect x="650" y="420" width="420" height="96" rx="10" fill="#fff0df" stroke="#d2a272" stroke-width="1.5" />
+  <text x="860.0" y="441.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">FREE ONLY THIS PLACE</text>
+  <text x="860.0" y="468.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Keep the remaining owners</text>
+  <text x="860.0" y="495.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Keep the established-group latch</text>
+  <rect x="650" y="574" width="420" height="96" rx="10" fill="#fff0df" stroke="#d2a272" stroke-width="1.5" />
+  <text x="860.0" y="595.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">REPLACEMENT INTERVAL</text>
+  <text x="860.0" y="622.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Wait 0.6 s between replacements</text>
+  <text x="860.0" y="649.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Released owner rests for 2 s</text>
+  <rect x="650" y="730" width="420" height="112" rx="10" fill="#fff0df" stroke="#d2a272" stroke-width="1.5" />
+  <text x="860.0" y="759.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">NEAREST ELIGIBLE REPLACEMENT</text>
+  <text x="860.0" y="786.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Alive, active and able to reach the target</text>
+  <text x="860.0" y="813.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Admit one vacancy at a time</text>
+  <rect x="650" y="900" width="420" height="90" rx="10" fill="#d9ece5" stroke="#79ab94" stroke-width="1.5" />
+  <text x="860.0" y="918.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">REJOIN THE PRESSURE GROUP</text>
+  <text x="860.0" y="945.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Fill only the vacant places</text>
+  <text x="860.0" y="972.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">No new all-enemy rush wave</text>
+  <rect x="630" y="1035" width="460" height="110" rx="10" fill="#ffffff" stroke="#d9e1ea" stroke-width="1.5" />
+  <text x="860.0" y="1064.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Stall timeout applies to active pursuit.</text>
+  <text x="860.0" y="1090.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Do not expire deliberate circling,</text>
+  <text x="860.0" y="1116.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">attacking, recovery or an escape pause.</text>
+  <rect x="1210" y="250" width="420" height="96" rx="10" fill="#e3f4ee" stroke="#7eaf9e" stroke-width="1.5" />
+  <text x="1420.0" y="271.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">PLAYER SPRINTS AWAY</text>
+  <text x="1420.0" y="298.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Actual movement takes the player away</text>
+  <text x="1420.0" y="325.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">from an engaged threat</text>
+  <rect x="1210" y="400" width="420" height="112" rx="10" fill="#e3f4ee" stroke="#7eaf9e" stroke-width="1.5" />
+  <text x="1420.0" y="415.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">ESCAPE PAUSE</text>
+  <text x="1420.0" y="442.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Walk after player / no Rush</text>
+  <text x="1420.0" y="469.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Pause new admissions / replacements</text>
+  <text x="1420.0" y="496.5" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Keep the current owners</text>
+  <rect x="1210" y="572" width="420" height="96" rx="10" fill="#e3f4ee" stroke="#7eaf9e" stroke-width="1.5" />
+  <text x="1420.0" y="593.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">SPRINTING STOPS</text>
+  <text x="1420.0" y="620.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Wait 0.8 s before running resumes</text>
+  <text x="1420.0" y="647.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Keep paused while sprinting continues</text>
+  <rect x="1210" y="740" width="420" height="120" rx="10" fill="#fff5d6" stroke="#ccb16c" stroke-width="1.5" />
+  <text x="1420.0" y="772.0" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">CLEAR OLD PRESSURE OWNERS</text>
+  <text x="1420.0" y="800.0" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Reset the established group</text>
+  <text x="1420.0" y="828.0" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">No reentry penalty for this reset</text>
+  <rect x="1190" y="1070" width="460" height="78" rx="10" fill="#ffffff" stroke="#d9e1ea" stroke-width="1.5" />
+  <text x="1420.0" y="1083.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Keep walking; current attacks may finish.</text>
+  <text x="1420.0" y="1109.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">This opens a chance to escape;</text>
+  <text x="1420.0" y="1135.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">existing attacks can still hit.</text>
+  <rect x="40" y="1210" width="1640" height="112" rx="10" fill="#eef3f9" stroke="#d9e1ea" stroke-width="1.5" />
+  <text x="860.0" y="1239.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">SHARED COMBAT SETTINGS  /  System Modification → Enemy Lab → Shared Combat Settings</text>
+  <text x="860.0" y="1266.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Owners: 3   •   Engagement: 4.5 m   •   Replacement: 0.6 s   •   Reentry: 2 s   •   Pursuit stall: 2 s</text>
+  <text x="860.0" y="1293.0" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Pause Rush While Escaping: ON   •   Escape resume: 0.8 s   •   Attack Start Interval: 0.8 s</text>
+  <rect x="1210" y="950" width="420" height="84" rx="10" fill="#e7f1ff" stroke="#8aabd6" stroke-width="1.5" />
+  <text x="1420.0" y="966.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">RESTART INITIAL APPROACH</text>
+  <text x="1420.0" y="992.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">All eligible distant enemies rush</text>
+  <text x="1420.0" y="1018.0" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#15283b" text-anchor="middle" dominant-baseline="central">Claim fresh slots on entering the radius</text>
+</svg>

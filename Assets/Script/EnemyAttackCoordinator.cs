@@ -7,12 +7,31 @@ public static class EnemyAttackCoordinator
     private sealed class Turn { public Transform Target; public float Expires; public int Limit; }
     private static readonly Dictionary<EnemyController, Turn> turns = new Dictionary<EnemyController, Turn>();
     private static readonly List<EnemyController> expired = new List<EnemyController>();
+    private static readonly Dictionary<Transform, float> nextStarts = new Dictionary<Transform, float>();
+    private static readonly List<Transform> expiredTargets = new List<Transform>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void Reset() { turns.Clear(); expired.Clear(); }
+    private static void Reset() { turns.Clear(); expired.Clear(); nextStarts.Clear(); expiredTargets.Clear(); }
+
+    public static float StartDelay(Transform target) => target != null && nextStarts.TryGetValue(target, out var next)
+        ? Mathf.Max(0, next - Time.time) : 0;
+
+    public static bool TryStartAttack(EnemyController owner, Transform target)
+    {
+        if (owner == null || target == null || !owner.isActiveAndEnabled || owner.IsDead || !owner.IsPatrolRunning) return false;
+        if (StartDelay(target) > 0) return false;
+        // Reserve atomically before Preparation. Cancellation keeps the short gap;
+        // releasing a turn must not let another enemy start in the same frame.
+        nextStarts[target] = Time.time + EnemyCombatSettings.StartInterval;
+        return true;
+    }
 
     private static void Clean()
     {
+        expiredTargets.Clear();
+        foreach (var entry in nextStarts)
+            if (entry.Key == null || entry.Value <= Time.time) expiredTargets.Add(entry.Key);
+        foreach (var target in expiredTargets) nextStarts.Remove(target);
         expired.Clear();
         foreach (var entry in turns)
             if (entry.Key == null || !entry.Key.isActiveAndEnabled || entry.Key.IsDead || !entry.Key.IsPatrolRunning ||

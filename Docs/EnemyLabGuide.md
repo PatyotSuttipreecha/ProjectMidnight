@@ -88,3 +88,9 @@ Loot ใช้ editor เปอร์เซ็นต์ชุดเดียว:
 ## Blend Tree hierarchy (15 October 2026)
 
 ลำดับใหม่: EnemyType → WeaponType → Speed → Horizontal/Verticle โดย TheLost ใช้ EnemyType = 0 และ Speed: Idle = 0, Walk = 0.5, Run = 1 สคริปต์ส่งค่าจากความเร็วเคลื่อนที่จริงและเลือก WeaponType ตามอาวุธปัจจุบัน: Unarm 0, Machete 0.2, Log 0.4, Torch 0.6, Stone 0.8, Axe 1 เมื่ออาวุธหลุดจะเลือก Unarm ทันที กิ่ง Log/Stone/Axe ที่ยังว่างใช้ Motion จาก Unarm ชั่วคราว สามารถเปลี่ยนคลิปภายในกิ่งนั้นเมื่อมีแอนิเมชันพร้อมได้ ส่วน TheWatcher/TheNameLess/TheKeeper ยังเป็นกิ่งว่างและยังไม่ได้เปิดใช้งาน
+
+## Gameplay State Overlay แบบกระชับ
+
+ป้ายอ้างกระดูก Head จริง (ไม่มี Humanoid Head ใช้จุดสูงจาก root 1.7 เมตร) ค่า Offset Above Head เริ่ม 0.12 เมตร ป้ายขนาดเล็กแสดง ID ประจำตัวและ State เท่านั้น ไม่ใช้หมายเลขอันดับระยะอีกต่อไป ตัวใกล้ได้พื้นที่ก่อนโดยให้ตัวที่ focus มีลำดับแรก จำกัดป้ายเริ่ม 8 ตัว ถ้าพื้นที่ไม่พอจะเหลือ marker สีและ ID ตรงหัวแทนการดันป้ายไกลออกไป ป้ายเลื่อนได้สูงสุด 28 พิกเซลและมีเส้นขอบดำ/สีเชื่อมไปยัง marker
+
+เล็งใกล้หัวเพื่อแสดง FOCUS พร้อม ID, ชื่อศัตรู, อาวุธ, State, ระยะ, พฤติกรรมและสิทธิ์โจมตีในมุมล่างซ้าย ปิด Focused Enemy Details ได้ ตั้ง Compact Label Limit, Offset Above Head, Label Range และ Text Size ที่ Cheat Menu ทั้ง Editor และ F10 การตั้งค่าใช้ชั่วคราวและ Reset All Cheats คืนค่าเดิม

@@ -59,7 +59,10 @@ public class CheatMenuWindow : EditorWindow
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField("Enemy Debug", EditorStyles.boldLabel);
         EnemyStateDisplay.Enabled = EditorGUILayout.Toggle("Show Enemy States (F8)", EnemyStateDisplay.Enabled);
-        EnemyStateDisplay.ShowDetails = EditorGUILayout.Toggle("Show Behaviour Details", EnemyStateDisplay.ShowDetails);
+        EnemyStateDisplay.ShowDetails = EditorGUILayout.Toggle("Focused Enemy Details", EnemyStateDisplay.ShowDetails);
+        EnemyStateDisplay.MaxLabels = EditorGUILayout.IntSlider("Compact Label Limit", EnemyStateDisplay.MaxLabels, 1, 20);
+        EnemyStateDisplay.HeadOffset = EditorGUILayout.Slider("Offset Above Head (m)", EnemyStateDisplay.HeadOffset, 0, .5f);
+        EditorGUILayout.HelpBox("Aim near an enemy's head to focus its details. IDs stay with each enemy. Closest enemies receive compact labels first; crowded labels collapse to head markers instead of floating far away.", MessageType.Info);
         EnemyStateDisplay.MaxDistance = EditorGUILayout.Slider("Label Range (m)", EnemyStateDisplay.MaxDistance, 5, 100);
         EnemyStateDisplay.FontSize = EditorGUILayout.IntSlider("Text Size", EnemyStateDisplay.FontSize, 10, 22);
         EditorGUILayout.EndVertical();

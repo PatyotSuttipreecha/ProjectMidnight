@@ -100,6 +100,12 @@ public sealed class EnemyProfileGUI
     {
         if (p == null) return;
         category = EditorGUILayout.Popup("Settings category", category, Categories);
+        if (category == 1 || category == 4 || category == 8)
+        {
+            EditorGUILayout.HelpBox("Shared Combat Timing controls the pressure group, nearest replacements, escape pauses and attack spacing across profiles. Owners keep their slots through melee. This mode overrides the saved Walk/Boost rhythm while enabled.", MessageType.Info);
+            if (GUILayout.Button("Open Shared Combat Timing"))
+                EnemyCombatSettingsWindow.Open();
+        }
         search = EditorGUILayout.TextField("Find setting", search);
         advanced = EditorGUILayout.ToggleLeft("Show advanced settings", advanced);
         EditorGUILayout.HelpBox("Hidden fields keep their saved values. Enable the relevant feature or Show advanced settings to reveal them. See Docs/EnemyLabGuide.md for the visibility rules.", MessageType.None);
@@ -205,6 +211,7 @@ public static class EnemyDiagnosticsGUI
         {
             EditorGUILayout.LabelField("Agent speed / velocity", agent.speed.ToString("0.000") + " / " + agent.velocity.magnitude.ToString("0.000") + " m/s");
             EditorGUILayout.LabelField("Path", agent.isStopped ? "Stopped" : agent.pathPending ? "Calculating" : agent.hasPath ? agent.pathStatus.ToString() : "No path");
+            EditorGUILayout.LabelField("Pressure group", enemy.RushStatus);
         }
         if (GUILayout.Button(enemy.IsPatrolRunning ? "Pause AI / Patrol" : "Start AI / Patrol"))
         { if (enemy.IsPatrolRunning) enemy.PausePatrol(); else enemy.StartPatrol(); }
