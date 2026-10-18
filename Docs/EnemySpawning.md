@@ -1,5 +1,15 @@
 # Enemy spawn schedules
 
+## Hidden continuous spawning (2026-10-18)
+
+- Enemy Spawn Point > Spawn Visibility > **Spawn Out Of View** enables the check. **Visibility Camera** optionally overrides the gameplay render camera; empty uses Main Camera.
+- All 9 Continuous spawn points in Scenes_Gameplay have this enabled. Existing intervals and living-enemy limits are retained.
+- Candidate positions must be reachable on NavMesh and the padded enemy body bounds must lie outside the camera frustum. A partly visible body is rejected. This conservative rule waits even behind walls if the location remains inside the camera frustum; it does not rely on occlusion rays.
+- If all candidate positions remain visible, the point skips this attempt, retains its spawn budget and retries at the next normal interval. No active camera also makes it wait. Runtime Inspector/Enemy Lab shows **Last placement** to explain waiting.
+- Automatic interval attempts run in LateUpdate after the gameplay camera is positioned (execution order 350), avoiding a previous-frame view during camera turns. Explicit SpawnOne calls remain immediate.
+- Continuous spawning applies the same rule to the initial batch. Once mode, if manually enabled with hidden spawning, still has its existing one-batch/no-retry semantics.
+- Verified with 318 isolated Unity Play Mode checks, including visible rejection, body-edge overlap, no budget consumption, inactive camera rejection, and an actual NavMesh spawn after turning the camera away. Runtime/editor compilation passed. Full gameplay scene still needs a playtest.
+
 On EnemySpawnPoint (also visible in Enemy Lab), select Spawn Mode:
 
 - Once: one immediate batch of Initial Count, capped by Max Alive. No automatic retries or refills. Start Spawning cannot repeat that batch.

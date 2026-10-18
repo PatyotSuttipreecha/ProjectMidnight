@@ -48,6 +48,11 @@ public class PlayerConfigurationWindow : EditorWindow
     }
     private void OnGUI()
     {
+        using (new ModificationGUI.WindowScope(this, "Player", "Player configuration", "Configure movement, starting loadout, inventory and interaction.", ModificationGUI.Player, player))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
         followSelection = EditorGUILayout.ToggleLeft("ติดตามวัตถุที่เลือก", followSelection);
         EditorGUI.BeginChangeCheck();
         player = (PlayerController)EditorGUILayout.ObjectField("Player", player, typeof(PlayerController), true);
@@ -63,13 +68,14 @@ public class PlayerConfigurationWindow : EditorWindow
                 settings = null;
             }
         }
+        if (GUILayout.Button("Open Player HUD Prefab")) PlayerHUDBuilder.Open();
         if (player == null)
         { EditorGUILayout.HelpBox("เลือก Player ใน Hierarchy หรือเปิด Player Prefab เพื่อปรับค่า", MessageType.Info); return; }
         if (EditorApplication.isPlaying)
             EditorGUILayout.HelpBox("ค่าที่ปรับใน Play Mode เป็นค่าชั่วคราว อาวุธเริ่มต้นมีผลเมื่อเริ่มเกมใหม่", MessageType.Info);
         else if (!EditorUtility.IsPersistent(player) && PrefabUtility.IsPartOfPrefabInstance(player))
             EditorGUILayout.HelpBox("กำลังปรับ Player ในฉาก ค่าจะเป็น Prefab override หากต้องการใช้กับทุกฉาก ให้เปิดค่าของ Player Prefab", MessageType.Info);
-        tab = GUILayout.Toolbar(tab, new[] { "ผู้เล่น", "อาวุธเริ่มต้น", "กระเป๋า", "References", "Interaction" });
+        tab = ModificationGUI.Tabs(tab, new[] { "Player", "Loadout", "Inventory", "References", "Interaction" }, ModificationGUI.Player);
         scroll = EditorGUILayout.BeginScrollView(scroll);
         if (settings == null || settings.targetObject != player) settings = new SerializedObject(player);
         settings.Update();
@@ -107,14 +113,25 @@ public class PlayerConfigurationWindow : EditorWindow
     private void NonNegative(string path, string label, float minimum = 0)
     {
         var property = settings.FindProperty(path);
-        property.floatValue = Mathf.Max(minimum, EditorGUILayout.FloatField(label, property.floatValue));
+        property.floatValue = Mathf.Max(minimum, EditorGUILayout.FloatField(new GUIContent(label, property.tooltip), property.floatValue));
     }
     private void DrawPlayer()
     {
-        EditorGUILayout.LabelField("การเคลื่อนที่", EditorStyles.boldLabel);
+        ModificationGUI.Section("Movement");
         NonNegative("moveSpeed", "ความเร็วเดิน");
         NonNegative("sprintBonus", "ความเร็วเพิ่มตอนวิ่ง");
-        EditorGUILayout.LabelField("เสียงที่ศัตรูได้ยิน", EditorStyles.boldLabel);
+        ModificationGUI.Section("Aiming movement");
+        var aimMultiplier = settings.FindProperty("aimMoveSpeedMultiplier");
+        aimMultiplier.floatValue = EditorGUILayout.Slider(new GUIContent("Aim Move Multiplier", aimMultiplier.tooltip), aimMultiplier.floatValue, 0, 1);
+        NonNegative("aimBackwardSpeedPenalty", "Aim Backward Penalty (m/s)");
+        float aimingSpeed = Mathf.Max(0, settings.FindProperty("moveSpeed").floatValue) * aimMultiplier.floatValue;
+        using (new EditorGUI.DisabledScope(true))
+        {
+            EditorGUILayout.FloatField("Aim Move Speed (m/s)", aimingSpeed);
+            EditorGUILayout.FloatField("Aim Backward Speed (m/s)", Mathf.Max(0, aimingSpeed - settings.FindProperty("aimBackwardSpeedPenalty").floatValue));
+        }
+        EditorGUILayout.HelpBox("Multiplier is relative to Walk Speed. Backward penalty is subtracted only while aiming. Sprint is disabled; enemy slow/hold effects apply afterward.", MessageType.Info);
+        ModificationGUI.Section("Movement noise");
         NonNegative("walkNoiseRadius", "ระยะเสียงเดิน");
         NonNegative("runNoiseRadius", "ระยะเสียงวิ่ง");
         NonNegative("walkNoiseInterval", "ช่วงเสียงเดิน (วินาที)", .1f);

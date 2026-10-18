@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8fc570592b124954b9aada0f21eb1b34
+guid: 06fb8d7af9d5e5f4da45a9f3eeed4454
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -22,7 +22,7 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 1
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
@@ -31,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Dead
+      name: Art_Model_Animation_Enemy_Thelost_Zombie Neck Bite
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 178
+      lastFrame: 250
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

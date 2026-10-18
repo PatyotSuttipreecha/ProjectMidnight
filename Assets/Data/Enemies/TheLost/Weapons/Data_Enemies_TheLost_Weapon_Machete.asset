@@ -18,11 +18,11 @@ MonoBehaviour:
   localEulerAngles: {x: 0, y: 0, z: 0}
   localScale: {x: 1, y: 1, z: 1}
   attackAnimation: Art_Animation_Thelost_Machete_Attack
-  range: 1.5
+  range: 2
   hitArc: 110
   minDamage: 15
   maxDamage: 22
-  preparation: 0.45
+  preparation: 0.25
   windup: 0.5
   recovery: 0.85
   armDropChance: 0.35

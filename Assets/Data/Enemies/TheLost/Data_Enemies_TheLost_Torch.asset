@@ -12,6 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66a91380e3b54ad428aed93a244661f6, type: 3}
   m_Name: Data_Enemies_TheLost_Torch
   m_EditorClassIdentifier: 
+  charge:
+    selectionChance: 0.5
+    decisionInterval: 3
+    reserveForMidRange: 1
+    enabled: 1
+    minDistance: 3
+    maxDistance: 6
+    preparation: 0.5
+    duration: 2
+    speed: 3
+    recovery: 0.8
+    cooldown: 5
+    preparationAnimation: Art_Model_Animation_Enemy_Thelost_Zombie Scream
+    runAnimation: Art_Model_Animation_Enemy_Thelost_Running
+    attackAnimation: Art_Model_Animation_Enemy_Thelost_Zombie Neck Bite
   detectionRadius: 12
   fieldOfView: 100
   obstacleMask:
@@ -38,8 +53,8 @@ MonoBehaviour:
   walkSpeed: 1
   waitTimeAtPoint: 2
   chaseSpeed: 2.5
-  closeApproachSpeed: 1
-  chaseSlowdownDistance: 2
+  closeApproachSpeed: 1.5
+  chaseSlowdownDistance: 4
   speedChangeRate: 5
   chaseRepathInterval: 0.25
   lostSightCooldown: 5
@@ -54,8 +69,8 @@ MonoBehaviour:
   locomotionVerticalParameter: Verticle
   locomotionAttackParameter: Attacking
   locomotionAttackState: Art_Animation_Thelost_Machete_Attack
-  animationWalkSpeed: 0.5
-  animationRunSpeed: 3.125
+  animationWalkSpeed: 1
+  animationRunSpeed: 3
   locomotionDamping: 0.12
   locomotionTransition: 0.12
   useChaseRhythm: 1
@@ -70,8 +85,8 @@ MonoBehaviour:
   aggressiveOnStart: 0
   coordinateAttacks: 1
   maxConcurrentAttackers: 2
-  engagementDistance: 1
-  pressureRingRadius: 1
+  engagementDistance: 6
+  pressureRingRadius: 1.8
   pressureOrbitSpeed: 0.6
   pressureOrbitStep: 25
   pressureOrbitMode: 0
@@ -91,9 +106,11 @@ MonoBehaviour:
   separationSpeed: 0.75
   minAttack: 8
   maxAttack: 12
-  attackRange: 1.2
-  attackPreparationTime: 0.5
+  attackRange: 2
+  attackPreparationTime: 0.25
+  advanceDuringPreparation: 1
   attackWindup: 0.5
+  meleeAttackStep: 0.5
   attackCooldown: 2
   eyeHeight: 1
   playerTargetHeight: 1
@@ -112,6 +129,15 @@ MonoBehaviour:
   ragdollLinearDamping: 0.8
   ragdollAngularDamping: 1.5
   deathPushImpulse: 3
+  actionBreak:
+    enabled: 1
+    threshold: 60
+    impactPerShot: 20
+    headMultiplier: 1.5
+    criticalChance: 0.05
+    recoveryPerSecond: 10
+    recoveryDelay: 1
+    resistanceAfterBreak: 1.2
   hitKnockbackDistance: 0.15
   hitKnockbackDuration: 0.12
   hitStaggerDuration: 0.3

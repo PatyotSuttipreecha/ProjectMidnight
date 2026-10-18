@@ -11,6 +11,11 @@ public class Bullet : MonoBehaviour
     private Vector3 previousPosition;
     private bool isReady;
     private bool hasHit;
+    private static int nextShotId;
+    private int shotId;
+    private float impactPower;
+    public static int AllocateShotId() => ++nextShotId;
+    public void SetImpactShot(int id, float power) { shotId = id; impactPower = power; }
 
     public void SetDamage(float dmg) => damage = dmg;
     public void SetSource(Transform shooter) => source = shooter;
@@ -57,7 +62,7 @@ public class Bullet : MonoBehaviour
         {
             HitBoxManager manager = hitBox.GetComponentInParent<HitBoxManager>();
             if (manager != null) manager.TakeDamage(hitBox.hitBox, damage, source,
-                target, target.ClosestPoint(transform.position), direction);
+                target, target.ClosestPoint(transform.position), direction, shotId, impactPower);
         }
         Destroy(gameObject);
         return true;

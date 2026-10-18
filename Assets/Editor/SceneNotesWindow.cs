@@ -43,6 +43,11 @@ public class SceneNotesWindow : EditorWindow
     }
     private void OnGUI()
     {
+        using (new ModificationGUI.WindowScope(this, "Scene Configuration", "Scene notes", "Browse game-wide design records and their placements in loaded scenes.", ModificationGUI.Scene, selected))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
         records.RemoveAll(r => r == null); Sort();
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
@@ -78,7 +83,6 @@ public class SceneNotesWindow : EditorWindow
             using (new EditorGUILayout.VerticalScope(GUILayout.Width(position.width * .40f)))
             {
                 listScroll = EditorGUILayout.BeginScrollView(listScroll); int shown = 0;
-                var style = new GUIStyle(EditorStyles.miniButton) { alignment = TextAnchor.UpperLeft, fixedHeight = 0, wordWrap = false, padding = new RectOffset(8,8,6,6), fontSize = 12 };
                 foreach (var record in records)
                 {
                     if (typeFilter > 0 && (int)record.pointType != typeFilter - 1 || statusFilter > 0 && (int)record.status != statusFilter - 1) continue;
@@ -87,8 +91,7 @@ public class SceneNotesWindow : EditorWindow
                     if (!string.IsNullOrWhiteSpace(search) && content.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     shown++;
                     string label = (record.title ?? "").Replace('\n',' ').Replace('\r',' ') + "\n" + record.pointType + " | " + record.status;
-                    if (GUILayout.Toggle(selected == record, new GUIContent(label, content + "\n" + AssetDatabase.GetAssetPath(record)), style, GUILayout.Height(46))) selected = record;
-                    GUILayout.Space(3);
+                    if (ModificationGUI.ListRow(selected == record, label, content + "\n" + AssetDatabase.GetAssetPath(record), ModificationGUI.Scene)) selected = record;
                 }
                 EditorGUILayout.EndScrollView(); EditorGUILayout.LabelField(shown + " / " + records.Count + " data records", EditorStyles.miniLabel);
             }

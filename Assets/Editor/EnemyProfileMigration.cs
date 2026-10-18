@@ -62,11 +62,42 @@ public static class EnemyProfileMigration
     [MenuItem("System Modification/Enemy Lab/Create/Patrol Route")]
     public static void CreateRoute()
     {
+        var selected = Selection.activeGameObject;
+        var spawn = selected != null ? selected.GetComponentInParent<EnemySpawnPoint>() : null;
+        if (spawn != null && !EditorUtility.IsPersistent(spawn))
+        {
+            Selection.activeGameObject = CreateSpawnRoute(spawn).gameObject;
+            return;
+        }
         GameObject obj = new GameObject("Patrol Route");
         Undo.RegisterCreatedObjectUndo(obj, "Create patrol route");
         obj.AddComponent<PatrolRoute>();
         if (SceneView.lastActiveSceneView != null) obj.transform.position = SceneView.lastActiveSceneView.pivot;
         Selection.activeGameObject = obj;
+    }
+
+    public static PatrolRoute CreateSpawnRoute(EnemySpawnPoint spawn)
+    {
+        if (spawn.patrolRoute != null) return spawn.patrolRoute;
+        Undo.IncrementCurrentGroup();
+        int group = Undo.GetCurrentGroup();
+        Undo.SetCurrentGroupName("Create spawn patrol route");
+        GameObject obj = new GameObject(spawn.name + " Route");
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(obj, spawn.gameObject.scene);
+        obj.transform.position = spawn.transform.position;
+        Undo.RegisterCreatedObjectUndo(obj, "Create spawn patrol route");
+        // Parenting preserves world placement; patrol points remain editable world-space Transforms.
+        Undo.SetTransformParent(obj.transform, spawn.transform, "Parent spawn patrol route");
+        PatrolRoute route = Undo.AddComponent<PatrolRoute>(obj);
+        var filter = PatrolPathPreview.Filter(spawn);
+        route.agentTypeId = filter.agentTypeID; route.areaMask = filter.areaMask;
+        Undo.RecordObject(spawn, "Assign spawn route");
+        spawn.patrolRoute = route;
+        EditorUtility.SetDirty(spawn);
+        if (PrefabUtility.IsPartOfPrefabInstance(spawn)) PrefabUtility.RecordPrefabInstancePropertyModifications(spawn);
+        EditorSceneManager.MarkSceneDirty(spawn.gameObject.scene);
+        Undo.CollapseUndoOperations(group);
+        return route;
     }
 }
 

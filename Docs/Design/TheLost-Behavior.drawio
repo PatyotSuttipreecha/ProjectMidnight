@@ -1,4 +1,5 @@
-<mxfile host="app.diagrams.net" pages="5">
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" pages="9">
   <diagram name="01 — The Lost: Behavior" id="01-—-The-Lost:-Behavior">
     <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1200" pageHeight="1400" math="0" shadow="0">
       <root>
@@ -7,43 +8,43 @@
         <mxCell id="title" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=26;" value="01 — The Lost: Behavior" vertex="1">
           <mxGeometry height="45" width="1120" x="40" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="subtitle" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" value="DESIGN DRAFT • 13 Oct 2026&#xa;แรงขับ: ตามสิ่งที่อาจนำออกจากป่า → พยายามคว้ามินไว้ • แผนภาพนี้เป็นเป้าหมายดีไซน์ ไม่ใช่สถานะโค้ดทั้งหมด" vertex="1">
+        <mxCell id="subtitle" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" value="DESIGN DRAFT • 13 Oct 2026&#10;แรงขับ: ตามสิ่งที่อาจนำออกจากป่า → พยายามคว้ามินไว้ • แผนภาพนี้เป็นเป้าหมายดีไซน์ ไม่ใช่สถานะโค้ดทั้งหมด" vertex="1">
           <mxGeometry height="65" width="1120" x="40" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="idle" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="IDLE / PATROL&#xa;เดินวน • คลำประตู • พึมพำ" vertex="1">
+        <mxCell id="idle" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="IDLE / PATROL&#10;เดินวน • คลำประตู • พึมพำ" vertex="1">
           <mxGeometry height="85" width="300" x="420" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="detect" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="DETECT&#xa;หยุดฟัง / มือค้าง / หันหาเสียง&#xa;ยังไม่รู้ตำแหน่งมินแน่นอน" vertex="1">
+        <mxCell id="detect" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="DETECT&#10;หยุดฟัง / มือค้าง / หันหาเสียง&#10;ยังไม่รู้ตำแหน่งมินแน่นอน" vertex="1">
           <mxGeometry height="90" width="300" x="420" y="280" as="geometry" />
         </mxCell>
         <mxCell id="confirm" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;rhombus;rounded=0;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ยืนยันว่าเห็นมิน?" vertex="1">
           <mxGeometry height="100" width="260" x="440" y="420" as="geometry" />
         </mxCell>
-        <mxCell id="search" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="SEARCH&#xa;ตรวจต้นเสียง / จุดที่เห็นล่าสุด&#xa;ไม่มองทะลุกำแพง" vertex="1">
+        <mxCell id="search" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="SEARCH&#10;ตรวจต้นเสียง / จุดที่เห็นล่าสุด&#10;ไม่มองทะลุกำแพง" vertex="1">
           <mxGeometry height="100" width="280" x="70" y="590" as="geometry" />
         </mxCell>
-        <mxCell id="chase" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#dae8fc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="CHASE&#xa;เดินตาม → ส่งสัญญาณก่อนเร่ง&#xa;ตัดสายตาได้ • ไม่วาร์ปตาม" vertex="1">
+        <mxCell id="chase" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#dae8fc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="CHASE&#10;เดินตาม → ส่งสัญญาณก่อนเร่ง&#10;ตัดสายตาได้ • ไม่วาร์ปตาม" vertex="1">
           <mxGeometry height="100" width="300" x="420" y="590" as="geometry" />
         </mxCell>
-        <mxCell id="return" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="LOST TARGET / RETURN&#xa;ค้นบริเวณจุดล่าสุด&#xa;ไม่พบตามเวลาที่กำหนด → กลับวน" vertex="1">
+        <mxCell id="return" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="LOST TARGET / RETURN&#10;ค้นบริเวณจุดล่าสุด&#10;ไม่พบตามเวลาที่กำหนด → กลับวน" vertex="1">
           <mxGeometry height="100" width="280" x="70" y="780" as="geometry" />
         </mxCell>
-        <mxCell id="ready" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;rhombus;rounded=0;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ระยะถึง + ทางโล่ง&#xa;พร้อมลงมือ + สิทธิ์ว่าง?" vertex="1">
+        <mxCell id="ready" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;rhombus;rounded=0;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ระยะถึง + ทางโล่ง&#10;พร้อมลงมือ + สิทธิ์ว่าง?" vertex="1">
           <mxGeometry height="110" width="260" x="440" y="740" as="geometry" />
         </mxCell>
-        <mxCell id="pressure" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="FOLLOW / PRESSURE&#xa;ยังเดินตาม แต่ชะลอเมื่อถูกขวาง&#xa;รักษาระยะจากมินและเพื่อน" vertex="1">
+        <mxCell id="pressure" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="FOLLOW / PRESSURE&#10;ยังเดินตาม แต่ชะลอเมื่อถูกขวาง&#10;รักษาระยะจากมินและเพื่อน" vertex="1">
           <mxGeometry height="105" width="310" x="810" y="745" as="geometry" />
         </mxCell>
-        <mxCell id="prep" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="PREPARATION&#xa;ตั้งเท้า • ยกมือ • เอนตัว&#xa;ยังไม่ทำ Damage / ผู้เล่นหลบได้" vertex="1">
+        <mxCell id="prep" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="PREPARATION&#10;ตั้งเท้า • ยกมือ • เอนตัว&#10;ยังไม่ทำ Damage / ผู้เล่นหลบได้" vertex="1">
           <mxGeometry height="95" width="300" x="420" y="900" as="geometry" />
         </mxCell>
-        <mxCell id="attack" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#f8cecc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ATTACK&#xa;คว้าหนึ่งครั้ง / ทิศและระยะจำกัด&#xa;ไม่หมุนตามมินเต็มตัว" vertex="1">
+        <mxCell id="attack" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#f8cecc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ATTACK&#10;คว้าหนึ่งครั้ง / ทิศและระยะจำกัด&#10;ไม่หมุนตามมินเต็มตัว" vertex="1">
           <mxGeometry height="95" width="300" x="420" y="1040" as="geometry" />
         </mxCell>
-        <mxCell id="recovery" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="RECOVERY&#xa;มือค้าง / เสียหลัก / ตั้งตัวใหม่&#xa;เปิดช่องให้หนี ก่อนโจมตีครั้งถัดไป" vertex="1">
+        <mxCell id="recovery" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="RECOVERY&#10;มือค้าง / เสียหลัก / ตั้งตัวใหม่&#10;เปิดช่องให้หนี ก่อนโจมตีครั้งถัดไป" vertex="1">
           <mxGeometry height="95" width="300" x="420" y="1180" as="geometry" />
         </mxCell>
-        <mxCell id="note" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ทุกช่วง: ถูกยิง → Hit reaction / ตาย → Death (ดูหน้า 02)&#xa;Detect, การคว้าล็อกทิศ และค้นรอบจุดล่าสุดเป็นเป้าหมายดีไซน์ที่ต้องพัฒนาต่อ&#xa;ค่าระยะ เวลา และจำนวนคนเข้าตีต้องทดสอบในเกม ไม่กำหนดตัวเลขตายตัวในผังนี้" vertex="1">
+        <mxCell id="note" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ทุกช่วง: ถูกยิง → Hit reaction / ตาย → Death (ดูหน้า 02)&#10;Detect, การคว้าล็อกทิศ และค้นรอบจุดล่าสุดเป็นเป้าหมายดีไซน์ที่ต้องพัฒนาต่อ&#10;ค่าระยะ เวลา และจำนวนคนเข้าตีต้องทดสอบในเกม ไม่กำหนดตัวเลขตายตัวในผังนี้" vertex="1">
           <mxGeometry height="80" width="1120" x="40" y="1300" as="geometry" />
         </mxCell>
         <mxCell id="e1" edge="1" parent="1" source="idle" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontFamily=Tahoma;fontSize=13;fontColor=#182230;labelBackgroundColor=#ffffff;" target="detect" value="ได้ยิน / เห็นการเคลื่อนไหว">
@@ -120,46 +121,46 @@
         <mxCell id="title" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=26;" value="02 — Group &amp; Interruptions" vertex="1">
           <mxGeometry height="45" width="1120" x="40" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="subtitle" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" value="DESIGN DRAFT • ฝูงไม่มีหัวหน้าและไม่วางแผนล้อม • แต่ละตัวรับรู้ข้อมูลของตัวเอง&#xa;เสียงปืนทำให้ไปตรวจต้นเสียง การเห็นมินจึงทำให้เริ่มตาม" vertex="1">
+        <mxCell id="subtitle" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" value="DESIGN DRAFT • ฝูงไม่มีหัวหน้าและไม่วางแผนล้อม • แต่ละตัวรับรู้ข้อมูลของตัวเอง&#10;เสียงปืนทำให้ไปตรวจต้นเสียง การเห็นมินจึงทำให้เริ่มตาม" vertex="1">
           <mxGeometry height="65" width="1120" x="40" y="70" as="geometry" />
         </mxCell>
         <mxCell id="noise" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="เสียงปืน / เสียงที่รับรู้ได้" vertex="1">
           <mxGeometry height="70" width="290" x="60" y="170" as="geometry" />
         </mxCell>
-        <mxCell id="investigate" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ไปตรวจต้นเสียง&#xa;ไม่รู้ตำแหน่งมินปัจจุบันอัตโนมัติ" vertex="1">
+        <mxCell id="investigate" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ไปตรวจต้นเสียง&#10;ไม่รู้ตำแหน่งมินปัจจุบันอัตโนมัติ" vertex="1">
           <mxGeometry height="95" width="290" x="60" y="290" as="geometry" />
         </mxCell>
         <mxCell id="seen" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;rhombus;rounded=0;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="เห็นมินแล้ว?" vertex="1">
           <mxGeometry height="100" width="260" x="75" y="435" as="geometry" />
         </mxCell>
-        <mxCell id="pursue" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#dae8fc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="แต่ละตัวตามมิน&#xa;เลี่ยงสิ่งกีดขวาง / ไม่ทะลุเพื่อน" vertex="1">
+        <mxCell id="pursue" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#dae8fc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="แต่ละตัวตามมิน&#10;เลี่ยงสิ่งกีดขวาง / ไม่ทะลุเพื่อน" vertex="1">
           <mxGeometry height="95" width="290" x="60" y="590" as="geometry" />
         </mxCell>
-        <mxCell id="notfound" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="SEARCH → RETURN&#xa;ค้นบริเวณต้นเสียง / ไม่พบตามเวลา&#xa;กลับวงจร Idle (หน้า 01)" vertex="1">
+        <mxCell id="notfound" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="SEARCH → RETURN&#10;ค้นบริเวณต้นเสียง / ไม่พบตามเวลา&#10;กลับวงจร Idle (หน้า 01)" vertex="1">
           <mxGeometry height="110" width="290" x="60" y="780" as="geometry" />
         </mxCell>
-        <mxCell id="eligible" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;rhombus;rounded=0;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="เข้าถึงได้ + ระยะถึง&#xa;พักครบ + มีสิทธิ์โจมตี?" vertex="1">
+        <mxCell id="eligible" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;rhombus;rounded=0;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="เข้าถึงได้ + ระยะถึง&#10;พักครบ + มีสิทธิ์โจมตี?" vertex="1">
           <mxGeometry height="110" width="285" x="440" y="590" as="geometry" />
         </mxCell>
-        <mxCell id="wait" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ตัวอื่นยังเคลื่อนกดดัน&#xa;ชะลอ / เลี่ยง / คลำเมื่อทางตัน&#xa;ไม่ทำวงล้อมสมบูรณ์" vertex="1">
+        <mxCell id="wait" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ตัวอื่นยังเคลื่อนกดดัน&#10;ชะลอ / เลี่ยง / คลำเมื่อทางตัน&#10;ไม่ทำวงล้อมสมบูรณ์" vertex="1">
           <mxGeometry height="110" width="285" x="440" y="780" as="geometry" />
         </mxCell>
-        <mxCell id="turn" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#f8cecc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="PREP → ATTACK → RECOVERY&#xa;เริ่มต้นทดลอง 1 ตัวเข้าตี&#xa;ค่อยทดสอบ 2 ตัวถ้าอ่านทัน" vertex="1">
+        <mxCell id="turn" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#f8cecc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="PREP → ATTACK → RECOVERY&#10;เริ่มต้นทดลอง 1 ตัวเข้าตี&#10;ค่อยทดสอบ 2 ตัวถ้าอ่านทัน" vertex="1">
           <mxGeometry height="115" width="310" x="820" y="585" as="geometry" />
         </mxCell>
-        <mxCell id="release" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="คืนสิทธิ์ให้ตัวอื่น&#xa;จบ / ยกเลิก / stagger / ตาย&#xa;ปิด AI / หมดเวลาเข้าประชิด" vertex="1">
+        <mxCell id="release" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="คืนสิทธิ์ให้ตัวอื่น&#10;จบ / ยกเลิก / stagger / ตาย&#10;ปิด AI / หมดเวลาเข้าประชิด" vertex="1">
           <mxGeometry height="105" width="310" x="820" y="785" as="geometry" />
         </mxCell>
         <mxCell id="bullet" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="ถูกยิงระหว่างมีชีวิต" vertex="1">
           <mxGeometry height="70" width="285" x="440" y="170" as="geometry" />
         </mxCell>
-        <mxCell id="hit" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="HIT REACTION&#xa;สะดุ้ง ณ จุดโดน / ผลักเล็กน้อย&#xa;หนักพอ → ยกเลิกท่าและตั้งหลัก" vertex="1">
+        <mxCell id="hit" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="HIT REACTION&#10;สะดุ้ง ณ จุดโดน / ผลักเล็กน้อย&#10;หนักพอ → ยกเลิกท่าและตั้งหลัก" vertex="1">
           <mxGeometry height="105" width="285" x="440" y="290" as="geometry" />
         </mxCell>
-        <mxCell id="dead" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#f8cecc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="HP หมด → DEATH&#xa;หยุด AI / คืนสิทธิ์ / ท่าตายหรือ Ragdoll&#xa;Loot และอายุศพตาม Profile" vertex="1">
+        <mxCell id="dead" parent="1" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#f8cecc;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="HP หมด → DEATH&#10;หยุด AI / คืนสิทธิ์ / ท่าตายหรือ Ragdoll&#10;Loot และอายุศพตาม Profile" vertex="1">
           <mxGeometry height="105" width="310" x="820" y="170" as="geometry" />
         </mxCell>
-        <mxCell id="rules" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="กติกาที่ต้องรักษา&#xa;• มีสัญญาณก่อนคว้า และช่องว่างหลังพลาด&#xa;• ไม่คว้าซ้อนจนผู้เล่นเสียการควบคุมต่อเนื่อง&#xa;• ฝูงกดดันจากตำแหน่งจริง ไม่แชร์ตำแหน่งมินแบบรู้ทุกอย่าง&#xa;• ความต่างเกิดจากทิศที่เข้ามา / ระยะ / จังหวะ ไม่ใช่สุ่มทุกเฟรม" vertex="1">
+        <mxCell id="rules" parent="1" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=16;" value="กติกาที่ต้องรักษา&#10;• มีสัญญาณก่อนคว้า และช่องว่างหลังพลาด&#10;• ไม่คว้าซ้อนจนผู้เล่นเสียการควบคุมต่อเนื่อง&#10;• ฝูงกดดันจากตำแหน่งจริง ไม่แชร์ตำแหน่งมินแบบรู้ทุกอย่าง&#10;• ความต่างเกิดจากทิศที่เข้ามา / ระยะ / จังหวะ ไม่ใช่สุ่มทุกเฟรม" vertex="1">
           <mxGeometry height="135" width="1070" x="60" y="930" as="geometry" />
         </mxCell>
         <mxCell id="a1" edge="1" parent="1" source="noise" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontFamily=Tahoma;fontSize=13;fontColor=#182230;labelBackgroundColor=#ffffff;" target="investigate" value="">
@@ -231,19 +232,19 @@
         <mxCell id="title" value="03 — Variants &amp; Sources" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=26;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="40" y="20" width="1120" height="45" />
         </mxCell>
-        <mxCell id="subtitle" value="The Lost • วงจรพื้นฐานร่วมกัน แต่ภัยที่ผู้เล่นต้องรับมือต่างกัน&#xa;รูปแบบย่อยด้านล่างเป็นข้อเสนอจากแชท Design ยังไม่ถือว่าได้อนุมัติหรือทำครบแล้ว" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" vertex="1" parent="1">
+        <mxCell id="subtitle" value="The Lost • วงจรพื้นฐานร่วมกัน แต่ภัยที่ผู้เล่นต้องรับมือต่างกัน&#10;รูปแบบย่อยด้านล่างเป็นข้อเสนอจากแชท Design ยังไม่ถือว่าได้อนุมัติหรือทำครบแล้ว" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="40" y="70" width="1120" height="65" />
         </mxCell>
         <mxCell id="base" value="พื้นฐานร่วม: เดินวน → รับรู้ → ค้นหา → ตาม → พยายามรั้งมิน → พัก / กลับวน" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#dae8fc;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="60" y="170" width="1080" height="80" />
         </mxCell>
-        <mxCell id="unarmed" value="มือเปล่า&#xa;&#xa;ตามเข้าระยะใกล้&#xa;ยกมือก่อนคว้า&#xa;คว้าพลาดแล้วเปิดช่องให้หนี&#xa;&#xa;รับมือ: รักษาระยะ / เคลื่อนข้าง" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="unarmed" value="มือเปล่า&#10;&#10;ตามเข้าระยะใกล้&#10;ยกมือก่อนคว้า&#10;คว้าพลาดแล้วเปิดช่องให้หนี&#10;&#10;รับมือ: รักษาระยะ / เคลื่อนข้าง" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="60" y="330" width="320" height="230" />
         </mxCell>
-        <mxCell id="stick" value="ถือไม้เท้า&#xa;&#xa;คลำทางขณะเดิน&#xa;กวาดไม้รั้งในระยะไกลกว่า&#xa;เตรียมท่านานให้เห็น&#xa;&#xa;รับมือ: รอพลาดแล้วผ่านด้านข้าง" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="stick" value="ถือไม้เท้า&#10;&#10;คลำทางขณะเดิน&#10;กวาดไม้รั้งในระยะไกลกว่า&#10;เตรียมท่านานให้เห็น&#10;&#10;รับมือ: รอพลาดแล้วผ่านด้านข้าง" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="440" y="330" width="320" height="230" />
         </mxCell>
-        <mxCell id="torch" value="ถือไฟฉาย&#xa;&#xa;หยุดตรวจและกวาดแสง&#xa;พบมิน → ร้องให้ตัวใกล้เคียงตรวจ&#xa;แล้วตามเข้าคว้า&#xa;&#xa;รับมือ: ใช้ฉากบัง / เปลี่ยนตำแหน่ง" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="torch" value="ถือไฟฉาย&#10;&#10;หยุดตรวจและกวาดแสง&#10;พบมิน → ร้องให้ตัวใกล้เคียงตรวจ&#10;แล้วตามเข้าคว้า&#10;&#10;รับมือ: ใช้ฉากบัง / เปลี่ยนตำแหน่ง" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#fff2cc;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="820" y="330" width="320" height="230" />
         </mxCell>
         <mxCell id="v0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontFamily=Tahoma;fontSize=13;fontColor=#182230;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="base" target="unarmed">
@@ -255,10 +256,10 @@
         <mxCell id="v2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontFamily=Tahoma;fontSize=13;fontColor=#182230;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="base" target="torch">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="scope" value="ขอบเขตต้นแบบ&#xa;เริ่มจาก The Lost มือเปล่า 1 แบบก่อน: เดินตาม / เตือนก่อนคว้า / พลาดแล้วพัก&#xa;ไม่จับล็อกยาวหรือบังคับ QTE ในต้นแบบแรก&#xa;สิ่งที่ติดตัวต้องเปลี่ยนวิธีรับมือจริง ไม่ใช่แค่เปลี่ยนโมเดล" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="scope" value="ขอบเขตต้นแบบ&#10;เริ่มจาก The Lost มือเปล่า 1 แบบก่อน: เดินตาม / เตือนก่อนคว้า / พลาดแล้วพัก&#10;ไม่จับล็อกยาวหรือบังคับ QTE ในต้นแบบแรก&#10;สิ่งที่ติดตัวต้องเปลี่ยนวิธีรับมือจริง ไม่ใช่แค่เปลี่ยนโมเดล" style="rounded=1;whiteSpace=wrap;html=0;align=center;verticalAlign=middle;spacing=10;fontFamily=Tahoma;strokeWidth=2;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#182230;fontSize=16;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="60" y="630" width="1080" height="130" />
         </mxCell>
-        <mxCell id="source" value="แหล่งที่มาและสถานะ&#xa;• Design - Documentation: การสนทนา 12 Oct 2026 เรื่องผู้สูญหาย, วงจรพฤติกรรม, Chaos และรูปแบบย่อย&#xa;• GDD : Project Midnight: โลกเครือหลงและฉากเปิด (เอกสารที่อ่านยังไม่มีวงจร The Lost ล่าสุด)&#xa;• Docs/EnemyGroupCombat.md และ EnemyController.cs: ใช้เทียบฐานเทคนิค ไม่ใช้แทนดีไซน์&#xa;&#xa;ผังจัดทำ 13 Oct 2026 • เป็นภาพรวมเป้าหมายสำหรับคุยและทำต้นแบบ&#xa;ยังไม่ได้แก้โค้ด AI ให้ตรงผัง หรือกำหนด timing / damage / จำนวนศัตรูขั้นสุดท้าย" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" vertex="1" parent="1">
+        <mxCell id="source" value="แหล่งที่มาและสถานะ&#10;• Design - Documentation: การสนทนา 12 Oct 2026 เรื่องผู้สูญหาย, วงจรพฤติกรรม, Chaos และรูปแบบย่อย&#10;• GDD : Project Midnight: โลกเครือหลงและฉากเปิด (เอกสารที่อ่านยังไม่มีวงจร The Lost ล่าสุด)&#10;• Docs/EnemyGroupCombat.md และ EnemyController.cs: ใช้เทียบฐานเทคนิค ไม่ใช้แทนดีไซน์&#10;&#10;ผังจัดทำ 13 Oct 2026 • เป็นภาพรวมเป้าหมายสำหรับคุยและทำต้นแบบ&#10;ยังไม่ได้แก้โค้ด AI ให้ตรงผัง หรือกำหนด timing / damage / จำนวนศัตรูขั้นสุดท้าย" style="text;whiteSpace=wrap;html=0;align=left;verticalAlign=middle;spacing=5;strokeColor=none;fillColor=#ffffff;strokeColor=#475569;fontColor=#182230;fontSize=14;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="60" y="790" width="1080" height="170" />
         </mxCell>
       </root>
@@ -272,49 +273,49 @@
         <mxCell id="TLdaZ_Ex-T1rYnWacwtL-1" parent="1" style="text;whiteSpace=wrap;html=0;fillColor=#ffffff;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="THE LOST — พฤติกรรม + Weapon Module" vertex="1">
           <mxGeometry height="55" width="1320" x="426" y="213.20001220703125" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-2" parent="1" style="text;whiteSpace=wrap;html=0;fillColor=#ffffff;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="ทุกตัวใช้ Base ร่วมกัน • อาวุธเปลี่ยนวิธีโจมตี • อาวุธหลุดแล้วกลับมือเปล่า&#xa;ผังเป้าหมายดีไซน์ — จำนวน / Damage / เวลา / Chance ปรับและทดสอบได้" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-2" parent="1" style="text;whiteSpace=wrap;html=0;fillColor=#ffffff;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="ทุกตัวใช้ Base ร่วมกัน • อาวุธเปลี่ยนวิธีโจมตี • อาวุธหลุดแล้วกลับมือเปล่า&#10;ผังเป้าหมายดีไซน์ — จำนวน / Damage / เวลา / Chance ปรับและทดสอบได้" vertex="1">
           <mxGeometry height="65" width="1320" x="426" y="273.20001220703125" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-3" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Idle / Patrol&#xa;เดินวน • คลำทาง" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-3" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Idle / Patrol&#10;เดินวน • คลำทาง" vertex="1">
           <mxGeometry height="60" width="240" x="676" y="363.20001220703125" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-4" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Detect&#xa;หันตรวจเสียง / การเคลื่อนไหว" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-4" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Detect&#10;หันตรวจเสียง / การเคลื่อนไหว" vertex="1">
           <mxGeometry height="65" width="240" x="676" y="453.20001220703125" as="geometry" />
         </mxCell>
         <mxCell id="TLdaZ_Ex-T1rYnWacwtL-5" parent="1" style="rhombus;whiteSpace=wrap;html=0;fillColor=#fff0cf;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="ยืนยันตำแหน่งมิน?" vertex="1">
           <mxGeometry height="85" width="200" x="696" y="548.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-6" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Search&#xa;ตรวจจุดเสียง / ตำแหน่งล่าสุด&#xa;ไม่รู้ตำแหน่งผ่านกำแพง" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-6" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Search&#10;ตรวจจุดเสียง / ตำแหน่งล่าสุด&#10;ไม่รู้ตำแหน่งผ่านกำแพง" vertex="1">
           <mxGeometry height="90" width="220" x="426" y="658.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-7" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Chase&#xa;ตามมิน / เข้าให้ถึงระยะ Module" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-7" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Chase&#10;ตามมิน / เข้าให้ถึงระยะ Module" vertex="1">
           <mxGeometry height="70" width="240" x="676" y="668.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-8" parent="1" style="rhombus;whiteSpace=wrap;html=0;fillColor=#fff0cf;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="ระยะ + ทางถึง + สิทธิ์โจมตี&#xa;พร้อมหรือยัง?" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-8" parent="1" style="rhombus;whiteSpace=wrap;html=0;fillColor=#fff0cf;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="ระยะ + ทางถึง + สิทธิ์โจมตี&#10;พร้อมหรือยัง?" vertex="1">
           <mxGeometry height="95" width="230" x="681" y="778.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-9" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Pressure / Approach&#xa;ยังตามและขยับกดดัน&#xa;ไม่ลงมือพร้อมกันทุกตัว" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-9" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Pressure / Approach&#10;ยังตามและขยับกดดัน&#10;ไม่ลงมือพร้อมกันทุกตัว" vertex="1">
           <mxGeometry height="95" width="235" x="946" y="773.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-10" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d7e9fa;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Preparation&#xa;เลือกท่าตามอาวุธที่ถือ&#xa;เตือนก่อนโจมตี" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-10" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d7e9fa;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Preparation&#10;เลือกท่าตามอาวุธที่ถือ&#10;เตือนก่อนโจมตี" vertex="1">
           <mxGeometry height="75" width="240" x="676" y="913.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-11" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8d9d5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Attack&#xa;ทำท่าและผลของ Module" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-11" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8d9d5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Attack&#10;ทำท่าและผลของ Module" vertex="1">
           <mxGeometry height="65" width="240" x="676" y="1023.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-12" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Recovery&#xa;พัก / ตั้งหลัก → ประเมินใหม่" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-12" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Recovery&#10;พัก / ตั้งหลัก → ประเมินใหม่" vertex="1">
           <mxGeometry height="60" width="240" x="676" y="1118.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-13" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Return&#xa;ค้นไม่พบ → กลับเส้นทางวน" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-13" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e8eef5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="Return&#10;ค้นไม่พบ → กลับเส้นทางวน" vertex="1">
           <mxGeometry height="65" width="220" x="426" y="788.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-14" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e3eef8;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="อาวุธที่ถือ = Attack Module&#xa;&#xa;มือเปล่า → ตี / จับรั้งสั้น&#xa;&#xa;มาเชเต้ + ท่อนไม้ → ท่ากวาดเดียวกัน&#xa;ระยะกว้างขึ้น • Damage แยก&#xa;&#xa;ขวานใหญ่ → เตรียมนาน / ฟันหนัก / พักนาน&#xa;&#xa;ก้อนหิน → ระยะไกล / เตรียมขว้าง&#xa;ข้อเสนอ: 1 ก้อน → หมดแล้วกลับ Base&#xa;&#xa;คบเพลิง → ท่าเดียวกับไม้ + ไฟลุก&#xa;ข้อเสนอ: 3 วิ • ต่อเวลา ไม่ซ้อนหลายชุด" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-14" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e3eef8;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="อาวุธที่ถือ = Attack Module&#10;&#10;มือเปล่า → ตี / จับรั้งสั้น&#10;&#10;มาเชเต้ + ท่อนไม้ → ท่ากวาดเดียวกัน&#10;ระยะกว้างขึ้น • Damage แยก&#10;&#10;ขวานใหญ่ → เตรียมนาน / ฟันหนัก / พักนาน&#10;&#10;ก้อนหิน → ระยะไกล / เตรียมขว้าง&#10;ข้อเสนอ: 1 ก้อน → หมดแล้วกลับ Base&#10;&#10;คบเพลิง → ท่าเดียวกับไม้ + ไฟลุก&#10;ข้อเสนอ: 3 วิ • ต่อเวลา ไม่ซ้อนหลายชุด" vertex="1">
           <mxGeometry height="420" width="470" x="1251" y="363.20001220703125" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-15" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8d9d5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="แทรกจากทุก State: ถูกโจมตี&#xa;ตรวจ Damage / Hit reaction / โอกาสอาวุธหลุด&#xa;&#xa;หลุด → ยกเลิกท่าอาวุธ → กลับ Base&#xa;ตั้งหลักก่อนโจมตีใหม่ • ไม่คว้าทันที&#xa;ตาย → จบพฤติกรรม / คืนสิทธิ์" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-15" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8d9d5;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="แทรกจากทุก State: ถูกโจมตี&#10;ตรวจ Damage / Hit reaction / โอกาสอาวุธหลุด&#10;&#10;หลุด → ยกเลิกท่าอาวุธ → กลับ Base&#10;ตั้งหลักก่อนโจมตีใหม่ • ไม่คว้าทันที&#10;ตาย → จบพฤติกรรม / คืนสิทธิ์" vertex="1">
           <mxGeometry height="160" width="470" x="1251" y="818.2000122070312" as="geometry" />
         </mxCell>
-        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-16" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e1eddf;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="กฎร่วมของกลุ่ม&#xa;เริ่มผู้เข้าตี 1 ตัว (ปรับได้) รวมการขว้าง&#xa;ตัวอื่นกดดัน / หลบกัน ไม่ทะลุเพื่อน&#xa;คืนสิทธิ์เมื่อจบ / สะดุด / ตาย / Timeout&#xa;ไม่จับ–ตีซ้อนจนมินขยับไม่ได้" vertex="1">
+        <mxCell id="TLdaZ_Ex-T1rYnWacwtL-16" parent="1" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#e1eddf;strokeColor=#64748b;fontColor=#142235;fontFamily=Noto Sans Thai;fontSize=16;align=center;verticalAlign=middle;spacing=8;" value="กฎร่วมของกลุ่ม&#10;เริ่มผู้เข้าตี 1 ตัว (ปรับได้) รวมการขว้าง&#10;ตัวอื่นกดดัน / หลบกัน ไม่ทะลุเพื่อน&#10;คืนสิทธิ์เมื่อจบ / สะดุด / ตาย / Timeout&#10;ไม่จับ–ตีซ้อนจนมินขยับไม่ได้" vertex="1">
           <mxGeometry height="150" width="470" x="1251" y="1013.2000122070312" as="geometry" />
         </mxCell>
         <mxCell id="TLdaZ_Ex-T1rYnWacwtL-17" edge="1" parent="1" source="TLdaZ_Ex-T1rYnWacwtL-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;strokeColor=#52657c;fontSize=14;labelBackgroundColor=#ffffff;" target="TLdaZ_Ex-T1rYnWacwtL-4" value="พบสิ่งผิดปกติ">
@@ -391,7 +392,7 @@
         <mxCell id="title" parent="1" value="THE LOST  /  RUSH &amp; PRESSURE CONTROL" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=30;fontColor=#102c44;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;fontStyle=1;shape=text;strokeColor=none;fillColor=none;align=left;spacing=0;" vertex="1">
           <mxGeometry x="40" y="26" width="1640" height="48" as="geometry" />
         </mxCell>
-        <mxCell id="subtitle" parent="1" value="Shared per player  |  Pressure ownership and attack permission are independent  |  16 Oct 2026" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#526577;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;shape=text;strokeColor=none;fillColor=none;align=left;spacing=0;" vertex="1">
+        <mxCell id="subtitle" parent="1" value="Shared per player  |  Pressure ownership and attack permission are independent  |  17 Oct 2026" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#526577;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;shape=text;strokeColor=none;fillColor=none;align=left;spacing=0;" vertex="1">
           <mxGeometry x="40" y="82" width="1640" height="38" as="geometry" />
         </mxCell>
         <mxCell id="lane1" parent="1" value="" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#f7f9fc;strokeColor=#e0e6ee;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
@@ -415,10 +416,10 @@
         <mxCell id="confirmed" parent="1" value="TARGET CONFIRMED&#10;Player is not escaping" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="90" y="250" width="420" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="initial" parent="1" value="INITIAL APPROACH&#10;All eligible distant enemies run&#10;until the pressure group fills" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="initial" parent="1" value="RANDOM INCOMING RUNNERS&#10;55% willing per enemy / once per round&#10;Stagger starts 0.3-0.7 s; shared cap 3" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="90" y="360" width="420" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="admit" parent="1" value="ENTER THE ENGAGEMENT RADIUS&#10;Nearest eligible enemies claim places&#10;Default: 4.5 m / maximum 3 owners" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="admit" parent="1" value="FIRST ELIGIBLE ARRIVAL CLAIMS&#10;Walkers and runners may claim a place&#10;Within 4.5 m / maximum 3 owners" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="90" y="520" width="420" height="96" as="geometry" />
         </mxCell>
         <mxCell id="established" parent="1" value="PRESSURE GROUP ESTABLISHED&#10;Owners keep the right to pursue&#10;Other enemies walk / wait outside" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#d9ece5;strokeColor=#79ab94;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
@@ -439,10 +440,10 @@
         <mxCell id="replacement-wait" parent="1" value="REPLACEMENT INTERVAL&#10;Wait 0.6 s between replacements&#10;Released owner rests for 2 s" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="650" y="574" width="420" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="nearest" parent="1" value="NEAREST ELIGIBLE REPLACEMENT&#10;Alive, active and able to reach the target&#10;Admit one vacancy at a time" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="nearest" parent="1" value="FIRST ARRIVING REPLACEMENT&#10;Must enter the radius on a valid path&#10;Admit one vacancy at a time" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#fff0df;strokeColor=#d2a272;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="650" y="730" width="420" height="112" as="geometry" />
         </mxCell>
-        <mxCell id="refill" parent="1" value="REJOIN THE PRESSURE GROUP&#10;Fill only the vacant places&#10;No new all-enemy rush wave" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#d9ece5;strokeColor=#79ab94;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="refill" parent="1" value="REJOIN THE PRESSURE GROUP&#10;Fill only the vacant places&#10;No distant runner reserves pressure" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#d9ece5;strokeColor=#79ab94;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="650" y="900" width="420" height="90" as="geometry" />
         </mxCell>
         <mxCell id="stall-note" parent="1" value="Stall timeout applies to active pursuit.&#10;Do not expire deliberate circling,&#10;attacking, recovery or an escape pause." style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#ffffff;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
@@ -457,16 +458,16 @@
         <mxCell id="resume-wait" parent="1" value="SPRINTING STOPS&#10;Wait 0.8 s before running resumes&#10;Keep paused while sprinting continues" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#e3f4ee;strokeColor=#7eaf9e;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="1210" y="572" width="420" height="96" as="geometry" />
         </mxCell>
-        <mxCell id="owners" parent="1" value="CLEAR OLD PRESSURE OWNERS&#10;Reset the established group&#10;No reentry penalty for this reset" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=19;fontColor=#15283b;fillColor=#fff5d6;strokeColor=#ccb16c;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="owners" parent="1" value="CLEAR OLD PRESSURE OWNERS&#10;Clear runners / arrivals / random choices&#10;No reentry penalty for this reset" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=19;fontColor=#15283b;fillColor=#fff5d6;strokeColor=#ccb16c;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="1210" y="740" width="420" height="120" as="geometry" />
         </mxCell>
         <mxCell id="escape-note" parent="1" value="Keep walking; current attacks may finish.&#10;This opens a chance to escape;&#10;existing attacks can still hit." style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#ffffff;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="1190" y="1070" width="460" height="78" as="geometry" />
         </mxCell>
-        <mxCell id="footer" parent="1" value="SHARED COMBAT SETTINGS  /  System Modification → Enemy Lab → Shared Combat Settings&#10;Owners: 3   •   Engagement: 4.5 m   •   Replacement: 0.6 s   •   Reentry: 2 s   •   Pursuit stall: 2 s&#10;Pause Rush While Escaping: ON   •   Escape resume: 0.8 s   •   Attack Start Interval: 0.8 s" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#eef3f9;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="footer" parent="1" value="SHARED COMBAT SETTINGS  /  System Modification → Enemy Lab → Shared Combat Settings&#10;Shared cap: 3   •   Radius: 4.5 m   •   Run chance: 55%   •   Start stagger: 0.3-0.7 s&#10;Replacement: 0.6 s   •   Reentry: 2 s   •   Escape resume: 0.8 s   •   Attack start: 0.8 s" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=18;fontColor=#15283b;fillColor=#eef3f9;strokeColor=#d9e1ea;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="40" y="1210" width="1640" height="112" as="geometry" />
         </mxCell>
-        <mxCell id="restart" parent="1" value="RESTART INITIAL APPROACH&#10;All eligible distant enemies rush&#10;Claim fresh slots on entering the radius" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
+        <mxCell id="restart" parent="1" value="RESTART RANDOM APPROACH&#10;Reroll willingness / stagger new runners&#10;First arrivals claim new pressure slots" style="rounded=1;whiteSpace=wrap;html=0;fontFamily=Arial;fontSize=17;fontColor=#15283b;fillColor=#e7f1ff;strokeColor=#8aabd6;strokeWidth=1.5;align=center;verticalAlign=middle;spacing=10;" vertex="1">
           <mxGeometry x="1210" y="950" width="420" height="84" as="geometry" />
         </mxCell>
         <mxCell id="a" edge="1" parent="1" source="confirmed" target="initial" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
@@ -512,6 +513,337 @@
         </mxCell>
         <mxCell id="m" edge="1" parent="1" source="owners" target="restart" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#64748b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=Arial;fontSize=15;fontColor=#526577;labelBackgroundColor=#f7f9fc;">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="TH 01 ภาพรวมพฤติกรรม" id="thai-clean-1">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1220" pageHeight="1440">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="TH 01 ภาพรวมพฤติกรรม" style="text;html=0;fontFamily=Tahoma;fontSize=26;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge0" value="ตรวจต่อเนื่อง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="idle" target="detect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" value="เสียง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="detect" target="search">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220.0" y="360.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" value="ค้นหาเสร็จ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="search" target="searchend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" value="เห็นผู้เล่น" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="detect" target="chase">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" value="เข้ารอบต่อสู้" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="chase" target="permission">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" value="ยังไม่ได้" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="permission" target="pressure">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980.0" y="720.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" value="รอ / พบโอกาสใหม่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="pressure" target="retry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge7" value="ได้สิทธิ์" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="permission" target="attack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge8" value="จบการพยายามโจมตี" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="attack" target="recover">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge9" value="ฟื้นตัว" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="recover" target="return">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="idle" value="Idle / Patrol&#10;ยืนรอหรือเดินตามเส้นทาง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="detect" value="Detect: ตรวจพบผู้เล่นหรือเสียง?&#10;ยืนยันเป้าหมายก่อนเข้าต่อสู้&#10;Aggressive ข้ามการค้นหาได้" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="310" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="search" value="Search: ไปตำแหน่งที่เห็น/ได้ยินล่าสุด&#10;พบอีกครั้ง → เข้ารอบต่อสู้&#10;หาไม่พบครบเวลา → กลับ Patrol" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="490" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="searchend" value="กลับไปประเมิน Detect ใหม่&#10;[จุดวนรอบ A]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="670" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="chase" value="Chase / Approach / Rush&#10;เข้าหาผู้เล่นและประเมินโอกาส&#10;ขอสิทธิ์ P / A ตามกติกาหน้า 2" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="490" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="permission" value="ได้รับ attack turn A+ แล้ว?&#10;และพ้น shared start interval&#10;เป้าหมายรับการโจมตีได้" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="670" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="pressure" value="Pressure: ยังรอสิทธิ์&#10;มองผู้เล่น / เดินวน / ถอยได้จำกัด&#10;ไม่ถอยกลับวงนอกหลังโดนยิง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="retry" value="กลับมาประเมินสิทธิ์และโอกาสใหม่&#10;[จุดวนรอบ B · ดูหน้า 2]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="attack" value="เลือกการโจมตีตามระยะ&#10;ระยะใกล้ → Preparation / Attack&#10;ระยะกลาง → Charge ถ้า Profile เปิด&#10;รายละเอียด Charge อยู่หน้า 4" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8cecc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="recover" value="Recovery&#10;พักหลังตี / พลาด / รอ projectile&#10;ไม่แย่ง turn จากท่าที่เริ่มแล้ว" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="return" value="คืน attack turn แล้วประเมินใหม่&#10;[จุดวนรอบ B · เข้ารอบต่อสู้]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1210" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="events" value="เหตุการณ์แทรกเกิดได้ทุกช่วง&#10;โดนยิง / ถูกขัดจังหวะ / HP หมด&#10;ดูเส้นทางแยกในหน้า 4" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="TH 02 การแจกสิทธิ์กลุ่ม" id="thai-clean-2">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1220" pageHeight="1440">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="TH 02 การแจกสิทธิ์กลุ่ม" style="text;html=0;fontFamily=Tahoma;fontSize=26;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge0" value="ตรวจโอกาส" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="move" target="front">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" value="มีโอกาส" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="front" target="intercept">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980.0" y="360.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" value="ได้รับสิทธิ์" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="intercept" target="frontturn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" value="เข้าประชิด" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="frontturn" target="frontreturn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" value="ไม่มีโอกาสสวน" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="front" target="arrival">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" value="เข้าระยะ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="arrival" target="slot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" value="ยังเต็ม" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="slot" target="wait">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220.0" y="720.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge7" value="รอรอบถัดไป" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="wait" target="waitreturn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge8" value="มีที่ว่าง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="slot" target="owner">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge9" value="ขอสิทธิ์ตี" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="owner" target="attackturn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge10" value="พร้อม" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="attackturn" target="combat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="move" value="ประเมินตำแหน่งและการเคลื่อนที่ผู้เล่น&#10;ใช้ทิศเดินจริง ไม่ใช้ทิศกล้อง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="front" value="มีโอกาสสวนจากด้านหน้าหรือไม่?&#10;อยู่ในกรวย 100° / ระยะ 6 เมตร&#10;เห็นผู้เล่น มีทางครบ ไม่ติด cooldown" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="310" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="intercept" value="เลือกตัวด้านหน้าที่ใกล้และพร้อมที่สุด&#10;รับ P+ ทีละคนตาม replacement interval&#10;ถ้าเต็ม → แทนคนด้านหลังที่ยังไม่เริ่มตี" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="490" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="frontturn" value="FRONT P+ เข้าประชิดได้ทันที&#10;ขอ A+ ก่อนถึงระยะตีได้&#10;ยังคุมเพดานกลุ่มและเวลาเริ่มโจมตี" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="670" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="frontreturn" value="ไปเลือกการโจมตี · หน้า 1&#10;ผ่านตัวไปแล้ว → ช่วง Escape เดินตาม&#10;ไม่วิ่งไล่จากด้านหลังตลอด" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="arrival" value="การเข้าหาปกติ&#10;สุ่มผู้ยอมวิ่ง / เริ่มแบบเหลื่อมเวลา&#10;คนเดินถึงก่อนก็รับ P+ ได้" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="490" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="slot" value="มี pressure slot ว่างหรือไม่?&#10;ผู้สมัครต้องถึงระยะและมีทางเข้าถึง&#10;เรียงตัวพร้อมใกล้ก่อน / ตามเวลามาถึง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="670" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="wait" value="ไม่มีที่ว่าง → Pressure รอ&#10;ยังหาโอกาสใหม่ได้&#10;ไม่เพิ่มจำนวนเจ้าของเกิน cap" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="waitreturn" value="กลับจุดวนรอบ B&#10;ประเมินสิทธิ์ใหม่ตามจังหวะเดิม" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="owner" value="มีที่ว่าง → รับ P+&#10;สิทธิ์เข้าประชิดยังไม่ใช่สิทธิ์ตี&#10;ต้องขอ attack turn A+ แยก" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="attackturn" value="A+ ผ่านแล้ว → รอ start interval&#10;ไม่ขัด Preparation / Charge / Attack&#10;อ่านป้าย P+ / A+ / FRONT ใน gameplay" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="combat" value="ไปเลือกการโจมตี · หน้า 1&#10;[จุดวนรอบ B]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1210" width="340" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="TH 03 การหนีและส่งต่อสิทธิ์" id="thai-clean-3">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1220" pageHeight="1440">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="TH 03 การหนีและส่งต่อสิทธิ์" style="text;html=0;fontFamily=Tahoma;fontSize=26;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge0" value="หนีจริง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="sprint" target="slow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" value="หยุดวิ่ง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="slow" target="settle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" value="ครบเวลา" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="settle" target="reset">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" value="รอบใหม่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="reset" target="sprintend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" value="วัดระยะห่าง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="walk" target="gap">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" value="ครบเงื่อนไข" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="gap" target="yield">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" value="ส่งต่อทีละตัว" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="yield" target="replace">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge7" value="ได้เจ้าของใหม่" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="replace" target="walkend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sprint" value="เส้นทาง A: sprint หนีออกห่าง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="160" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="slow" value="คนด้านหลังค่อยๆ ลดเป็นเดินตาม&#10;ตัวด้านหน้าที่ได้สิทธิ์ยังสวนเข้ามาได้&#10;ท่าที่เริ่มแล้วทำต่อจนจบ" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="160" y="330" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="settle" value="หยุด sprint ครบ settle delay&#10;ช่วงรอเดินตามได้&#10;วิ่งอีกครั้ง → เริ่มจับเวลาใหม่" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="160" y="530" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="reset" value="ล้างเจ้าของเดิม / สุ่มผู้ยอมวิ่งใหม่&#10;เริ่มทีละคนตามช่วงเหลื่อมเวลา&#10;ไม่ให้ทุกตัววิ่งกรูพร้อมกัน" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="160" y="730" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="sprintend" value="กลับประเมินโอกาส · หน้า 2&#10;[จุดวนรอบ B]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="160" y="930" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="walk" value="เส้นทาง B: เดินออกห่าง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="730" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="gap" value="คนถือสิทธิ์ตามไม่ทันต่อเนื่อง?&#10;นอกวงประชิด / ยังไม่เริ่มโจมตี&#10;2.5 วินาที + ระยะเพิ่มอย่างน้อย 0.5 ม.&#10;ยังไม่ครบ → ถือสิทธิ์ต่อ" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="730" y="330" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="yield" value="ครบเงื่อนไข → คืน P ทีละคน&#10;คนเดิมติด reentry cooldown&#10;ไม่รีเซ็ตกลุ่มและไม่เปลี่ยนสปีดผู้เล่น" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="730" y="530" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="replace" value="เลือกตัวใกล้ที่พร้อมแทน&#10;ตัวประชิดได้ลำดับก่อน&#10;คุมจำนวนและ replacement interval&#10;ไม่แย่งจากท่าที่เริ่มแล้ว" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="730" y="730" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="walkend" value="กลับประเมินโอกาส · หน้า 2&#10;[จุดวนรอบ B]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="730" y="930" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="budget" value="กติกา Pressure ร่วมกัน&#10;งบเดินถอยเริ่มต้น 0.6 ม. ต่อช่วง&#10;หมดงบ → เดินด้านข้าง / หยุดที่ระยะเคลียร์ตัว&#10;ไม่เดินถอยรักษาวงอย่างไม่สิ้นสุด" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1160" width="340" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="TH 04 Charge และเหตุการณ์แทรก" id="thai-clean-4">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1220" pageHeight="1460">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="TH 04 Charge และเหตุการณ์แทรก" style="text;html=0;fontFamily=Tahoma;fontSize=26;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge0" value="พร้อม" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ready" target="prep">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" value="จบเตือน" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="prep" target="run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" value="ถึงระยะ / จบวิ่ง" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="run" target="hit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" value="ไม่โดน" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="hit" target="miss">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220.0" y="720.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" value="ฟื้นตัว" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="miss" target="missend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" value="damage สำเร็จ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="hit" target="hold">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" value="จบล็อก" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="hold" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge7" value="พ้น grace" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="end" target="return">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge8" value="ขัดจังหวะ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="event" target="reaction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge9" value="ฟื้นตัว" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="reaction" target="recoverhit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge10" value="จบ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;strokeColor=#526273;strokeWidth=2;fontFamily=Tahoma;fontSize=13;labelBackgroundColor=#fafbfc;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="death" target="cleanup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ready" value="Charge ของแต่ละ Profile&#10;เปิดใช้งาน / อยู่ระยะกลาง / มี A+&#10;พ้น start interval / คนถือหินไม่ Charge" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="prep" value="Charge Preparation&#10;เล่นท่าเฉพาะ / หันตามเป้าหมาย&#10;เตรียมหรือวิ่ง Charge ครั้งละ 1 ตัว" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="310" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="run" value="Charge Run&#10;บันทึกจุดหมายตอนจบการเตรียม&#10;วิ่งแบบมีเวลาสูงสุด ไม่ homing ตลอด" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="490" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="hit" value="Charge Attack โดนจริงหรือไม่?&#10;ถึงระยะจึงเล่นท่าโจมตี&#10;ตรวจระยะ มุม สิ่งกีดขวาง และ hit protection" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8cecc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="670" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="miss" value="พลาด / ทางตัน / หลบพ้น / หมดเวลา&#10;พักหลังพลาด แล้วคืน turn&#10;รอ cooldown ของตัวเอง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="missend" value="กลับรอบต่อสู้ · หน้า 1&#10;[จุดวนรอบ B]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dae8fc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="hold" value="โดนจริง → onChargeHit&#10;ล็อกการเดินตามค่า Shared Combat&#10;กันเริ่มโจมตีและ hit ซ้อนจากตัวอื่น&#10;กล้องไม่ถูกล็อกอัตโนมัติ" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8cecc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="850" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="end" value="EndChargeLock() หรือหมดเวลาสำรอง&#10;เว้น grace หลังล็อก (เริ่มต้น 1 วินาที)&#10;ไม่ให้ event ที่ไม่จบทำให้ล็อกค้าง" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="return" value="กลับมาแจก / ขอ attack turn&#10;[จุดวนรอบ B · หน้า 1]" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#d5e8d4;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1210" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="event" value="เหตุการณ์แทรก: โดนยิง&#10;เกิดได้จากทุกช่วง ไม่ต้องรอ flow หลัก" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="130" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="reaction" value="HitReaction: stagger / push&#10;ยกเลิกท่าที่ขัดจังหวะได้ / คืนสิทธิ์&#10;คนอื่นแทนตามกติกากลุ่ม" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#ffe6cc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="310" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="recoverhit" value="ฟื้นตัว → Pressure ใกล้ตำแหน่งเดิม&#10;รอ cooldown / โอกาสรับสิทธิ์ใหม่&#10;กลับจุดวนรอบ B" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="490" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="death" value="เหตุการณ์แทรก: HP หมด&#10;Dead: ยกเลิกท่าและคืนสิทธิ์" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#f8cecc;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1030" width="340" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="cleanup" value="Ragdoll / Drop / Cleanup&#10;จบการทำงานของตัวนี้" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#eeeeee;strokeColor=#607080;fontFamily=Tahoma;fontSize=16;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1210" width="340" height="100" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

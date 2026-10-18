@@ -7,12 +7,44 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
     public enum PatrolMode { Random, Loop, PingPong }
-    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure, Detect, Preparation, Recovery, Approach, Retreat, ChaseBurst, Rush, EscapeWalk }
+    public enum EnemyState { Idle, Patrol, Waiting, Chase, Search, Attack, Dead, HitReaction, Pressure, Detect, Preparation, Recovery, Approach, Retreat, ChaseBurst, Rush, EscapeWalk, ChargePreparation, Charge }
+    private float nextChargeTime;
+    private float nextChargeDecision;
+    private bool choseCharge;
+    private bool chargeAttack;
+    private readonly EnemyStaggerMeter staggerMeter = new EnemyStaggerMeter();
+    public float AccumulatedImpact => staggerMeter.Impact;
+    public string LastImpactResult => staggerMeter.LastResult;
+    private float createdAt;
+    public float SpawnAge => Mathf.Max(0, Time.time - createdAt);
+    public float LastRootJumpDistance { get; private set; }
+    private float lastRootJumpTime = -100;
+    public bool HasRecentRootJump => Time.time - lastRootJumpTime < 3;
+    public string SpawnSourceName { get; private set; } = "Scene / manual";
+    public void RecordSpawnSource(EnemySpawnPoint point) => SpawnSourceName = point != null ? point.name : "Scene / manual";
+
+    public static void PrepareAnimatedVisibility(GameObject root)
+    {
+        // The NavMesh root and procedural hit bones keep moving off camera.
+        // Do not let skinning/animation retain an old pose/bounds until re-entry.
+        foreach (var animation in root.GetComponentsInChildren<Animator>(true))
+            animation.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            skin.updateWhenOffscreen = true;
+    }
+    private float retreatDeceleration;
+    private bool easingRetreat;
+    [Tooltip("Confirmed charge contact. Hook bite or camera events here. Player input/camera hold and group protection are configured in Shared Combat.")]
+    public UnityEngine.Events.UnityEvent onChargeHit = new UnityEngine.Events.UnityEvent();
     private float chasePhaseDeadline;
     private bool chaseRhythmActive;
     public bool IsChaseBoosting { get; private set; }
     private float pressureWaitTime, retreatUntil;
     private bool pressureOrbitActive;
+    private float pressureHoldRadius, pressureRetreatRemaining;
+    private Vector3 lastPressurePosition;
+    public bool IsCloseDefenseCandidate => playerDetected && player != null && !isAttacking &&
+        Vector3.ProjectOnPlane(player.position - transform.position, Vector3.up).magnitude <= AttackReach + .25f && HasClearSight();
     private float nextPressureDirectionTime;
     public int PressureOrbitDirection { get; private set; } = 1;
     private bool aggressionOverrideSet, aggressionOverride;
@@ -49,7 +81,7 @@ public class EnemyController : MonoBehaviour
     public float AttackReach => CurrentWeapon != null ? Mathf.Max(.1f, CurrentWeapon.range) : enemyData != null ? enemyData.attackRange : 0;
     public enum ApproachStyle { Direct, Flank, Burst }
     public ApproachStyle CurrentApproach { get; private set; }
-    public bool HasAttackTurn => enemyData != null && (!EnemyCombatSettings.RushEnabled || HasRushSlot) &&
+    public bool HasAttackTurn => enemyData != null && IsPatrolRunning && !IsDead && player != null &&
         (!enemyData.coordinateAttacks || EnemyAttackCoordinator.HasTurn(this, player));
     public float AttackStartDelay => EnemyAttackCoordinator.StartDelay(ResolveTargetTransform(player));
     private float RushStopDistance => Mathf.Max(AttackReach, enemyData != null ? enemyData.chaseSlowdownDistance : 0);
@@ -84,7 +116,7 @@ public class EnemyController : MonoBehaviour
     public EnemyState CurrentState { get; private set; }
     private void OnGUI()
     {
-        if (!EnemyStateDisplay.Available || !EnemyStateDisplay.Enabled) return;
+        if (!EnemyStateDisplay.Available || (!EnemyStateDisplay.Enabled && !EnemyStateDisplay.ShowAttackRanges)) return;
         EnemyStateDisplay.DrawAll(activeEnemies);
     }
     public string GameplayDebugState
@@ -229,13 +261,23 @@ public class EnemyController : MonoBehaviour
     {
         ApplyCrowdSeparation(Time.deltaTime);
         float deltaTime = Time.deltaTime;
+        if (!IsDead && SpawnAge > .25f && deltaTime > 0)
+        {
+            float distance = Vector3.Distance(transform.position, lastAnimationPosition);
+            float speed = Mathf.Max(agent != null ? agent.speed : 0, ChargeSettings != null ? ChargeSettings.speed : 0);
+            if (distance > Mathf.Max(1, speed * deltaTime * 3))
+            {
+                LastRootJumpDistance = distance; lastRootJumpTime = Time.time;
+                if (EnemyStateDisplay.Enabled) Debug.LogWarning("Enemy root jump: " + name + " moved " + distance.ToString("0.00") + "m in one frame; source=" + SpawnSourceName, this);
+            }
+        }
         if (deltaTime > 0 && !IsDead)
         {
             // Include NavMesh avoidance and separation; exclude forced knockback.
-            Vector3 velocity = IsPatrolRunning && !isAttacking && staggerRemaining <= 0 && knockbackRemaining <= 0 && AgentReady && !agent.isStopped
+            Vector3 velocity = IsPatrolRunning && (!isAttacking || CurrentState == EnemyState.Charge || CurrentState == EnemyState.Preparation && !agent.isStopped) && staggerRemaining <= 0 && knockbackRemaining <= 0 && AgentReady && !agent.isStopped
                 ? (transform.position - lastAnimationPosition) / deltaTime : Vector3.zero;
             if (velocity.sqrMagnitude > 10000) velocity = Vector3.zero; // Warp/teleport is not locomotion.
-            locomotionAnimator?.Update(velocity, isAttacking && CurrentState == EnemyState.Attack, deltaTime, CurrentWeapon);
+            if (!HasChargeRunAnimation) locomotionAnimator?.Update(velocity, isAttacking && CurrentState == EnemyState.Attack, deltaTime, CurrentWeapon);
         }
         lastAnimationPosition = transform.position;
     }
@@ -349,6 +391,7 @@ public class EnemyController : MonoBehaviour
     }
     private void Awake()
     {
+        createdAt = Time.time;
         approachPath = new NavMeshPath();
         IsPatrolRunning = startPatrolOnStart;
         agent = GetComponent<NavMeshAgent>();
@@ -369,6 +412,7 @@ public class EnemyController : MonoBehaviour
         if (patrolRoute != null) { patrolPoints = patrolRoute.points != null ? (Transform[])patrolRoute.points.Clone() : new Transform[0]; patrolMode = patrolRoute.mode; }
         // NavMeshAgent owns movement; animation must not also move the root.
         if (animator != null) animator.applyRootMotion = false;
+        PrepareAnimatedVisibility(gameObject);
         if ((useRagdoll || enableHitReaction) && GetComponentsInChildren<Joint>().Length == 0)
         {
             if (!EnemyRagdollBuilder.Build(animator))
@@ -411,6 +455,7 @@ public class EnemyController : MonoBehaviour
         ResetChaseRhythm();
         ReleaseAttackTurn();
         IsPatrolRunning = false;
+        choseCharge = chargeAttack = easingRetreat = false;
         StopAllCoroutines(); // Only attack routines run while this enemy is alive.
         attackRoutine = null;
         staggerRemaining = knockbackRemaining = 0f;
@@ -437,9 +482,10 @@ public class EnemyController : MonoBehaviour
             return;
         }
         attackTimer = Mathf.Max(0f, attackTimer - Time.deltaTime);
+        if (enemyData != null) staggerMeter.Tick(enemyData.actionBreak, Time.time);
         if (enemyData == null || !AgentReady) { EnemyRushCoordinator.Release(this); return; }
         agent.updateRotation = true;
-        agent.stoppingDistance = Mathf.Max(0, enemyData.stoppingDistance);
+        agent.stoppingDistance = isAttacking && CurrentState == EnemyState.Attack ? 0 : Mathf.Max(0, enemyData.stoppingDistance);
         if (staggerRemaining > 0f || knockbackRemaining > 0f)
         {
             EnemyRushCoordinator.Release(this);
@@ -467,7 +513,13 @@ public class EnemyController : MonoBehaviour
             pressureOrbitActive = false;
             ResetChaseRhythm();
             agent.isStopped = false;
-            agent.speed = Mathf.Max(0, enemyData.walkSpeed);
+            if (!easingRetreat)
+            {
+                easingRetreat = true;
+                float duration = .8f;
+                retreatDeceleration = Mathf.Max(.1f, (agent.speed - Mathf.Max(0, enemyData.walkSpeed)) / Mathf.Max(.05f, duration));
+            }
+            agent.speed = Mathf.MoveTowards(agent.speed, Mathf.Max(0, enemyData.walkSpeed), retreatDeceleration * Time.deltaTime);
             Patrol();
             if (CurrentState == EnemyState.Patrol) CurrentState = EnemyState.Retreat;
             return;
@@ -509,27 +561,11 @@ public class EnemyController : MonoBehaviour
         }
 
         if (!CanHoldPressure) EnemyRushCoordinator.Release(this);
+        if (!isAttacking && !InChargeBand) choseCharge = false;
         EnemyRushCoordinator.Tick(RushTarget);
-        if (!isAttacking && isAlert && EnemyRushCoordinator.IsEscapePaused(RushTarget))
-        {
-            // Escape suspends running, not pursuit. Owners and waiters continue
-            // walking without starting another rush or a new attack.
-            if (EnemyAttackCoordinator.HasTurn(this, player)) ReleaseAttackTurn();
-            pressureOrbitActive = false;
-            pressureWaitTime = 0;
-            ResetChaseRhythm();
-            agent.isStopped = false;
-            agent.speed = Mathf.Max(0, enemyData.walkSpeed);
-            CurrentState = EnemyState.EscapeWalk;
-            if (!agent.pathPending && (!agent.hasPath || Time.time >= nextChaseRepath))
-            {
-                nextChaseRepath = Time.time + Mathf.Max(.05f, enemyData.chaseRepathInterval);
-                SetChaseDestination();
-            }
-            PlayLocomotion(agent.pathPending || agent.remainingDistance > agent.stoppingDistance + .1f);
-            return;
-        }
-        UpdateApproachAndTurn();
+        easingRetreat = false;
+        UpdateApproachDecision();
+        UpdateCombatTurn();
         if (isAttacking) { pressureOrbitActive = false; ResetChaseRhythm(); return; }
         agent.isStopped = false;
         if (isAlert)
@@ -539,13 +575,32 @@ public class EnemyController : MonoBehaviour
             if (playerDetected && enemyData.coordinateAttacks)
                 CurrentState = HasAttackTurn ? targetDistance <= Mathf.Max(AttackReach, enemyData.chaseSlowdownDistance) ? EnemyState.Approach : EnemyState.Chase :
                     targetDistance <= Mathf.Max(enemyData.engagementDistance, PressureRadius + 1f) ? EnemyState.Pressure : EnemyState.Chase;
-            if (EnemyCombatSettings.RushEnabled && playerDetected && !HasRushSlot)
+            if (EnemyCombatSettings.RushEnabled && playerDetected && !HasRushSlot && !HasAttackTurn)
                 CurrentState = WaitingForPressureSlot && targetDistance <= Mathf.Max(enemyData.engagementDistance, PressureRadius + 1f)
                     ? EnemyState.Pressure : EnemyState.Chase;
             if (IsRushRunning) CurrentState = EnemyState.Rush;
             UpdateMovementSpeed();
             if (CurrentState == EnemyState.Pressure)
             {
+                if (!pressureOrbitActive)
+                {
+                    // Losing a turn changes permission, not the enemy's position.
+                    // Keep an inner arrival/recovery instead of backing out to
+                    // the outer waiting ring. Hold this radius for this orbit.
+                    float distance = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up).magnitude;
+                    pressureHoldRadius = Mathf.Max(agent.radius + .5f,
+                        Mathf.Min(RequestedPressureRadius, distance));
+                    pressureRetreatRemaining = EnemyCombatSettings.RetreatBudget;
+                    lastPressurePosition = transform.position;
+                    nextChaseRepath = 0;
+                }
+                else
+                {
+                    Vector3 outward = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up).normalized;
+                    pressureRetreatRemaining = Mathf.Max(0, pressureRetreatRemaining - Mathf.Max(0,
+                        Vector3.Dot(transform.position - lastPressurePosition, outward)));
+                    lastPressurePosition = transform.position;
+                }
                 UpdatePressureDirection();
                 pressureWaitTime += Time.deltaTime;
                 if (!HasRushSlot && !IsAggressive && enemyData.pressureWaitTimeout > 0 && pressureWaitTime >= enemyData.pressureWaitTimeout)
@@ -570,6 +625,11 @@ public class EnemyController : MonoBehaviour
                     transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facing), Mathf.Max(1, enemyData.turnSpeed) * Time.deltaTime);
             }
             else { pressureWaitTime = 0; pressureOrbitActive = false; }
+            if (CanStartCharge(targetDistance))
+            {
+                attackRoutine = StartCoroutine(PerformCharge());
+                return;
+            }
             // Attack needs reach and clear sight, not the patrol vision cone.
             // A nearby player can be beside the enemy after an avoidance manoeuvre.
             if (attackTimer <= 0f && InAttackRange() && HasAttackTurn && TargetAvailableForLostHit())
@@ -616,6 +676,7 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlert || !playerDetected || player == null) ResetChaseRhythm();
         float speed = Mathf.Max(0f, enemyData.walkSpeed);
+        bool grantedApproach = false;
         if (isAlert && playerDetected && player != null)
         {
             float distance = Vector3.Distance(transform.position, player.position);
@@ -627,9 +688,12 @@ public class EnemyController : MonoBehaviour
             if (rushMode)
             {
                 ResetChaseRhythm();
+                grantedApproach = HasRushSlot || HasAttackTurn;
+                // Granted attackers keep one approach speed throughout the close
+                // zone; do not dip to Patrol Walk Speed at its outer boundary.
                 speed = IsRushRunning ? Mathf.Max(0, enemyData.chaseSpeed) * Mathf.Max(1, enemyData.burstSpeedMultiplier) :
-                    distance > outer ? Mathf.Max(0, enemyData.walkSpeed) :
-                    Mathf.Lerp(Mathf.Max(0, enemyData.closeApproachSpeed), Mathf.Max(0, enemyData.walkSpeed), blend);
+                    grantedApproach && distance <= outer ? Mathf.Max(0, enemyData.closeApproachSpeed) :
+                    Mathf.Max(0, enemyData.walkSpeed);
             }
             else if (rhythm)
             {
@@ -662,7 +726,7 @@ public class EnemyController : MonoBehaviour
                 speed = Mathf.Min(speed, Mathf.Max(enemyData.walkSpeed, enemyData.closeApproachSpeed));
         }
         // A full pressure group or an escaping player must slow waiters immediately.
-        agent.speed = EnemyCombatSettings.RushEnabled && !IsRushRunning && speed < agent.speed ? speed :
+        agent.speed = EnemyCombatSettings.RushEnabled && !grantedApproach && !IsRushRunning && speed < agent.speed ? speed :
             Mathf.MoveTowards(agent.speed, speed, Mathf.Max(.1f, enemyData.speedChangeRate) * Time.deltaTime);
     }
     private static float SampleChaseDuration(Vector2 duration)
@@ -676,7 +740,14 @@ public class EnemyController : MonoBehaviour
         chasePhaseDeadline = 0;
     }
 
-    private void UpdateApproachAndTurn()
+    public float EffectiveAttackTurnRequestDistance => enemyData == null ? 0 : Mathf.Max(
+        enemyData.engagementDistance, AttackReach,
+        EnemyCombatSettings.RushEnabled
+            ? Mathf.Max(EnemyCombatSettings.PressureDistance, enemyData.chaseSlowdownDistance, enemyData.pressureRingRadius) + .5f : 0,
+        ChargeSettings != null && ChargeSettings.enabled && EnemyCombatSettings.Shared != null && EnemyCombatSettings.Shared.enableCharge
+            ? EffectiveChargeDistance : 0);
+
+    private void UpdateApproachDecision()
     {
         if (isAlert && playerDetected && player != null && !isAttacking && Time.time >= nextApproachDecision)
         {
@@ -690,6 +761,12 @@ public class EnemyController : MonoBehaviour
             if (side.sqrMagnitude < .01f) side = approachDirection;
             committedApproachDirection = Quaternion.AngleAxis((approachDirection.x < 0f ? -1f : 1f) * enemyData.flankAngle, Vector3.up) * side;
         }
+    }
+
+    // This is the only combat permission request. It deliberately does not
+    // consult runner ownership or the random choice of attack animation/action.
+    private void UpdateCombatTurn()
+    {
         if (!enemyData.coordinateAttacks) { EnemyAttackCoordinator.Release(this); return; }
         bool reserved = EnemyAttackCoordinator.HasTurn(this, player);
         if (isAttacking)
@@ -698,18 +775,13 @@ public class EnemyController : MonoBehaviour
             EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers);
             return;
         }
-        if (EnemyCombatSettings.RushEnabled && !HasRushSlot)
-        {
-            if (reserved) ReleaseAttackTurn();
-            return;
-        }
         if (!isAlert || !playerDetected || player == null || attackTimer > 0f || !TargetAvailableForLostHit() ||
             reserved && Time.time >= turnDeadline)
         {
             if (reserved) ReleaseAttackTurn();
             return;
         }
-        if (Time.time < nextTurnRequest || Vector3.Distance(transform.position, player.position) > Mathf.Max(enemyData.engagementDistance, AttackReach)) return;
+        if (Time.time < nextTurnRequest || Vector3.Distance(transform.position, player.position) > EffectiveAttackTurnRequestDistance) return;
         if (EnemyAttackCoordinator.Request(this, player, enemyData.maxConcurrentAttackers) && !reserved)
             turnDeadline = Time.time + Mathf.Max(.5f, enemyData.attackTurnTimeout);
     }
@@ -720,8 +792,10 @@ public class EnemyController : MonoBehaviour
         nextTurnRequest = Time.time + (enemyData != null ? Mathf.Max(.1f, enemyData.attackTurnRest) : 1f);
     }
 
-    private float PressureRadius => Mathf.Max(enemyData.pressureRingRadius, agent.radius + .5f,
+    private float RequestedPressureRadius => Mathf.Max(enemyData.pressureRingRadius, agent.radius + .5f,
         WaitingForPressureSlot ? EnemyCombatSettings.PressureDistance + .5f : 0);
+    private float PressureRadius => pressureOrbitActive
+        ? Mathf.Min(RequestedPressureRadius, pressureHoldRadius) : RequestedPressureRadius;
     private void UpdatePressureDirection()
     {
         if (enemyData.pressureOrbitMode != EnemyDataSO.PressureOrbitMode.Random)
@@ -741,8 +815,14 @@ public class EnemyController : MonoBehaviour
     {
         if ((!enemyData.coordinateAttacks && !EnemyCombatSettings.RushEnabled) || HasAttackTurn || !playerDetected || player == null) return false;
         if (CurrentState != EnemyState.Pressure) return false;
-        float radius = PressureRadius;
-        float distance = Vector3.Distance(transform.position, lastKnownPlayerPosition);
+        float distance = Vector3.ProjectOnPlane(transform.position - lastKnownPlayerPosition, Vector3.up).magnitude;
+        float clearance = agent.radius + .5f;
+        if (pressureRetreatRemaining <= .01f && distance <= clearance + .1f)
+        {
+            agent.isStopped = true;
+            return true;
+        }
+        float radius = Mathf.Max(clearance, Mathf.Min(PressureRadius, distance + pressureRetreatRemaining));
         if (distance > Mathf.Max(radius + 1f, enemyData.engagementDistance)) return false;
         Vector3 side = Vector3.ProjectOnPlane(transform.position - lastKnownPlayerPosition, Vector3.up).normalized;
         if (side.sqrMagnitude < .01f) side = approachDirection;
@@ -926,11 +1006,141 @@ public class EnemyController : MonoBehaviour
             && HasClearSight();
     }
 
+    public EnemyChargeSettings ChargeSettings => enemyData != null ? enemyData.charge : null;
+    private bool InChargeBand => EnemyCombatSettings.Shared != null && EnemyCombatSettings.Shared.enableCharge &&
+        ChargeSettings != null && ChargeSettings.enabled && player != null && playerDetected &&
+        (CurrentWeapon == null || CurrentWeapon.loadout != EnemyWeaponSO.Loadout.Stone) &&
+        Vector3.Distance(transform.position, player.position) >= Mathf.Max(AttackReach + .3f, ChargeSettings.minDistance) &&
+        Vector3.Distance(transform.position, player.position) <= EffectiveChargeDistance;
+    public float EffectiveChargeDistance
+    {
+        get
+        {
+            if (ChargeSettings == null) return 0;
+            float speed = Mathf.Max(.1f, ChargeSettings.speed);
+            float duration = Mathf.Max(.1f, ChargeSettings.duration);
+            float acceleration = agent != null ? Mathf.Max(.1f, agent.acceleration) : 8f;
+            float accelerating = Mathf.Min(duration, speed / acceleration);
+            float travel = .5f * acceleration * accelerating * accelerating + speed * (duration - accelerating);
+            return Mathf.Min(ChargeSettings.maxDistance, Mathf.Max(0, travel + AttackReach - .35f));
+        }
+    }
+    private bool ChooseCharge()
+    {
+        // Keep an accepted decision while waiting for the shared start clock.
+        // Arrival inside the close-role boundary must not cancel that decision.
+        if (choseCharge) return true;
+        if (Time.time >= nextChargeDecision)
+        {
+            nextChargeDecision = Time.time + Mathf.Max(.1f, ChargeSettings.decisionInterval) * Random.Range(.8f, 1.2f);
+            float chance = Mathf.Clamp01(ChargeSettings.selectionChance);
+            choseCharge = Random.value < chance;
+        }
+        return choseCharge;
+    }
+    public bool IsFrontOpportunity
+    {
+        get
+        {
+            if (!playerDetected || player == null || !player.TryGetComponent(out PlayerController controller) ||
+                !controller.isActiveAndEnabled || controller.IsGameplayInputBlocked || controller.currentHealth <= 0 ||
+                controller.PlanarVelocity.sqrMagnitude <= .04f) return false;
+            Vector3 toward = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up);
+            return toward.magnitude <= EnemyCombatSettings.InterceptDistance &&
+                Vector3.Angle(controller.PlanarVelocity, toward) <= EnemyCombatSettings.InterceptAngle * .5f && HasClearSight();
+        }
+    }
+    public bool CanDefendDuringEscape => IsCloseDefenseCandidate || IsFrontOpportunity;
+    private bool HasChargeRunAnimation => CurrentState == EnemyState.Charge && ChargeSettings != null &&
+        !string.IsNullOrEmpty(ChargeSettings.runAnimation) && animator != null && animator.HasState(0, Animator.StringToHash(ChargeSettings.runAnimation));
+    private void PlayChargeAnimation(string name, int fallback)
+    {
+        int state = !string.IsNullOrEmpty(name) && animator != null && animator.HasState(0, Animator.StringToHash(name)) ? Animator.StringToHash(name) : fallback;
+        PlayAnimation(state);
+    }
+    public string ChargeStatus => ChargeSettings == null || !ChargeSettings.enabled ? "Charge: profile disabled" :
+        EnemyCombatSettings.Shared == null || !EnemyCombatSettings.Shared.enableCharge ? "Charge: globally disabled" :
+        CurrentWeapon != null && CurrentWeapon.loadout == EnemyWeaponSO.Loadout.Stone ? "Charge: ranged loadout" :
+        CurrentState == EnemyState.Charge || CurrentState == EnemyState.ChargePreparation ? "Charge: committed" :
+        Time.time < nextChargeTime ? "Charge cooldown: " + (nextChargeTime - Time.time).ToString("0.0") + "s" :
+        !playerDetected || player == null ? "Charge: no detected target" :
+        EffectiveChargeDistance < Mathf.Max(AttackReach + .3f, ChargeSettings.minDistance) ? "Charge: INVALID range; increase duration or reduce Min Distance" :
+        !InChargeBand ? "Charge: outside reachable band (max " + EffectiveChargeDistance.ToString("0.0") + "m)" :
+        !HasAttackTurn ? "Charge: waiting for engagement turn" :
+        !choseCharge ? "Charge: walk / next decision in " + Mathf.Max(0, nextChargeDecision - Time.time).ToString("0.0") + "s" :
+        !HasClearSight() ? "Charge: sight blocked" :
+        AttackStartDelay > 0 ? "Charge: chosen; start in " + AttackStartDelay.ToString("0.0") + "s" : "Charge: eligible";
+    private bool CanStartCharge(float distance) => HasAttackTurn && InChargeBand && Time.time >= nextChargeTime && attackTimer <= 0 &&
+        TargetAvailableForLostHit() && HasClearSight() && ChooseCharge();
+
+    private IEnumerator PerformCharge()
+    {
+        var settings = ChargeSettings;
+        if (settings == null) yield break;
+        var target = ResolveTargetTransform(player);
+        var module = CurrentWeapon;
+        // Charge uses the same attack start clock and turn as melee. At most one
+        // charge per target is preparing/running, even with multiple melee turns.
+        foreach (var other in ActiveEnemies)
+            if (other != this && other != null && other.RushTarget == RushTarget &&
+                (other.CurrentState == EnemyState.ChargePreparation || other.CurrentState == EnemyState.Charge)) yield break;
+        if (!EnemyAttackCoordinator.TryStartAttack(this, target)) yield break;
+        nextChargeTime = Time.time + Mathf.Max(.1f, settings.cooldown);
+        choseCharge = false;
+        nextChargeDecision = nextChargeTime;
+        isAttacking = true;
+        CurrentState = EnemyState.ChargePreparation;
+        agent.isStopped = true;
+        PlayChargeAnimation(settings.preparationAnimation, Idle);
+        float until = Time.time + Mathf.Max(.1f, settings.preparation);
+        while (Time.time < until)
+        {
+            if (target == null || CurrentWeapon != module || !TargetAvailableForLostHit()) { FinishLostAttack(); yield break; }
+            FaceTarget(target);
+            yield return null;
+        }
+        // Snapshot a fixed destination: no homing after the telegraph.
+        var path = new NavMeshPath();
+        NavMeshHit hit = default;
+        bool valid = target != null && Vector3.Distance(transform.position, target.position) <= EffectiveChargeDistance && HasClearSight() &&
+            NavMesh.SamplePosition(target.position, out hit, .75f, agent.areaMask);
+        Vector3 destination = valid ? hit.position : transform.position;
+        valid = valid && agent.CalculatePath(destination, path) && path.status == NavMeshPathStatus.PathComplete && path.corners.Length <= 2;
+        if (valid)
+        {
+            CurrentState = EnemyState.Charge;
+            PlayChargeAnimation(settings.runAnimation, Walk);
+            agent.isStopped = false;
+            agent.updateRotation = true;
+            agent.stoppingDistance = Mathf.Max(.1f, AttackReach * .65f);
+            agent.speed = Mathf.Max(.1f, settings.speed);
+            agent.SetPath(path);
+            until = Time.time + Mathf.Max(.1f, settings.duration);
+            while (Time.time < until && target != null && CurrentWeapon == module && TargetAvailableForLostHit())
+            {
+                if (InAttackRange())
+                {
+                    agent.isStopped = true;
+                    chargeAttack = true;
+                    yield return PerformAttack();
+                    chargeAttack = false;
+                    yield break;
+                }
+                if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + .05f) break;
+                yield return null;
+            }
+        }
+        agent.isStopped = true;
+        CurrentState = EnemyState.Recovery;
+        PlayAnimation(Idle);
+        yield return new WaitForSeconds(Mathf.Max(.05f, settings.recovery));
+        FinishLostAttack();
+    }
+
     private IEnumerator PerformAttack()
     {
-        if (EnemyRushCoordinator.IsEscapePaused(RushTarget)) yield break;
         // The turn permits approaching; the shared target clock permits starting.
-        if (!EnemyAttackCoordinator.TryStartAttack(this, ResolveTargetTransform(player))) yield break;
+        if (!chargeAttack && !EnemyAttackCoordinator.TryStartAttack(this, ResolveTargetTransform(player))) yield break;
         if (enemyData.useLostCombat)
         {
             yield return PerformLostAttack();
@@ -939,7 +1149,7 @@ public class EnemyController : MonoBehaviour
         isAttacking = true;
         CurrentState = EnemyState.Preparation;
         agent.isStopped = true;
-        float preparation = Mathf.Max(0f, enemyData.attackPreparationTime);
+        float preparation = chargeAttack ? 0f : Mathf.Max(0f, enemyData.attackPreparationTime);
         attackTimer = Mathf.Max(preparation + attackWindup, enemyData.attackCooldown);
         if (preparation > 0f)
         {
@@ -957,17 +1167,29 @@ public class EnemyController : MonoBehaviour
         Vector3 facing = Vector3.ProjectOnPlane(player.position - transform.position, Vector3.up);
         if (facing.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(facing);
         CurrentState = EnemyState.Attack;
-        PlayAnimation(Attack);
-        yield return new WaitForSeconds(attackWindup);
+        if (chargeAttack) PlayChargeAnimation(ChargeSettings.attackAnimation, Attack);
+        else PlayAnimation(Attack);
+        if (!chargeAttack) yield return new WaitForSeconds(attackWindup);
         if (InAttackRange())
         {
             var target = ResolveTargetTransform(player);
             if (target != null && target.TryGetComponent(out PlayerController controller))
-                controller.TakeDamage(Random.Range(enemyData.minAttack, enemyData.maxAttack));
+            {
+                if (chargeAttack)
+                {
+                    var combat = EnemyCombatSettings.Shared;
+                    var effects = EnemyPlayerEffects.For(controller);
+                    if (effects.TryHit(Random.Range(enemyData.minAttack, enemyData.maxAttack), enemyData.playerHitProtection,
+                        combat.chargeHoldDuration, combat.chargeHoldSpeedMultiplier))
+                    { effects.BeginChargeLock(combat.chargeHoldDuration); onChargeHit?.Invoke(); }
+                }
+                else if (!EnemyPlayerEffects.For(controller).BlocksGroupAttack) controller.TakeDamage(Random.Range(enemyData.minAttack, enemyData.maxAttack));
+            }
         }
         // Recover once; cooldown is measured from attack start, not counted twice.
         CurrentState = EnemyState.Recovery;
         while (attackTimer > 0f) yield return null;
+        chargeAttack = false;
         isAttacking = false;
         if (AgentReady) agent.isStopped = false;
         animationState = 0;
@@ -992,14 +1214,40 @@ public class EnemyController : MonoBehaviour
         var target = ResolveTargetTransform(player);
         float prep = module != null ? module.preparation : enemyData.attackPreparationTime;
         float windup = module != null ? module.windup : attackWindup;
+        // Charge already telegraphed before the run. Contact confirms the grab;
+        // replaying ordinary melee preparation here lets a reached player escape it.
+        if (chargeAttack) { prep = 0; windup = 0; }
         float recovery = module != null ? module.recovery : enemyData.baseRecovery;
         isAttacking = true;
         CurrentState = EnemyState.Preparation;
         agent.isStopped = true;
         attackTimer = Mathf.Max(0, prep) + Mathf.Max(0, windup) + Mathf.Max(.05f, recovery);
         FaceTarget(target);
-        PlayAnimation(Idle);
-        if (prep > 0) yield return new WaitForSeconds(prep);
+        bool melee = module == null || module.loadout != EnemyWeaponSO.Loadout.Stone;
+        if (melee && enemyData.advanceDuringPreparation && prep > 0)
+        {
+            // Preparation is a closing phase, not an immediate full stop at the
+            // very edge of reach. Damage direction still commits at windup.
+            agent.isStopped = false;
+            agent.speed = Mathf.Max(0, enemyData.closeApproachSpeed);
+            float preparedAt = Time.time + prep;
+            while (Time.time < preparedAt)
+            {
+                if (target == null || CurrentWeapon != module || !TargetAvailableForLostHit())
+                { FinishLostAttack(); yield break; }
+                FaceTarget(target);
+                if (!agent.pathPending && (!agent.hasPath || (agent.destination - target.position).sqrMagnitude > .04f))
+                    agent.SetDestination(target.position);
+                PlayLocomotion(agent.velocity.sqrMagnitude > .01f);
+                yield return null;
+            }
+            agent.isStopped = true;
+        }
+        else
+        {
+            PlayAnimation(Idle);
+            if (prep > 0) yield return new WaitForSeconds(prep);
+        }
         if (!InAttackRange() || !TargetAvailableForLostHit() || CurrentWeapon != module)
         { FinishLostAttack(); yield break; }
         // Last adjustment before windup. No tracking rotation during the hit window.
@@ -1009,8 +1257,10 @@ public class EnemyController : MonoBehaviour
         CurrentState = EnemyState.Attack;
         string stateName = module != null ? module.attackAnimation : enemyData.baseAttackAnimation;
         int state = locomotionAnimator != null ? locomotionAnimator.ResolveAttackState(stateName, module != null) : Attack;
-        PlayAnimation(state);
-        if (windup > 0) yield return new WaitForSeconds(windup);
+        if (chargeAttack) PlayChargeAnimation(ChargeSettings.attackAnimation, state);
+        else PlayAnimation(state);
+        if (melee) yield return StepMeleeWindup(windup, facing, target);
+        else if (windup > 0) yield return new WaitForSeconds(windup);
         if (CurrentWeapon == module && target != null && TargetAvailableForLostHit())
         {
             if (module != null && module.loadout == EnemyWeaponSO.Loadout.Stone)
@@ -1030,10 +1280,20 @@ public class EnemyController : MonoBehaviour
                     float low = module != null ? module.minDamage : enemyData.minAttack;
                     float high = module != null ? module.maxDamage : enemyData.maxAttack;
                     var effects = EnemyPlayerEffects.For(controller);
+                    var combat = EnemyCombatSettings.Shared;
+                    bool hold = chargeAttack && combat != null;
                     if (effects.TryHit(Random.Range(Mathf.Min(low, high), Mathf.Max(low, high)), enemyData.playerHitProtection,
-                        module == null ? enemyData.restraintDuration : 0, enemyData.restraintSpeedMultiplier) &&
-                        module != null && module.loadout == EnemyWeaponSO.Loadout.Torch)
-                        effects.Ignite(module.burnDuration, module.burnDamagePerSecond, module.burnEffect);
+                        hold ? combat.chargeHoldDuration : module == null ? enemyData.restraintDuration : 0,
+                        hold ? combat.chargeHoldSpeedMultiplier : enemyData.restraintSpeedMultiplier))
+                    {
+                        if (chargeAttack)
+                        {
+                            effects.BeginChargeLock(combat != null ? combat.chargeHoldDuration : 0);
+                            onChargeHit?.Invoke();
+                        }
+                        if (module != null && module.loadout == EnemyWeaponSO.Loadout.Torch)
+                            effects.Ignite(module.burnDuration, module.burnDamagePerSecond, module.burnEffect);
+                    }
                 }
             }
         }
@@ -1044,8 +1304,30 @@ public class EnemyController : MonoBehaviour
         activeStone = null;
         FinishLostAttack();
     }
+    private IEnumerator StepMeleeWindup(float duration, Vector3 facing, Transform target)
+    {
+        float distance = target != null ? Vector3.ProjectOnPlane(target.position - transform.position, Vector3.up).magnitude : 0;
+        float step = Mathf.Min(Mathf.Clamp(enemyData.meleeAttackStep, 0, 1), Mathf.Max(0, distance - agent.radius - .5f));
+        if (step > .01f && duration > .01f)
+        {
+            Vector3 desired = transform.position + facing * step;
+            if (agent.Raycast(desired, out var edge)) desired = Vector3.MoveTowards(edge.position, transform.position, .02f);
+            var path = new NavMeshPath();
+            if (agent.CalculatePath(desired, path) && path.status == NavMeshPathStatus.PathComplete && path.corners.Length <= 2)
+            {
+                agent.stoppingDistance = 0;
+                agent.speed = step / duration;
+                agent.SetPath(path);
+                agent.isStopped = false;
+            }
+        }
+        if (duration > 0) yield return new WaitForSeconds(duration);
+        if (AgentReady) { agent.isStopped = true; agent.ResetPath(); }
+    }
+
     private void FinishLostAttack()
     {
+        chargeAttack = false;
         isAttacking = false;
         attackRoutine = null;
         animationState = 0;
@@ -1054,7 +1336,8 @@ public class EnemyController : MonoBehaviour
     }
     private void InterruptLostAttack()
     {
-        EnemyRushCoordinator.Release(this);
+        chargeAttack = false;
+        // Disarm cancels a weapon action without automatically abandoning pursuit.
         if (activeStone != null) activeStone.Cancel();
         activeStone = null;
         if (attackRoutine != null) StopCoroutine(attackRoutine);
@@ -1080,6 +1363,8 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        chargeAttack = false;
+        easingRetreat = false;
         EnemyRushCoordinator.Release(this);
         if (activeStone != null) activeStone.Cancel();
         activeStone = null;
@@ -1274,12 +1559,15 @@ public class EnemyController : MonoBehaviour
         if (hitReaction != null) hitReaction.SyncMasses();
     }
 
-    public void ReceiveBulletImpact(Collider collider, Vector3 point, Vector3 direction)
+    public void ReceiveBulletImpact(Collider collider, Vector3 point, Vector3 direction, int shotId = 0, float impactPower = 0)
     {
         if (collider == null || direction.sqrMagnitude < 0.001f) return;
         if (!IsDead && weaponRuntime != null && weaponRuntime.TryDisarm(collider))
             InterruptLostAttack();
-        if (!IsDead && enableHitReaction && enemyData != null && IsPatrolRunning)
+        var hitBox = collider.GetComponent<HitBox>();
+        if (!IsDead && enemyData != null && IsPatrolRunning &&
+            staggerMeter.Hit(enemyData.actionBreak, Time.time, hitBox != null && hitBox.hitBox == HitBoxPart.Head,
+                shotId, impactPower, Mathf.Max(enemyData.hitStaggerDuration, enemyData.hitKnockbackDistance > 0 ? enemyData.hitKnockbackDuration : 0)))
         {
             float stagger = Mathf.Max(0f, enemyData.hitStaggerDuration);
             float push = Mathf.Max(0f, enemyData.hitKnockbackDistance);
@@ -1290,6 +1578,7 @@ public class EnemyController : MonoBehaviour
                 activeStone = null;
                 ReleaseAttackTurn();
                 if (attackRoutine != null) { StopCoroutine(attackRoutine); attackRoutine = null; }
+                chargeAttack = false;
                 isAttacking = false;
                 staggerRemaining = Mathf.Max(staggerRemaining, stagger);
                 knockbackRemaining = push > 0f ? Mathf.Max(.02f, enemyData.hitKnockbackDuration) : 0f;
@@ -1335,7 +1624,6 @@ public class EnemyController : MonoBehaviour
     {
         get
         {
-            if (!IsDead && hitReaction != null && hitReaction.IsReacting) return new Color(0.1f, 0.6f, 1f);
             switch (CurrentState)
             {
                 case EnemyState.Patrol: return new Color(0.15f, 1f, 0.25f);
@@ -1344,6 +1632,8 @@ public class EnemyController : MonoBehaviour
                 case EnemyState.Rush:
                 case EnemyState.ChaseBurst: return new Color(1f, .15f, .05f);
                 case EnemyState.Pressure: return new Color(1f, .75f, .2f);
+                case EnemyState.ChargePreparation: return new Color(1f, .5f, .1f);
+                case EnemyState.Charge: return Color.red;
                 case EnemyState.EscapeWalk: return new Color(.2f, .8f, 1f);
                 case EnemyState.Approach: return new Color(1f, .5f, .1f);
                 case EnemyState.Retreat: return new Color(.4f, .65f, .9f);

@@ -30,12 +30,20 @@ public class ItemSpawnConfigurationWindow : EditorWindow
     }
     private void OnGUI()
     {
+        using (new ModificationGUI.WindowScope(this, "Item Lab", "Item spawn points", "Choose fixed items, random item types and scene spawn locations.", ModificationGUI.Item, point))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
+        using (new ModificationGUI.Card("Spawn target"))
+        {
         followSelection = EditorGUILayout.ToggleLeft("Follow selection", followSelection);
         point = (ItemSpawnPoint)EditorGUILayout.ObjectField("Spawn Point", point, typeof(ItemSpawnPoint), true);
         if (GUILayout.Button("Create Item Spawn Point"))
             EditorApplication.ExecuteMenuItem("System Modification/ItemLab/Create/Item Spawn Point");
+        }
         scroll = EditorGUILayout.BeginScrollView(scroll);
-        EditorGUILayout.LabelField("Loaded Scene Spawn Points", EditorStyles.boldLabel);
+        ModificationGUI.Section("Loaded scene spawn points");
         foreach (var entry in FindObjectsByType<ItemSpawnPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (!entry.gameObject.scene.IsValid()) continue;
@@ -52,7 +60,7 @@ public class ItemSpawnConfigurationWindow : EditorWindow
         else
         {
             Editor.CreateCachedEditor(point, null, ref inspector);
-            inspector.OnInspectorGUI();
+            using (new ModificationGUI.Card("Spawn settings")) inspector.OnInspectorGUI();
         }
         EditorGUILayout.EndScrollView();
     }

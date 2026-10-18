@@ -18,7 +18,7 @@ public static class SpawnValidation
     static void Tick(EnemySpawnPoint s)
     {
         typeof(EnemySpawnPoint).GetField("nextSpawnTime",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(s,Time.time-1);
-        typeof(EnemySpawnPoint).GetMethod("Update",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(s,null);
+        typeof(EnemySpawnPoint).GetMethod("LateUpdate",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(s,null);
     }
     public static void Run()
     {

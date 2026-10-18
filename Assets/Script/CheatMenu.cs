@@ -5,6 +5,51 @@ using UnityEngine;
 [AddComponentMenu("Debug/Cheat Menu")]
 public class CheatMenu : MonoBehaviour
 {
+    public bool InfiniteAmmo { get; private set; }
+    public void SetInfiniteAmmo(bool value) => InfiniteAmmo = Available && value;
+    public ItemSO spawnItem;
+    public int spawnQuantity = 1;
+    public bool spawnInWorld;
+    private ItemSO[] items = new ItemSO[0];
+    private string itemSearch = "", spawnResult = "";
+    public string SpawnResult => spawnResult;
+    private Vector2 itemScroll;
+    public static bool HasInfiniteAmmo(PlayerController target) => target != null &&
+        target.TryGetComponent(out CheatMenu menu) && menu.Available && menu.InfiniteAmmo;
+    public void RefreshItems()
+    {
+#if UNITY_EDITOR
+        var records = new System.Collections.Generic.List<ItemSO>();
+        foreach (var guid in UnityEditor.AssetDatabase.FindAssets("t:ItemSO", new[] { "Assets" }))
+        {
+            var item = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemSO>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+            if (item != null) records.Add(item);
+        }
+        items = records.ToArray();
+#else
+        items = Resources.FindObjectsOfTypeAll<ItemSO>();
+#endif
+        System.Array.Sort(items, (a,b) => string.Compare(a.itemName, b.itemName, System.StringComparison.OrdinalIgnoreCase));
+    }
+    public bool SpawnSelected()
+    {
+        if (!Available || !Application.isPlaying || player == null || spawnItem == null)
+        { spawnResult = "Select an item in Play Mode."; return false; }
+        int quantity = Mathf.Clamp(spawnQuantity, 1, 999);
+        if (!spawnInWorld)
+        {
+            bool added = InventoryManager.Instance != null && InventoryManager.Instance.TryAddItemAutoPlace(spawnItem, quantity);
+            spawnResult = added ? "Added " + quantity + " x " + spawnItem.itemName : "Inventory full, missing, or item does not fit. Nothing added.";
+            return added;
+        }
+        if (spawnItem.pickupPrefab == null) { spawnResult = "Item has no Pickup Prefab. Use Add to inventory."; return false; }
+        // Initialise the actual pickup data; never change the shared ItemSO.
+        var pickup = Instantiate(spawnItem.pickupPrefab, player.transform.position + player.transform.forward * 1.5f + Vector3.up * .3f, Quaternion.identity);
+        pickup.itemData = spawnItem;
+        pickup.quantity = quantity;
+        spawnResult = "Spawned " + quantity + " x " + spawnItem.itemName;
+        return true;
+    }
     private PlayerController player;
     private bool open;
     private CursorLockMode cursorLock;
@@ -29,6 +74,7 @@ public class CheatMenu : MonoBehaviour
                 cursorLock = Cursor.lockState; cursorVisible = Cursor.visible;
                 player.LockGameplayInput(this);
                 Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
+                RefreshItems();
                 open = true;
             }
         }
@@ -66,6 +112,25 @@ public class CheatMenu : MonoBehaviour
         GUILayout.EndVertical();
         GUILayout.Space(8);
         GUILayout.BeginVertical(card);
+        GUILayout.Label("WEAPONS & ITEMS", heading);
+        SetInfiniteAmmo(GUILayout.Toggle(InfiniteAmmo, "Infinite Ammo (no reload needed)"));
+        itemSearch = GUILayout.TextField(itemSearch);
+        if (GUILayout.Button("Refresh item list")) RefreshItems();
+        itemScroll = GUILayout.BeginScrollView(itemScroll, GUILayout.Height(140));
+        foreach (var item in items)
+        {
+            if (item == null || (!string.IsNullOrEmpty(itemSearch) && (item.itemName + " " + item.name + " " + item.itemType).IndexOf(itemSearch, System.StringComparison.OrdinalIgnoreCase) < 0)) continue;
+            if (GUILayout.Toggle(spawnItem == item, item.itemName + " [" + item.itemType + "]", GUI.skin.button)) spawnItem = item;
+        }
+        GUILayout.EndScrollView();
+        GUILayout.Label("Quantity: " + spawnQuantity);
+        spawnQuantity = Mathf.RoundToInt(GUILayout.HorizontalSlider(spawnQuantity, 1, 99));
+        spawnInWorld = GUILayout.Toggle(spawnInWorld, "Spawn world pickup (off = add to inventory)");
+        if (GUILayout.Button("Spawn selected item")) SpawnSelected();
+        GUILayout.Label(spawnResult, muted);
+        GUILayout.EndVertical();
+        GUILayout.Space(8);
+        GUILayout.BeginVertical(card);
         GUILayout.Label("MOVEMENT", heading);
         GUILayout.Label("Sprint speed: " + player.cheatSprintMultiplier.ToString("0.0") + "x");
         player.cheatSprintMultiplier = GUILayout.HorizontalSlider(player.cheatSprintMultiplier, 1f, 10f);
@@ -83,6 +148,7 @@ public class CheatMenu : MonoBehaviour
         GUILayout.BeginVertical(card);
         GUILayout.Label("ENEMY DEBUG", heading);
         EnemyStateDisplay.Enabled = GUILayout.Toggle(EnemyStateDisplay.Enabled, "Show Enemy States (F8)");
+        EnemyStateDisplay.ShowPermissions = GUILayout.Toggle(EnemyStateDisplay.ShowPermissions, "Show granted rights / legend (P+ / A+ / FRONT)");
         EnemyStateDisplay.ShowDetails = GUILayout.Toggle(EnemyStateDisplay.ShowDetails, "Show focused enemy details (aim near its head)");
         GUILayout.Label("Compact labels: " + EnemyStateDisplay.MaxLabels + " | Others keep head markers", muted);
         EnemyStateDisplay.MaxLabels = Mathf.RoundToInt(GUILayout.HorizontalSlider(EnemyStateDisplay.MaxLabels, 1, 20));
@@ -101,6 +167,7 @@ public class CheatMenu : MonoBehaviour
     private void ResetCheats()
     {
         if (player == null) return;
+        SetInfiniteAmmo(false);
         player.cheatSprintMultiplier = 1f;
         player.SetCheatFlying(false);
         player.cheatFlySpeed = 8f;

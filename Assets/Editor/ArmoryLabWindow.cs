@@ -120,9 +120,11 @@ public class ArmoryLabWindow : EditorWindow
 
     private void OnGUI()
     {
-        EditorGUILayout.LabelField("Armory Lab", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Tune a weapon, try it, keep the settings you like.", EditorStyles.wordWrappedLabel);
-        EditorGUILayout.Space();
+        using (new ModificationGUI.WindowScope(this, "Armory Lab", "Armory Lab", "Tune weapon accuracy, breathing, recoil and shotgun spread.", ModificationGUI.Weapon, weapon))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
         EditorGUI.BeginChangeCheck();
         Guns selected = (Guns)EditorGUILayout.ObjectField("Weapon", weapon, typeof(Guns), true);
         if (EditorGUI.EndChangeCheck()) SetWeapon(selected);
@@ -223,8 +225,7 @@ public class ArmoryLabWindow : EditorWindow
 
     private void Section(string title)
     {
-        EditorGUILayout.Space(8f);
-        EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        ModificationGUI.Section(title);
     }
 
     private void Slider(string path, string label, float min, float max, string tooltip)

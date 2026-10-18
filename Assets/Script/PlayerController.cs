@@ -12,6 +12,11 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     public float moveSpeed = 2f;
     public float sprintBonus = 2f;
+    [Header("Aiming Movement")]
+    [Tooltip("Fraction of Walk Speed used while aiming. 0.5 = half walk speed. Sprint is disabled while aiming.")]
+    [Range(0, 1)] public float aimMoveSpeedMultiplier = .5f;
+    [Tooltip("Extra metres per second removed while moving backward and aiming. Result is clamped to zero before enemy movement effects.")]
+    [Min(0)] public float aimBackwardSpeedPenalty = .2f;
     [System.NonSerialized] public float cheatSprintMultiplier = 1f;
     [System.NonSerialized] public float cheatFlySpeed = 8f;
     public bool CheatFlying { get; private set; }
@@ -132,6 +137,8 @@ public class PlayerController : MonoBehaviour
     private readonly System.Collections.Generic.HashSet<object> inputLockOwners = new System.Collections.Generic.HashSet<object>();
     public bool IsGameplayInputBlocked => isCheckInventory || modalDepth > 0 || inputLockOwners.Count > 0;
     public bool IsCutsceneInputLocked => inputLockOwners.Count > 0;
+    private bool chargeCameraHeld;
+    private float chargeCameraFov;
     public void LockGameplayInput(object owner)
     {
         if (owner == null || !inputLockOwners.Add(owner)) return;
@@ -213,12 +220,38 @@ public class PlayerController : MonoBehaviour
         currentHealth = maxHealth;
         healthInitialized = true;
         RecordHealthChange(initialHealth, "Initial health");
+        PlayerHUD.EnsureFor(this);
     }
 
     void Update()
     {
         IsSprinting = false;
         PlanarVelocity = Vector3.zero;
+        var chargeEffects = GetComponent<EnemyPlayerEffects>();
+        bool chargeHeld = chargeEffects != null && chargeEffects.IsChargeLocked;
+        if (chargeHeld && !IsGameplayInputBlocked)
+        {
+            if (!chargeCameraHeld)
+            {
+                chargeCameraHeld = true;
+                chargeCameraFov = cineCamera != null ? cineCamera.Lens.FieldOfView : 60f;
+                SuspendCameraLook();
+            }
+            isAiming = false;
+            SuppressWeaponPose();
+            animator.SetFloat("Speed", 0f);
+            if (cineCamera != null) cineCamera.Lens.FieldOfView = Mathf.Lerp(cineCamera.Lens.FieldOfView,
+                EnemyCombatSettings.Shared != null ? EnemyCombatSettings.Shared.chargeCameraFov : 45f, Time.deltaTime * 8f);
+            if (EnemyCombatSettings.Shared != null && !EnemyCombatSettings.Shared.chargeLockMovement) HandleMovement();
+            else ApplyGravity(Vector3.zero);
+            return;
+        }
+        if (chargeCameraHeld)
+        {
+            chargeCameraHeld = false;
+            if (cineCamera != null) cineCamera.Lens.FieldOfView = chargeCameraFov;
+            if (!IsGameplayInputBlocked) RestoreCameraLook();
+        }
         // Timeline owns character pose/placement while a cutscene lock is held.
         if (IsCutsceneInputLocked) { isAiming = false; return; }
         if (modalDepth > 0)
@@ -283,7 +316,7 @@ public class PlayerController : MonoBehaviour
         if (isAiming && isMoving)
         {
             // เดินตอนเล็ง → ช้าลง
-            currentSpeed *= 0.5f;
+            currentSpeed = Mathf.Max(0, moveSpeed) * Mathf.Clamp01(aimMoveSpeedMultiplier);
             speedPercent = 0.3f;   // Animator: Aiming เดิน
             
         }
@@ -299,8 +332,8 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        if (Input.GetKey(KeyCode.S) && Input.GetMouseButton(1)) // ถอยหลังช้า
-            currentSpeed -= 0.2f;
+        if (isAiming && moveZ < 0)
+            currentSpeed = Mathf.Max(0, currentSpeed - Mathf.Max(0, aimBackwardSpeedPenalty));
 
         var enemyEffects = GetComponent<EnemyPlayerEffects>();
         if (enemyEffects != null) currentSpeed *= enemyEffects.MovementMultiplier;
@@ -790,6 +823,8 @@ public class PlayerController : MonoBehaviour
     }
     private void OnDisable()
     {
+        if (chargeCameraHeld && cineCamera != null) cineCamera.Lens.FieldOfView = chargeCameraFov;
+        chargeCameraHeld = false;
         IsSprinting = false;
         PlanarVelocity = Vector3.zero;
         if (inputLockOwners.Count == 0) RestoreCameraLook();

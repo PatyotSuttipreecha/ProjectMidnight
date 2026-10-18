@@ -18,6 +18,13 @@ public class TriggerConfigurationWindow : EditorWindow
     private void OnDisable() { if (inspector != null) DestroyImmediate(inspector); }
     private void OnGUI()
     {
+        using (new ModificationGUI.WindowScope(this, "Scene Configuration", "Trigger configuration", "Link scene events to cutscenes, doors and spawn systems.", ModificationGUI.Scene, trigger))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
+        using (new ModificationGUI.Card("Trigger target", "Select an event point or link a trigger to an existing object."))
+        {
         EditorGUILayout.HelpBox("Player entry activates On Triggered. Wire events to a Timeline, door, enemy spawner or other scene component. This trigger does not manage cutscene input or Mission completion automatically.", MessageType.Info);
         trigger = (WorldTrigger)EditorGUILayout.ObjectField("Trigger", trigger, typeof(WorldTrigger), true);
         using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
@@ -26,9 +33,11 @@ public class TriggerConfigurationWindow : EditorWindow
             using (new EditorGUI.DisabledScope(Selection.activeGameObject == null || EditorUtility.IsPersistent(Selection.activeGameObject)))
                 if (GUILayout.Button("Create Linked Trigger from Selected Object")) Create(true);
         }
+        }
         if (trigger == null) return;
         scroll = EditorGUILayout.BeginScrollView(scroll);
-        Editor.CreateCachedEditor(trigger, null, ref inspector); inspector.OnInspectorGUI();
+        Editor.CreateCachedEditor(trigger, null, ref inspector);
+        using (new ModificationGUI.Card("Trigger settings")) inspector.OnInspectorGUI();
         EditorGUILayout.LabelField("Triggered this session", trigger.HasTriggered ? "Yes" : "No");
         if (GUILayout.Button("Select / Frame")) { Selection.activeGameObject = trigger.gameObject; SceneView.lastActiveSceneView?.FrameSelected(); }
         EditorGUILayout.EndScrollView();

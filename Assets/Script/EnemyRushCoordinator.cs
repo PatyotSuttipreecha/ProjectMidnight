@@ -10,13 +10,18 @@ public static class EnemyRushCoordinator
         public Transform Target;
         public float ProgressTime;
         public Vector3 Position;
+        public float GapSince = -1, GapDistance;
     }
     private sealed class Encounter
     {
-        public bool Formed, EscapePaused;
-        public float ResumeAt, NextReplacement;
+        public bool Formed;
+        public float NextReplacement, NextHandoff;
+        public float NextRunnerStart = -1;
         public int Frame = -1;
         public readonly List<EnemyController> Candidates = new List<EnemyController>();
+        public readonly Dictionary<EnemyController, Slot> Runners = new Dictionary<EnemyController, Slot>();
+        public readonly Dictionary<EnemyController, bool> RunChoices = new Dictionary<EnemyController, bool>();
+        public readonly Dictionary<EnemyController, float> Arrivals = new Dictionary<EnemyController, float>();
     }
     private static readonly Dictionary<EnemyController, Slot> slots = new Dictionary<EnemyController, Slot>();
     private static readonly Dictionary<EnemyController, float> cooldowns = new Dictionary<EnemyController, float>();
@@ -75,39 +80,86 @@ public static class EnemyRushCoordinator
         if (group.Frame == Time.frameCount) return group;
         group.Frame = Time.frameCount;
         group.Candidates.Clear();
-        bool movingAwayFromThreat = false;
         target.TryGetComponent(out PlayerController player);
-        bool sprinting = player != null && player.isActiveAndEnabled && !player.IsGameplayInputBlocked &&
-            player.currentHealth > 0 && player.IsSprinting && player.PlanarVelocity.sqrMagnitude > .04f;
         foreach (var enemy in EnemyController.ActiveEnemies)
+            if (enemy != null && enemy.RushEncounterActive && enemy.RushTarget == target && enemy.CanHoldPressure && !CoolingDown(enemy))
+                group.Candidates.Add(enemy);
+
+        // Intercept the movement route before the player reaches melee range.
+        // Admit one reachable front enemy per shared interval, without pausing the group.
+        if (Time.time >= Mathf.Max(group.NextHandoff, group.NextReplacement))
         {
-            if (enemy == null || !enemy.RushEncounterActive || enemy.RushTarget != target) continue;
-            // An enemy in front must not mask another pursuer behind the player.
-            Vector3 away = Vector3.ProjectOnPlane(target.position - enemy.transform.position, Vector3.up).normalized;
-            if (sprinting && Vector3.Dot(player.PlanarVelocity, away) > .1f) movingAwayFromThreat = true;
-            if (enemy.CanHoldPressure && !CoolingDown(enemy)) group.Candidates.Add(enemy);
+            EnemyController interceptor = null;
+            float nearest = float.PositiveInfinity;
+            foreach (var candidate in group.Candidates)
+            {
+                float distance = Vector3.Distance(candidate.transform.position, target.position);
+                if (Owns(candidate, target) || !candidate.IsFrontOpportunity || distance >= nearest || !candidate.CanReachRushTarget(path)) continue;
+                interceptor = candidate; nearest = distance;
+            }
+            if (interceptor != null)
+            {
+                EnemyController displaced = null;
+                float farthest = -1;
+                if (Count(target) >= EnemyCombatSettings.RushLimit)
+                    foreach (var entry in slots)
+                    {
+                        var owner = entry.Key;
+                        if (entry.Value.Target != target || owner.isAttacking || owner.IsFrontOpportunity || owner.IsCloseDefenseCandidate) continue;
+                        float distance = Vector3.Distance(owner.transform.position, target.position);
+                        if (distance > farthest) { displaced = owner; farthest = distance; }
+                    }
+                if (displaced != null) Release(displaced);
+                if (Count(target) < EnemyCombatSettings.RushLimit)
+                {
+                    slots[interceptor] = new Slot { Target = target, Position = interceptor.transform.position, ProgressTime = Time.time };
+                    group.Runners.Remove(interceptor);
+                    group.NextHandoff = group.NextReplacement = Time.time + EnemyCombatSettings.ReplacementInterval;
+                    // Running nominations cannot exceed the same combined cap.
+                    while (Count(target) + group.Runners.Count > EnemyCombatSettings.RushLimit)
+                    {
+                        EnemyController demoted = null;
+                        float farthestRunner = -1;
+                        foreach (var runner in group.Runners.Keys)
+                        {
+                            float distance = (runner.transform.position - target.position).sqrMagnitude;
+                            if (distance > farthestRunner) { demoted = runner; farthestRunner = distance; }
+                        }
+                        if (demoted == null) break;
+                        group.Runners.Remove(demoted);
+                    }
+                }
+            }
         }
 
-        // Once escape starts, turning or weaving while still sprinting must not
-        // restart pursuit. The settle timer starts only when actual sprinting stops.
-        bool escaping = EnemyCombatSettings.PauseWhileEscaping && sprinting &&
-            (movingAwayFromThreat || group.EscapePaused);
-        if (escaping)
+        // A nearby reachable defender can replace a distant uncommitted owner.
+        // Per-owner handoff does not reroll or restart the whole group.
+        if (Time.time >= Mathf.Max(group.NextHandoff, group.NextReplacement) && Count(target) >= EnemyCombatSettings.RushLimit)
         {
-            group.EscapePaused = true;
-            group.ResumeAt = Time.time + EnemyCombatSettings.EscapeResumeDelay;
-        }
-        else if (group.EscapePaused && (!EnemyCombatSettings.PauseWhileEscaping || Time.time >= group.ResumeAt))
-        {
-            group.EscapePaused = false;
-            // A settled escape starts a fresh initial approach for this target.
-            // This is not an interruption: do not give old owners a reentry penalty.
-            removed.Clear();
-            foreach (var entry in slots)
-                if (entry.Value.Target == target) removed.Add(entry.Key);
-            foreach (var owner in removed) slots.Remove(owner);
-            group.Formed = false;
-            group.NextReplacement = 0;
+            EnemyController defender = null;
+            float nearest = float.PositiveInfinity;
+            foreach (var candidate in group.Candidates)
+            {
+                float distance = Vector3.Distance(candidate.transform.position, target.position);
+                if (Owns(candidate, target) || !candidate.IsCloseDefenseCandidate || distance >= nearest || !candidate.CanReachRushTarget(path)) continue;
+                defender = candidate; nearest = distance;
+            }
+            EnemyController victim = null;
+            float farthest = EnemyCombatSettings.PressureDistance + .5f;
+            if (defender != null)
+                foreach (var entry in slots)
+                {
+                    var owner = entry.Key;
+                    if (entry.Value.Target != target || owner.isAttacking) continue;
+                    float distance = Vector3.Distance(owner.transform.position, target.position);
+                    if (distance > farthest && distance > nearest + 1f)
+                    { victim = owner; farthest = distance; }
+                }
+            if (victim != null)
+            {
+                Release(victim);
+                group.NextHandoff = Time.time + EnemyCombatSettings.ReplacementInterval;
+            }
         }
 
         removed.Clear();
@@ -117,7 +169,28 @@ public static class EnemyRushCoordinator
             var owner = entry.Key;
             var slot = entry.Value;
             if (!owner.CanHoldPressure || owner.RushTarget != target) { removed.Add(owner); continue; }
-            if (group.EscapePaused || !owner.CanRush || owner.CurrentState == EnemyController.EnemyState.Pressure)
+            float distanceToTarget = Vector3.ProjectOnPlane(target.position - owner.transform.position, Vector3.up).magnitude;
+            bool walkingAway = player != null && player.isActiveAndEnabled && !player.IsGameplayInputBlocked && player.currentHealth > 0 &&
+                player.PlanarVelocity.sqrMagnitude > .04f && Vector3.Dot(player.PlanarVelocity,
+                    Vector3.ProjectOnPlane(target.position - owner.transform.position, Vector3.up).normalized) > .1f;
+            if (!owner.isAttacking && walkingAway &&
+                distanceToTarget > Mathf.Max(EnemyCombatSettings.PressureDistance, owner.AttackReach + .75f))
+            {
+                if (slot.GapSince < 0 || distanceToTarget < slot.GapDistance - .15f)
+                { slot.GapSince = Time.time; slot.GapDistance = distanceToTarget; }
+                if (Time.time - slot.GapSince >= EnemyCombatSettings.HandoffDelay)
+                {
+                    if (distanceToTarget >= slot.GapDistance + EnemyCombatSettings.HandoffGap && Time.time >= group.NextHandoff)
+                    {
+                        removed.Add(owner);
+                        group.NextHandoff = Time.time + EnemyCombatSettings.ReplacementInterval;
+                        continue;
+                    }
+                    slot.GapSince = Time.time; slot.GapDistance = distanceToTarget;
+                }
+            }
+            else slot.GapSince = -1;
+            if (!owner.CanRush || owner.CurrentState == EnemyController.EnemyState.Pressure)
             {
                 slot.ProgressTime = Time.time;
                 slot.Position = owner.transform.position;
@@ -129,20 +202,37 @@ public static class EnemyRushCoordinator
         }
         foreach (var owner in removed) Release(owner);
 
+        // Record the first sampled arrival, regardless of whether the enemy ran.
+        // Walking into range must not lose to an incoming runner farther away.
+        removed.Clear();
+        foreach (var entry in group.Arrivals)
+            if (entry.Key == null || !entry.Key.CanHoldPressure || entry.Key.RushTarget != target || CoolingDown(entry.Key) ||
+                Vector3.Distance(entry.Key.transform.position, target.position) > EnemyCombatSettings.PressureDistance) removed.Add(entry.Key);
+        foreach (var owner in removed) group.Arrivals.Remove(owner);
+        foreach (var candidate in group.Candidates)
+            if (Vector3.Distance(candidate.transform.position, target.position) <= EnemyCombatSettings.PressureDistance &&
+                !group.Arrivals.ContainsKey(candidate)) group.Arrivals[candidate] = Time.time;
+
         int count = Count(target);
         if (count >= EnemyCombatSettings.RushLimit) group.Formed = true;
-        if (group.EscapePaused || count >= EnemyCombatSettings.RushLimit || Time.time < group.NextReplacement) return group;
         group.Candidates.Sort((a, b) =>
         {
+            int defense = b.IsCloseDefenseCandidate.CompareTo(a.IsCloseDefenseCandidate);
+            if (defense != 0) return defense;
+            float aTime = group.Arrivals.TryGetValue(a, out var first) ? first : float.PositiveInfinity;
+            float bTime = group.Arrivals.TryGetValue(b, out var second) ? second : float.PositiveInfinity;
+            int arrival = aTime.CompareTo(bTime);
+            if (arrival != 0) return arrival;
             int distance = (a.transform.position - target.position).sqrMagnitude.CompareTo((b.transform.position - target.position).sqrMagnitude);
             return distance != 0 ? distance : a.GetInstanceID().CompareTo(b.GetInstanceID());
         });
         foreach (var candidate in group.Candidates)
         {
-            if (Owns(candidate, target) || !candidate.CanHoldPressure || CoolingDown(candidate)) continue;
-            if (!group.Formed && Vector3.Distance(candidate.transform.position, target.position) > EnemyCombatSettings.PressureDistance) continue;
+            if (count >= EnemyCombatSettings.RushLimit || Time.time < group.NextReplacement) break;
+            if (Owns(candidate, target) || !candidate.CanHoldPressure || CoolingDown(candidate) || !group.Arrivals.ContainsKey(candidate)) continue;
             if (!candidate.CanReachRushTarget(path)) continue;
             slots[candidate] = new Slot { Target = target, ProgressTime = Time.time, Position = candidate.transform.position };
+            group.Runners.Remove(candidate);
             count++;
             if (group.Formed)
             {
@@ -151,7 +241,58 @@ public static class EnemyRushCoordinator
             }
             if (count >= EnemyCombatSettings.RushLimit) { group.Formed = true; break; }
         }
+        UpdateRunners(group, target, count);
         return group;
+    }
+
+    private static void UpdateRunners(Encounter group, Transform target, int owners)
+    {
+        removed.Clear();
+        foreach (var entry in group.Runners)
+        {
+            var enemy = entry.Key;
+            var runner = entry.Value;
+            if (enemy == null || !enemy.CanHoldPressure || enemy.RushTarget != target || CoolingDown(enemy) || Owns(enemy, target))
+            { removed.Add(enemy); continue; }
+            if (!enemy.CanRush)
+            { runner.ProgressTime = Time.time; runner.Position = enemy.transform.position; continue; }
+            if (Vector3.ProjectOnPlane(enemy.transform.position - runner.Position, Vector3.up).sqrMagnitude >= .01f)
+            { runner.ProgressTime = Time.time; runner.Position = enemy.transform.position; }
+            else if (Time.time - runner.ProgressTime >= EnemyCombatSettings.RushStallTimeout) removed.Add(enemy);
+        }
+        foreach (var enemy in removed) Release(enemy);
+        // A walker arriving first can take the place of an incoming runner.
+        while (owners + group.Runners.Count > EnemyCombatSettings.RushLimit)
+        {
+            EnemyController farthest = null;
+            float farthestDistance = -1;
+            foreach (var enemy in group.Runners.Keys)
+            {
+                float distance = (enemy.transform.position - target.position).sqrMagnitude;
+                if (distance > farthestDistance) { farthest = enemy; farthestDistance = distance; }
+            }
+            if (farthest == null) break;
+            group.Runners.Remove(farthest); // Demotion is not a hit or a cooldown penalty.
+        }
+        if (owners + group.Runners.Count >= EnemyCombatSettings.RushLimit) return;
+        float chance = EnemyCombatSettings.ApproachRunChance;
+        foreach (var candidate in group.Candidates)
+            if (!group.RunChoices.ContainsKey(candidate)) group.RunChoices[candidate] = chance > 0 && (chance >= 1 || Random.value < chance);
+        if (group.NextRunnerStart < 0) group.NextRunnerStart = Time.time + EnemyCombatSettings.SampleRushStartDelay();
+        if (Time.time < group.NextRunnerStart) return;
+        EnemyController chosen = null;
+        int eligible = 0;
+        foreach (var candidate in group.Candidates)
+        {
+            if (!candidate.CanRush || Owns(candidate, target) || group.Runners.ContainsKey(candidate) || CoolingDown(candidate) ||
+                !group.RunChoices.TryGetValue(candidate, out bool willing) || !willing ||
+                Vector3.Distance(candidate.transform.position, target.position) <= EnemyCombatSettings.PressureDistance ||
+                !candidate.CanReachRushTarget(path)) continue;
+            if (Random.Range(0, ++eligible) == 0) chosen = candidate;
+        }
+        if (chosen == null) return;
+        group.Runners[chosen] = new Slot { Target = target, Position = chosen.transform.position, ProgressTime = Time.time };
+        group.NextRunnerStart = Time.time + EnemyCombatSettings.SampleRushStartDelay();
     }
 
     public static void Tick(Transform target) => Evaluate(target);
@@ -163,35 +304,43 @@ public static class EnemyRushCoordinator
     public static bool ShouldRun(EnemyController owner, Transform target)
     {
         var group = Evaluate(target);
-        return group != null && owner != null && owner.CanRush && !group.EscapePaused && !CoolingDown(owner) &&
-            (Owns(owner, target) || !group.Formed);
+        return group != null && owner != null && owner.CanRush && !CoolingDown(owner) &&
+            (Owns(owner, target) || group.Runners.ContainsKey(owner));
     }
-    public static bool IsEscapePaused(Transform target) => Evaluate(target)?.EscapePaused ?? false;
+    public static bool IsEscapePaused(Transform target) => false;
     public static bool IsWaiting(EnemyController owner, Transform target)
     {
         var group = Evaluate(target);
         return group != null && owner != null && !Owns(owner, target) &&
-            (group.Formed || group.EscapePaused || CoolingDown(owner));
+            (Count(target) >= EnemyCombatSettings.RushLimit || CoolingDown(owner));
     }
     public static string Describe(EnemyController owner, Transform target)
     {
         var group = Evaluate(target);
         if (group == null) return "Legacy chase";
         string status = Owns(owner, target) ? "Pressure owner" : CoolingDown(owner) ? "Interrupted / resting" :
-            group.Formed ? "Waiting for pressure slot" : "Initial approach";
-        return status + " | " + Count(target) + "/" + EnemyCombatSettings.RushLimit +
-            (group.EscapePaused ? " | Escape pause" : "");
+            group.Runners.ContainsKey(owner) ? "Random runner / no pressure slot" :
+            Count(target) >= EnemyCombatSettings.RushLimit ? "Waiting for pressure slot" : "Walking / first arrivals claim slots";
+        return status + " | " + Count(target) + "/" + EnemyCombatSettings.RushLimit;
     }
     public static void Release(EnemyController owner)
     {
-        if (ReferenceEquals(owner, null) || !slots.TryGetValue(owner, out var slot)) return;
-        slots.Remove(owner);
-        if (owner != null) cooldowns[owner] = Time.time + EnemyCombatSettings.RushReentry;
-        if (slot.Target != null && encounters.TryGetValue(slot.Target, out var group))
+        if (ReferenceEquals(owner, null)) return;
+        bool releasedPressure = slots.TryGetValue(owner, out var slot);
+        if (releasedPressure) slots.Remove(owner);
+        bool released = releasedPressure;
+        foreach (var entry in encounters)
         {
-            group.NextReplacement = Mathf.Max(group.NextReplacement, Time.time + EnemyCombatSettings.ReplacementInterval);
+            var group = entry.Value;
+            bool runner = group.Runners.Remove(owner);
+            if (!runner && (!releasedPressure || entry.Key != slot.Target)) continue;
+            released = true;
+            if (releasedPressure && entry.Key == slot.Target)
+                group.NextReplacement = Mathf.Max(group.NextReplacement, Time.time + EnemyCombatSettings.ReplacementInterval);
+            group.NextRunnerStart = Mathf.Max(group.NextRunnerStart, Time.time + EnemyCombatSettings.SampleRushStartDelay());
             group.Frame = -1;
         }
+        if (released && owner != null) cooldowns[owner] = Time.time + EnemyCombatSettings.RushReentry;
     }
 }
 

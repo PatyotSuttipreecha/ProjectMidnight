@@ -11,13 +11,27 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a6c5be141ce146d6aa07e64d57ad6e54, type: 3}
   m_Name: EnemyCombatSettings
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   attackStartInterval: 0.8
   useRushSlots: 1
-  maxRushers: 3
-  pressureDistance: 4.5
+  maxRushers: 2
+  approachRunChance: 0.55
+  rushStartDelay: {x: 0.3, y: 0.7}
+  pressureDistance: 4
   replacementInterval: 0.6
   rushReentryDelay: 2
   rushStallTimeout: 2
+  frontInterceptDistance: 4
+  frontInterceptAngle: 100
+  pursuitHandoffDelay: 2.5
+  pursuitHandoffGap: 0.5
+  pressureRetreatBudget: 0.6
   pauseRushWhileEscaping: 1
   escapeResumeDelay: 0.8
+  enableCharge: 1
+  chargeHoldDuration: 0.8
+  chargeLockMovement: 1
+  chargeCameraFov: 45
+  chargeHoldSpeedMultiplier: 0.25
+  escapeSlowdownTime: 0.8
+  chargePostHoldGrace: 1

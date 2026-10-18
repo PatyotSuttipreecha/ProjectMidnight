@@ -99,11 +99,17 @@ public class EnemyLabWindow : EditorWindow
 
     private void OnGUI()
     {
-        EditorGUILayout.LabelField("Enemy Lab", EditorStyles.boldLabel);
+        using (new ModificationGUI.WindowScope(this, "Enemy Lab", "Enemy Lab", "Tune profiles, patrol routes, spawn points and shared enemy behavior.", ModificationGUI.Enemy, workspace == 0 ? (Object)enemy : workspace == 1 ? standaloneProfile : workspace == 2 ? selectedRoute : workspace == 3 ? selectedSpawn : workspace == 4 ? selectedGroup : selectedModule))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
         int previous = workspace;
-        workspace = GUILayout.Toolbar(workspace, new[] { "Enemy", "Profiles", "Routes", "Spawns", "Groups", "Modules" });
+        workspace = ModificationGUI.Tabs(workspace, new[] { "Enemy", "Profiles", "Routes", "Spawns", "Groups", "Modules" }, ModificationGUI.Enemy);
         if (previous != workspace) { placePoints = editPoints = false; scroll = Vector2.zero; }
         if (workspace >= 2) { DrawWorkspace(); return; }
+        using (new ModificationGUI.Card("Workspace target", "Follow selection or assign the object you want to configure."))
+        {
         followSelection = EditorGUILayout.ToggleLeft("Follow Hierarchy / Project selection", followSelection);
         if (workspace == 0)
         {
@@ -116,6 +122,7 @@ public class EnemyLabWindow : EditorWindow
             standaloneProfile = (EnemyDataSO)EditorGUILayout.ObjectField("Enemy Profile", standaloneProfile, typeof(EnemyDataSO), false);
             using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
                 if (GUILayout.Button("Create Enemy Profile")) EnemyProfileMigration.CreateProfile();
+        }
         }
         if (workspace == 1)
         {
@@ -132,6 +139,7 @@ public class EnemyLabWindow : EditorWindow
         scroll = EditorGUILayout.BeginScrollView(scroll);
         if (Application.isPlaying) { EnemyDiagnosticsGUI.Draw(enemy); Repaint(); }
         EditorGUILayout.HelpBox("Instance settings: references, patrol assignment and Gizmos. Shared tuning: the Profile below. Route placement: Routes workspace.", MessageType.Info);
+        using (new ModificationGUI.Card("Instance wiring"))
         using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
         {
             var controller = new SerializedObject(enemy); controller.Update();
@@ -228,6 +236,8 @@ public class EnemyLabWindow : EditorWindow
     }
     private void DrawWorkspace()
     {
+        using (new ModificationGUI.Card("Workspace target"))
+        {
         followSelection = EditorGUILayout.ToggleLeft("Follow selection", followSelection);
         if (workspace == 2)
         {
@@ -252,6 +262,7 @@ public class EnemyLabWindow : EditorWindow
             selectedModule = (EnemyWeaponSO)EditorGUILayout.ObjectField("Weapon Module", selectedModule, typeof(EnemyWeaponSO), false);
             EditorGUILayout.HelpBox("Weapon settings belong here; the Combat profile category contains the unarmed/base attack. Edits affect every profile using this module.", MessageType.Info);
             if (GUILayout.Button("Open Weapon Module window")) EnemyWeaponLabWindow.Open(selectedModule);
+        }
         }
         Object target = workspace == 2 ? (Object)selectedRoute : workspace == 3 ? (Object)selectedSpawn : workspace == 4 ? (Object)selectedGroup : selectedModule;
         if (target == null) { EditorGUILayout.HelpBox("Select an existing object or create one here.", MessageType.Info); return; }
@@ -323,7 +334,7 @@ public class EnemyLabWindow : EditorWindow
         }
     }
 
-    private static void Section(string title) { EditorGUILayout.Space(8); EditorGUILayout.LabelField(title, EditorStyles.boldLabel); }
+    private static void Section(string title) => ModificationGUI.Section(title);
     private static void Property(SerializedObject data, string path, string label)
     {
         SerializedProperty property = data.FindProperty(path);

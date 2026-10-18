@@ -16,9 +16,13 @@ public static class EnemyAttackCoordinator
     public static float StartDelay(Transform target) => target != null && nextStarts.TryGetValue(target, out var next)
         ? Mathf.Max(0, next - Time.time) : 0;
 
+    private static bool GroupBlocked(Transform target) => target != null &&
+        target.TryGetComponent(out EnemyPlayerEffects effects) && effects.BlocksGroupAttack;
+
     public static bool TryStartAttack(EnemyController owner, Transform target)
     {
         if (owner == null || target == null || !owner.isActiveAndEnabled || owner.IsDead || !owner.IsPatrolRunning) return false;
+        if (GroupBlocked(target)) return false;
         if (StartDelay(target) > 0) return false;
         // Reserve atomically before Preparation. Cancellation keeps the short gap;
         // releasing a turn must not let another enemy start in the same frame.
@@ -47,6 +51,7 @@ public static class EnemyAttackCoordinator
     {
         Clean();
         if (owner == null || target == null || !owner.isActiveAndEnabled || owner.IsDead || !owner.IsPatrolRunning) return false;
+        if (GroupBlocked(target)) { turns.Remove(owner); return false; }
         if (turns.TryGetValue(owner, out var current))
         {
             if (current.Target == target) { current.Expires = Time.time + 1f; return true; }
@@ -56,7 +61,25 @@ public static class EnemyAttackCoordinator
         limit = Mathf.Max(1, limit);
         foreach (var turn in turns.Values)
             if (turn.Target == target) { count++; limit = Mathf.Min(limit, turn.Limit); }
-        if (count >= limit) return false;
+        if (count >= limit)
+        {
+            // A turn is an approach reservation, not an entitlement to block a
+            // close defender forever. Never interrupt a committed attack.
+            bool intercept = owner.IsFrontOpportunity;
+            if (!owner.IsCloseDefenseCandidate && !intercept) return false;
+            EnemyController displaced = null;
+            float farthest = intercept ? -1 : Vector3.Distance(owner.transform.position, target.position) + 1f;
+            foreach (var entry in turns)
+            {
+                var other = entry.Key;
+                if (entry.Value.Target != target || other.isAttacking || intercept && other.IsFrontOpportunity) continue;
+                float distance = Vector3.Distance(other.transform.position, target.position);
+                if (distance > farthest && distance > other.AttackReach + .75f)
+                { displaced = other; farthest = distance; }
+            }
+            if (displaced == null) return false;
+            turns.Remove(displaced);
+        }
         turns[owner] = new Turn { Target = target, Expires = Time.time + 1f, Limit = limit };
         return true;
     }

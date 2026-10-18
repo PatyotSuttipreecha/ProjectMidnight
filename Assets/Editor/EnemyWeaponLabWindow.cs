@@ -69,7 +69,11 @@ public class EnemyWeaponLabWindow : EditorWindow
     private void OnDisable() { if (moduleEditor != null) DestroyImmediate(moduleEditor); }
     private void OnGUI()
     {
-        EditorGUILayout.LabelField("The Lost - Weapon Modules", EditorStyles.boldLabel);
+        using (new ModificationGUI.WindowScope(this, "Enemy Lab", "Weapon modules", "Configure enemy loadouts, held models and attack timing.", ModificationGUI.Enemy, module))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
         EditorGUILayout.HelpBox("Assign a module to Starting Weapon on an Enemy Profile with Use Lost Combat enabled. Empty = unarmed. Runtime drops return to the profile's base attack without changing this asset.", MessageType.Info);
         module = (EnemyWeaponSO)EditorGUILayout.ObjectField("Weapon module", module, typeof(EnemyWeaponSO), false);
         if (GUILayout.Button("Select prototype loadout profiles"))

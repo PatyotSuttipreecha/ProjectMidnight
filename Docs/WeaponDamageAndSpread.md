@@ -1,0 +1,8 @@
+# Weapon damage and crosshair — 2026-10-18
+
+- Configure base damage on the gun prefab: Guns > Weapon Stat > Damage. Damage 0 means no health loss. Removed HitBoxManager's legacy random-damage fallback for zero values. Negative, NaN and infinite inputs are ignored. Positive hit-location multipliers remain unchanged.
+- FireBullet and the crosshair share aim-target resolution and the same local yaw/pitch scatter geometry. Crosshair bounds are projected from the muzzle onto the current aim plane through the actual camera, incorporating FOV, muzzle parallax and target distance.
+- Horizontal/vertical inner edges mark the scatter bounds. They are not a guaranteed hit area: scenery or characters before the selected aim plane can intercept bullets. The existing yaw/pitch scatter is rectangular, not a circular distribution.
+- Shotgun display includes its extra pellet cone, sampled around the cone boundary. Canvas conversion uses RectTransformUtility rather than treating canvas units as screen pixels.
+- Normal gun display no longer uses the independent Max Distance / Expand Speed settings or smoothing that lags behind actual accuracy. These fields remain documented fallback controls for other SetSpread callers.
+- Verification: 4522 isolated Unity Play Mode checks passed using production HitBoxManager, Bullet and Crosshair, plus the projection methods extracted verbatim from Guns. Unrelated enemy/gun dependencies are stubbed. Checks include zero/invalid damage, positive multipliers, single-consumption projectile hits, perspective projection, zoom, muzzle parallax, 4500 sampled trajectories across pitch/FOV, pellet envelope growth and Canvas scales 1/2. Runtime/editor compilation passed. Actual gameplay scene visuals still require a playtest.

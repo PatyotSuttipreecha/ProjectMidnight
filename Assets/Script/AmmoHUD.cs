@@ -17,6 +17,12 @@ public class AmmoHUD : MonoBehaviour
     private bool lastReload;
     private bool wasVisible;
 
+    public void Retire()
+    {
+        if (panel != null) panel.SetActive(false);
+        enabled = false;
+    }
+
     private void LateUpdate()
     {
         if (player == null) player = PlayerController.instance;

@@ -14,8 +14,8 @@ public sealed class EnemyProfileGUI
         new[] { "useLocomotionBlendTree", "autoAnimationReferenceSpeeds", "keepWalkBlendWhileMoving", "animationStopSpeed", "animationWalkSpeed", "animationRunSpeed", "locomotionDamping", "locomotionTransition", "locomotionState", "locomotionBlendParameter", "locomotionHorizontalParameter", "locomotionVerticalParameter", "locomotionAttackParameter", "locomotionAttackState", "runAnimation" },
         new[] { "detectionRadius", "fieldOfView", "obstacleMask", "eyeHeight", "playerTargetHeight", "detectAnticipation", "lostSightCooldown", "canHear", "hearingMultiplier", "walkHearingRadius", "runHearingRadius", "gunshotHearingRadius", "noiseSearchDuration", "noiseTravelTimeout" },
         new[] { "coordinateAttacks", "maxConcurrentAttackers", "engagementDistance", "pressureRingRadius", "pressureOrbitSpeed", "pressureOrbitStep", "pressureOrbitMode", "pressureDirectionDuration", "pressureWaitTimeout", "pressureRetreatCooldown", "attackTurnTimeout", "attackTurnRest", "useApproachDecisions", "approachDecisionInterval", "approachWeights", "flankAngle", "pressureSpeedMultiplier", "spreadChaseTargets", "chaseApproachRadius", "varyAvoidancePriority", "separateNearbyEnemies", "separationRadius", "separationSpeed" },
-        new[] { "startingWeapon", "minAttack", "maxAttack", "attackRange", "attackPreparationTime", "attackWindup", "attackCooldown", "baseHitArc", "baseRecovery", "baseAttackAnimation", "restraintDuration", "restraintSpeedMultiplier", "playerHitProtection" },
-        new[] { "hitKnockbackDistance", "hitKnockbackDuration", "hitStaggerDuration", "enableHitReaction", "hitPushImpulse", "hitPhysicsDuration", "hitRecoveryDuration", "hitReactionBlend", "hitAnimationSupport", "hitMaxAngle", "useRagdoll", "deathAnimation", "deathAnimationLeadIn", "deathBlendDuration", "deathAnimationDrive", "hybridDeathPushScale", "corpseLifetime", "ragdollGravityScale", "ragdollLinearDamping", "ragdollAngularDamping", "deathPushImpulse", "corpseSettleDelay", "physicsMassMultiplier", "boneMassOverrides" },
+        new[] { "startingWeapon", "minAttack", "maxAttack", "attackRange", "attackPreparationTime", "advanceDuringPreparation", "attackWindup", "meleeAttackStep", "attackCooldown", "charge", "baseHitArc", "baseRecovery", "baseAttackAnimation", "restraintDuration", "restraintSpeedMultiplier", "playerHitProtection" },
+        new[] { "actionBreak", "hitKnockbackDistance", "hitKnockbackDuration", "hitStaggerDuration", "enableHitReaction", "hitPushImpulse", "hitPhysicsDuration", "hitRecoveryDuration", "hitReactionBlend", "hitAnimationSupport", "hitMaxAngle", "useRagdoll", "deathAnimation", "deathAnimationLeadIn", "deathBlendDuration", "deathAnimationDrive", "hybridDeathPushScale", "corpseLifetime", "ragdollGravityScale", "ragdollLinearDamping", "ragdollAngularDamping", "deathPushImpulse", "corpseSettleDelay", "physicsMassMultiplier", "boneMassOverrides" },
         new[] { "lootDropChance", "lootTable", "lootPrefab", "lootOffset" }
     };
     private static readonly HashSet<string> advancedFields = new HashSet<string> {
@@ -43,6 +43,7 @@ public sealed class EnemyProfileGUI
         if ((field.StartsWith("pressure", StringComparison.Ordinal) && field != "pressureSpeedMultiplier" || field == "maxConcurrentAttackers" || field == "engagementDistance" || field.StartsWith("attackTurn", StringComparison.Ordinal)) && !p.coordinateAttacks) return false;
         if ((field == "hearingMultiplier" || field.EndsWith("HearingRadius", StringComparison.Ordinal) || field.StartsWith("noise", StringComparison.Ordinal)) && !p.canHear) return false;
         if ((field == "startingWeapon" || field == "detectAnticipation" || field.StartsWith("base", StringComparison.Ordinal) || field.StartsWith("restraint", StringComparison.Ordinal) || field == "playerHitProtection") && !p.useLostCombat) return false;
+        if ((field == "meleeAttackStep" || field == "advanceDuringPreparation") && !p.useLostCombat) return false;
         if (field == "attackCooldown" && p.useLostCombat) return false;
         if (field == "restraintSpeedMultiplier" && p.restraintDuration <= 0) return false;
         if (new[] { "hitPushImpulse", "hitPhysicsDuration", "hitRecoveryDuration", "hitReactionBlend", "hitAnimationSupport", "hitMaxAngle" }.Contains(field) && !p.enableHitReaction) return false;
@@ -60,6 +61,23 @@ public sealed class EnemyProfileGUI
             result.Add("Custom Walk Reference Speed is much higher than AI Walk Speed. Enable automatic references or align the two values.");
         if (p.useLocomotionBlendTree && !p.keepWalkBlendWhileMoving) result.Add("Full Walk while moving is disabled: slow movement will blend toward Idle.");
         if (p.animationStopSpeed >= p.walkSpeed && p.useLocomotionBlendTree) result.Add("Animation Stop Speed is at least Walk Speed; ordinary walking may look idle.");
+        if (p.charge != null && p.charge.enabled)
+        {
+            float chargeSpeed = Mathf.Max(.1f, p.charge.speed);
+            float chargeDuration = Mathf.Max(.1f, p.charge.duration);
+            float acceleration = Mathf.Max(.1f, p.acceleration);
+            float accelerating = Mathf.Min(chargeDuration, chargeSpeed / acceleration);
+            float reach = p.useLostCombat && p.startingWeapon != null ? p.startingWeapon.range : p.attackRange;
+            float reachable = Mathf.Min(p.charge.maxDistance, .5f * acceleration * accelerating * accelerating + chargeSpeed * (chargeDuration - accelerating) + reach - .35f);
+            if (reachable < Mathf.Max(reach + .3f, p.charge.minDistance)) result.Add("Charge cannot start: reachable maximum " + reachable.ToString("0.00") + " m is below its minimum. Increase Charge Duration or reduce Min Distance.");
+            if (p.charge.selectionChance <= 0) result.Add("Charge Selection Chance is zero: this profile always chooses ordinary approach.");
+            if (p.charge.maxDistance > p.charge.speed * p.charge.duration + p.attackRange - .35f) result.Add("Charge Max Distance exceeds its travel budget. Runtime limits the start range using speed, duration, acceleration and actual weapon reach.");
+            if (p.charge.maxDistance <= p.charge.minDistance) result.Add("Charge Max Distance should exceed Min Distance and melee reach.");
+            if (string.IsNullOrEmpty(p.charge.runAnimation)) result.Add("Charge Run Animation is empty: the charge uses the existing locomotion animation. Assign a dedicated layer-0 Animator state to make it visually distinct.");
+        }
+        if (p.coordinateAttacks && EnemyCombatSettings.RushEnabled &&
+            p.engagementDistance < Mathf.Max(EnemyCombatSettings.PressureDistance, p.chaseSlowdownDistance, p.pressureRingRadius) + .5f)
+            result.Add("Engagement Distance is inside the waiting ring. Detected enemies request the same combat turn from the ring boundary + 0.5 m; movement ownership does not gate that request.");
         if (p.minAttack > p.maxAttack) result.Add("Minimum Damage exceeds Maximum Damage.");
         if (!p.useLostCombat && p.startingWeapon != null) result.Add("Starting Weapon is assigned but Lost Combat is disabled; the module is not used.");
         if (p.chaseWalkDuration.x <= 0 || p.chaseWalkDuration.y < p.chaseWalkDuration.x || p.chaseBoostDuration.x <= 0 || p.chaseBoostDuration.y < p.chaseBoostDuration.x)
@@ -96,13 +114,30 @@ public sealed class EnemyProfileGUI
         }
         return warnings;
     }
+    private static void DrawCharge(SerializedProperty charge)
+    {
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField(new GUIContent("Charge", charge.tooltip), EditorStyles.boldLabel);
+        // Draw direct children without a parent PropertyField/foldout. Expansion
+        // remains independent of Unity's saved serialized foldout state.
+        var child = charge.Copy();
+        var end = child.GetEndProperty();
+        if (child.NextVisible(true))
+            do
+            {
+                if (SerializedProperty.EqualContents(child, end)) break;
+                EditorGUILayout.PropertyField(child, true);
+            } while (child.NextVisible(false));
+        EditorGUILayout.Space(8);
+    }
+
     public void Draw(EnemyDataSO p)
     {
         if (p == null) return;
         category = EditorGUILayout.Popup("Settings category", category, Categories);
         if (category == 1 || category == 4 || category == 8)
         {
-            EditorGUILayout.HelpBox("Shared Combat Timing controls the pressure group, nearest replacements, escape pauses and attack spacing across profiles. Owners keep their slots through melee. This mode overrides the saved Walk/Boost rhythm while enabled.", MessageType.Info);
+            EditorGUILayout.HelpBox("Group settings here define this profile’s orbit, separation and requested attack-turn cap. Shared Combat Timing controls random staggered runners, first-arrival pressure ownership, per-owner handoff and attack spacing across profiles. Walkers can arrive first and earn a slot. Owners keep their slots through melee. This mode overrides the saved Walk/Boost rhythm while enabled.", MessageType.Info);
             if (GUILayout.Button("Open Shared Combat Timing"))
                 EnemyCombatSettingsWindow.Open();
         }
@@ -122,8 +157,8 @@ public sealed class EnemyProfileGUI
                     var property = data.FindProperty(field);
                     return property != null && (property.displayName + " " + field + " " + property.tooltip).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
                 })) continue;
-                EditorGUILayout.Space(6);
-                EditorGUILayout.LabelField(Categories[group], EditorStyles.boldLabel);
+                using (new ModificationGUI.Card(Categories[group]))
+                {
                 if (group == 5) EditorGUILayout.HelpBox("These are the unarmed/base attack values. Equipped weapon range, damage and timing belong to Weapon Module below.", MessageType.Info);
                 if (group == 2 && p.useLocomotionBlendTree)
                 {
@@ -140,13 +175,20 @@ public sealed class EnemyProfileGUI
                     bool visible = IsVisible(field, p, advanced);
                     if (!visible && !searching) continue;
                     using (new EditorGUI.DisabledScope(!visible))
-                        EditorGUILayout.PropertyField(property, new GUIContent(property.displayName, property.tooltip), true);
+                    {
+                        if (field == "actionBreak") EditorGUILayout.HelpBox("Ordinary shots keep physical feedback without losing pursuit or combat rights. Action Break uses accumulated impact or a per-shot critical, then releases only the interrupted enemy.", MessageType.Info);
+                        if (field == "hitKnockbackDistance") EditorGUILayout.LabelField("Action Break movement", EditorStyles.boldLabel);
+                        if (field == "enableHitReaction") EditorGUILayout.LabelField("Physical feedback (ordinary hits)", EditorStyles.boldLabel);
+                        if (field == "charge") DrawCharge(property);
+                        else EditorGUILayout.PropertyField(property, new GUIContent(property.displayName, property.tooltip), true);
+                    }
                     if (!visible && searching) EditorGUILayout.LabelField("Inactive / advanced setting; enable its feature to edit.", EditorStyles.miniLabel);
                 }
                 if (group == 7 && (!searching || Fields[7].Any(field => ObjectNames.NicifyVariableName(field).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)))
                 {
                     EnemyLootEditor.Draw(data);
                     EditorGUILayout.PropertyField(data.FindProperty("lootOffset"));
+                }
                 }
             }
             data.ApplyModifiedProperties();
@@ -212,6 +254,9 @@ public static class EnemyDiagnosticsGUI
             EditorGUILayout.LabelField("Agent speed / velocity", agent.speed.ToString("0.000") + " / " + agent.velocity.magnitude.ToString("0.000") + " m/s");
             EditorGUILayout.LabelField("Path", agent.isStopped ? "Stopped" : agent.pathPending ? "Calculating" : agent.hasPath ? agent.pathStatus.ToString() : "No path");
             EditorGUILayout.LabelField("Pressure group", enemy.RushStatus);
+            EditorGUILayout.LabelField("Effective turn request range", enemy.EffectiveAttackTurnRequestDistance.ToString("0.##") + " m");
+            EditorGUILayout.LabelField("Attack target gate", enemy.RushTarget != null && enemy.RushTarget.TryGetComponent(out PlayerController targetPlayer)
+                ? EnemyPlayerEffects.For(targetPlayer).BlockReason : "Missing player");
         }
         if (GUILayout.Button(enemy.IsPatrolRunning ? "Pause AI / Patrol" : "Start AI / Patrol"))
         { if (enemy.IsPatrolRunning) enemy.PausePatrol(); else enemy.StartPatrol(); }

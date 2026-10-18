@@ -62,7 +62,12 @@ public class ItemConfigurationWindow : EditorWindow
     }
     private void OnGUI()
     {
-        tab = GUILayout.Toolbar(tab, new[] { "Item Settings", "Inventory / Examine UI" });
+        using (new ModificationGUI.WindowScope(this, "Item Lab", "Item configuration", "Manage inventory items, inspection models and editable UI prefabs.", ModificationGUI.Item, tab == 0 ? (Object)item : inventoryUI))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
+        tab = ModificationGUI.Tabs(tab, new[] { "Item Settings", "Inventory / Examine UI" }, ModificationGUI.Item);
         followSelection = EditorGUILayout.ToggleLeft("ติดตามวัตถุที่เลือก", followSelection);
         scroll = EditorGUILayout.BeginScrollView(scroll);
         if (tab == 0) DrawItem(); else DrawUI();
@@ -84,7 +89,7 @@ public class ItemConfigurationWindow : EditorWindow
             {
                 if (entry == null || (!string.IsNullOrWhiteSpace(filter) &&
                     (entry.name + " " + entry.itemName).IndexOf(filter, System.StringComparison.OrdinalIgnoreCase) < 0)) continue;
-                if (GUILayout.Button($"{entry.itemName}  [{entry.itemType}]  {entry.width}×{entry.height}", EditorStyles.miniButton))
+                if (ModificationGUI.ListRow(item == entry, $"{entry.itemName}  [{entry.itemType}]  {entry.width}×{entry.height}", AssetDatabase.GetAssetPath(entry), ModificationGUI.Item) && item != entry)
                 { item = entry; settings = null; }
             }
         }
@@ -194,7 +199,7 @@ public class ItemConfigurationWindow : EditorWindow
     private void Field(string path, string title) => EditorGUILayout.PropertyField(settings.FindProperty(path), new GUIContent(title), true);
     private void Integer(string path, string title, int min, int max)
     { var property = settings.FindProperty(path); property.intValue = Mathf.Clamp(EditorGUILayout.IntField(title, property.intValue), min, max); }
-    private static void Section(string title) { EditorGUILayout.Space(); EditorGUILayout.LabelField(title, EditorStyles.boldLabel); }
+    private static void Section(string title) => ModificationGUI.Section(title);
     private void CreateItem()
     {
         string path = EditorUtility.SaveFilePanelInProject("สร้าง ItemSO", "NewItem", "asset", "เลือกที่เก็บไอเทม", "Assets/Data/Items");

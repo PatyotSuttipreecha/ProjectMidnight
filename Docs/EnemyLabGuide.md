@@ -94,3 +94,13 @@ Loot ใช้ editor เปอร์เซ็นต์ชุดเดียว:
 ป้ายอ้างกระดูก Head จริง (ไม่มี Humanoid Head ใช้จุดสูงจาก root 1.7 เมตร) ค่า Offset Above Head เริ่ม 0.12 เมตร ป้ายขนาดเล็กแสดง ID ประจำตัวและ State เท่านั้น ไม่ใช้หมายเลขอันดับระยะอีกต่อไป ตัวใกล้ได้พื้นที่ก่อนโดยให้ตัวที่ focus มีลำดับแรก จำกัดป้ายเริ่ม 8 ตัว ถ้าพื้นที่ไม่พอจะเหลือ marker สีและ ID ตรงหัวแทนการดันป้ายไกลออกไป ป้ายเลื่อนได้สูงสุด 28 พิกเซลและมีเส้นขอบดำ/สีเชื่อมไปยัง marker
 
 เล็งใกล้หัวเพื่อแสดง FOCUS พร้อม ID, ชื่อศัตรู, อาวุธ, State, ระยะ, พฤติกรรมและสิทธิ์โจมตีในมุมล่างซ้าย ปิด Focused Enemy Details ได้ ตั้ง Compact Label Limit, Offset Above Head, Label Range และ Text Size ที่ Cheat Menu ทั้ง Editor และ F10 การตั้งค่าใช้ชั่วคราวและ Reset All Cheats คืนค่าเดิม
+## Shared Combat Settings: Combat director
+
+เปิด System Modification → Enemy Lab → Shared Combat Settings หน้าต่างจัดเป็นการ์ดพร้อมสรุปโควตารวม โอกาสพร้อมวิ่ง และระยะรับสิทธิ์ที่ด้านบน ช่องเดิมกระจายอยู่ใน 4 แท็บดังนี้:
+
+- Approach: เปิด Shared Coordination, Owners + Incoming Runners, Approach Run Chance (%) และช่วง Stagger Between Starts แยก Min / Max
+- Pressure: Claim Distance, Replacement Interval, Reentry Cooldown และ Pursuit Stall Timeout
+- Escape: Pause Rush During Escape, Delay After Sprint Stops และคำอธิบายการล้างสิทธิ์/สุ่มรอบใหม่
+- Attack: Attack Start Interval และปุ่มเปิด Enemy Lab สำหรับตั้งค่าราย Profile / Weapon Module
+
+โอกาสวิ่งแสดงเป็นเปอร์เซ็นต์ในหน้าต่าง แต่ยังบันทึก 0–1 ใน SO ตามเดิม การแก้ค่ารองรับ Undo / Redo และปุ่ม Save Settings; Locate ชี้ Asset ใน Project ส่วน Asset & Persistence แสดงไฟล์ที่ใช้ ค่าที่แก้ใน Play Mode เป็นการแก้ Asset จริงและยังคงอยู่หลังหยุด Play ช่องที่ขึ้นกับ Shared Coordination จะปรับไม่ได้เมื่อปิดโหมดนี้ แต่ Attack Start Interval ยังปรับได้

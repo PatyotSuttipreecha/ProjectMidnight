@@ -4,6 +4,7 @@ using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
 
+[DefaultExecutionOrder(350)]
 public class EnemySpawnPoint : MonoBehaviour
 {
     public enum SpawnMode { ExistingSettings, Once, Continuous, FixedCount }
@@ -58,6 +59,26 @@ public class EnemySpawnPoint : MonoBehaviour
     [Header("Placement")]
     [Min(0f)] public float spawnRadius = 2f;
     [Min(0.1f)] public float navMeshSnapDistance = 2f;
+    [Header("Spawn Visibility")]
+    [Tooltip("Spawn only when the entire enemy placement bounds are outside the gameplay camera frustum. Visible positions are skipped without consuming the spawn budget. Continuous points retry on their normal interval.")]
+    public bool spawnOutOfView;
+    [Tooltip("Optional gameplay render camera. Empty uses Camera.main. If no active camera is available, hidden spawning waits rather than spawning unchecked.")]
+    public Camera visibilityCamera;
+    public string LastPlacementResult { get; private set; } = "Not attempted";
+
+    public bool IsPositionOutOfView(Vector3 position, NavMeshAgent templateAgent = null)
+    {
+        Camera camera = visibilityCamera != null ? visibilityCamera : Camera.main;
+        if (camera == null || !camera.isActiveAndEnabled) return false;
+        // Test a body-sized volume, not just its feet: a partly visible enemy
+        // must not pop into the edge of the screen. Padding covers animation.
+        float height = Mathf.Max(2f, templateAgent != null ? templateAgent.height : 2f);
+        float radius = Mathf.Max(.5f, templateAgent != null ? templateAgent.radius : .5f);
+        float offset = templateAgent != null ? templateAgent.baseOffset : 0;
+        Bounds bounds = new Bounds(position + Vector3.up * (offset + height * .5f),
+            new Vector3(radius * 2 + 1, height + 1, radius * 2 + 1));
+        return !GeometryUtility.TestPlanesAABB(GeometryUtility.CalculateFrustumPlanes(camera), bounds);
+    }
     private readonly List<EnemyController> living = new List<EnemyController>();
     private int spawnedCount;
     private float nextSpawnTime;
@@ -86,7 +107,9 @@ public class EnemySpawnPoint : MonoBehaviour
         }
         else if (spawnOnStart) StartSpawning();
     }
-    private void Update()
+    // Cinemachine applies the visible camera pose in LateUpdate. Test that pose,
+    // not the previous frame's view while the player is turning the camera.
+    private void LateUpdate()
     {
         if (!IsSpawning || Time.time < nextSpawnTime) return;
         if (!HasBudget) { FinishSpawning(); return; }
@@ -168,9 +191,16 @@ public class EnemySpawnPoint : MonoBehaviour
                     if (!NavMesh.CalculatePath(hit.position, first.position, filter, path) || path.status != NavMeshPathStatus.PathComplete) continue;
                 }
             }
+            if (spawnOutOfView && !IsPositionOutOfView(hit.position, templateAgent)) continue;
             spawnPosition = hit.position; found = true; break;
         }
-        if (!found) { Debug.LogWarning("No reachable NavMesh at this spawn point.", this); return null; }
+        if (!found)
+        {
+            LastPlacementResult = spawnOutOfView ? "Waiting: no hidden, reachable position (or no active gameplay camera)" : "No reachable NavMesh";
+            if (!spawnOutOfView) Debug.LogWarning("No reachable NavMesh at this spawn point.", this);
+            return null;
+        }
+        LastPlacementResult = "Spawned at " + spawnPosition.ToString("F1");
         // An inactive staging parent prevents Awake from running before profile/route injection.
         GameObject staging = new GameObject("Enemy Spawn Staging");
         staging.SetActive(false);
@@ -180,6 +210,7 @@ public class EnemySpawnPoint : MonoBehaviour
         instance.ConfigureSpawn(resolvedProfile, patrolRoute, target);
         instance.transform.SetParent(null, true);
         instance.gameObject.SetActive(true);
+        instance.RecordSpawnSource(this);
         if (aggressionMode != AggressionMode.UseProfile)
             instance.SetAggressive(aggressionMode == AggressionMode.Aggressive);
         if (enemyGroup != null) enemyGroup.RegisterEnemy(instance);

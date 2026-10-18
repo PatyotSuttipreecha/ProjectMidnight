@@ -162,6 +162,9 @@ public class EnemySpawnPointEditor : Editor
         }
         serializedObject.ApplyModifiedProperties();
         EnemySpawnPoint spawn = (EnemySpawnPoint)target;
+        if (spawn.spawnOutOfView)
+            EditorGUILayout.HelpBox("Hidden spawn: the full placement bounds must be outside the gameplay camera. A visible point waits until a later scheduled attempt. Camera defaults to Main Camera.", MessageType.Info);
+        if (Application.isPlaying) EditorGUILayout.LabelField("Last placement", spawn.LastPlacementResult, EditorStyles.wordWrappedLabel);
         if (spawn.spawnMode == EnemySpawnPoint.SpawnMode.ExistingSettings)
         {
             serializedObject.Update();
@@ -186,19 +189,7 @@ public class EnemySpawnPointEditor : Editor
         {
             if (spawn.patrolRoute == null && GUILayout.Button("Create and assign Patrol Route"))
             {
-                Undo.IncrementCurrentGroup(); int group = Undo.GetCurrentGroup();
-                GameObject obj = new GameObject(spawn.name + " Route");
-                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(obj, spawn.gameObject.scene);
-                obj.transform.position = spawn.transform.position;
-                Undo.RegisterCreatedObjectUndo(obj, "Create spawn patrol route");
-                PatrolRoute route = Undo.AddComponent<PatrolRoute>(obj);
-                NavMeshQueryFilter filter = PatrolPathPreview.Filter(spawn);
-                route.agentTypeId = filter.agentTypeID; route.areaMask = filter.areaMask;
-                Undo.RecordObject(spawn, "Assign spawn route"); spawn.patrolRoute = route;
-                EditorUtility.SetDirty(spawn);
-                if (PrefabUtility.IsPartOfPrefabInstance(spawn)) PrefabUtility.RecordPrefabInstancePropertyModifications(spawn);
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(spawn.gameObject.scene);
-                Undo.CollapseUndoOperations(group);
+                EnemyProfileMigration.CreateSpawnRoute(spawn);
             }
             showPaths = EditorGUILayout.ToggleLeft("Show NavMesh paths: green reachable / red blocked", showPaths);
             if (GUILayout.Button("Validate Spawn + Patrol paths")) problems = PatrolPathPreview.Validate(spawn);

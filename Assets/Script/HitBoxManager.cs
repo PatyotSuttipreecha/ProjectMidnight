@@ -7,28 +7,25 @@ public class HitBoxManager : MonoBehaviour
     private bool isDead;
 
     public void TakeDamage(HitBoxPart hitPart, float baseDamage = 0f, Transform source = null,
-        Collider hitCollider = null, Vector3 hitPoint = default, Vector3 hitDirection = default)
+        Collider hitCollider = null, Vector3 hitPoint = default, Vector3 hitDirection = default, int shotId = 0, float impactPower = 0)
     {
-        if (isDead) return;
-        float minDamage = 10f;
-        float maxDamage = 15f;
+        if (isDead || float.IsNaN(baseDamage) || float.IsInfinity(baseDamage) || baseDamage <= 0f) return;
         float multiplier = 0.5f;
         switch (hitPart)
         {
             case HitBoxPart.Head:
-                minDamage = 30f; maxDamage = 45f; multiplier = 1.75f;
+                multiplier = 1.75f;
                 break;
             case HitBoxPart.Body:
-                minDamage = 20f; maxDamage = 25f; multiplier = 1f;
+                multiplier = 1f;
                 break;
             case HitBoxPart.Hip:
             case HitBoxPart.UpperArm:
             case HitBoxPart.UpperLeg:
-                minDamage = 15f; maxDamage = 20f; multiplier = 0.75f;
+                multiplier = 0.75f;
                 break;
         }
-        // Existing weapons have damage = 0. Preserve their old damage until configured.
-        float damage = baseDamage > 0f ? baseDamage * multiplier : Random.Range(minDamage, maxDamage);
+        float damage = baseDamage * multiplier;
         health = Mathf.Max(0f, health - damage);
         Debug.Log($"{hitPart} hit! -{damage} HP (Remaining: {health})");
         if (TryGetComponent(out EnemyController enemy)) enemy.AlertTo(source);
@@ -38,6 +35,6 @@ public class HitBoxManager : MonoBehaviour
             if (enemy != null) enemy.BeginDeath();
             else Destroy(gameObject);
         }
-        if (enemy != null) enemy.ReceiveBulletImpact(hitCollider, hitPoint, hitDirection);
+        if (enemy != null) enemy.ReceiveBulletImpact(hitCollider, hitPoint, hitDirection, shotId, impactPower);
     }
 }

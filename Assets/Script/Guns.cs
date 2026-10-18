@@ -12,7 +12,10 @@ public class Guns : MonoBehaviour
     public struct WeaponStat
     {
         public WeaponType weaponName;
+        [Min(0), Tooltip("Base damage per bullet/pellet before hit-location multipliers. Zero deals no damage.")]
         public float damage;
+        [Min(0), Tooltip("Action Break impact per shot per enemy. Zero uses the Enemy Profile default. Does not affect HP damage; shotgun pellets share one impact decision.")]
+        public float staggerPower;
         public float fireRate;
         public float recoil;
         public float recoilRecovery;
@@ -26,7 +29,9 @@ public class Guns : MonoBehaviour
         [Min(1)] public int pelletCount;
         [Tooltip("Shotgun pellet cone half-angle in degrees. Independent of aiming accuracy spread.")]
         [Range(0f, 45f)] public float pelletSpreadAngle;
+        [Tooltip("Yaw/pitch half-angle in degrees. Crosshair projects this actual scatter through the aim camera.")]
         public float baseSpread;       // spread ปกติ
+        [Tooltip("Minimum yaw/pitch scatter in degrees after steady aim.")]
         public float minSpread;     // spread ต่ำสุดเมื่อเล็งมั่นคง
         public float aimTime;       // เวลาในการหด spread ให้แคบลง
         public GameObject bulletPrefab;
@@ -139,6 +144,7 @@ public class Guns : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateCrosshairProjection();
         if (camRotationComposer == null)
             return;
 
@@ -238,11 +244,11 @@ public class Guns : MonoBehaviour
 
     void Shooting()
     {
-        if (IsAiming && weaponStat.currentAmmo > 0)
+        if (IsAiming && (weaponStat.currentAmmo > 0 || CheatMenu.HasInfiniteAmmo(playerController)))
         {
             if (Input.GetMouseButtonDown(0))
             {
-                weaponStat.currentAmmo--;
+                if (!CheatMenu.HasInfiniteAmmo(playerController)) weaponStat.currentAmmo--;
                 if (weaponStat.muzzleFlash != null) weaponStat.muzzleFlash.Play();
                
                 FireBullet();
@@ -261,7 +267,7 @@ public class Guns : MonoBehaviour
                 return;
             }
         }
-        if (Input.GetMouseButtonDown(0) && weaponStat.currentAmmo <= 0)
+        if (Input.GetMouseButtonDown(0) && weaponStat.currentAmmo <= 0 && !CheatMenu.HasInfiniteAmmo(playerController))
         {
             SoundManager.PlaySound(weaponStat.emptyMagSO, 1);
             Debug.Log("Ammo running out");
@@ -271,22 +277,7 @@ public class Guns : MonoBehaviour
     {
         if (weaponStat.bulletPrefab == null || weaponStat.firePoint == null) return;
 
-        Vector3 targetPoint;
-        if (aimPosition != null)
-        {
-            // Use the same camera, mask and fallback as the rig's Aimpoint.
-            aimPosition.RefreshTarget();
-            targetPoint = aimPosition.TargetPoint;
-        }
-        else
-        {
-            Camera mainCamera = Camera.main;
-            if (mainCamera == null) return;
-            Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f + aimViewportOffset.x, 0.5f + aimViewportOffset.y, 0f));
-            targetPoint = Physics.Raycast(ray, out RaycastHit hit, 1000f,
-                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
-                ? hit.point : ray.GetPoint(1000f);
-        }
+        if (!TryGetAimTarget(out _, out Vector3 targetPoint)) return;
 
         // 2. คำนวณทิศจาก firePoint → targetPoint
         Vector3 shootDirection = (targetPoint - weaponStat.firePoint.position).normalized;
@@ -295,12 +286,12 @@ public class Guns : MonoBehaviour
         float spreadX = Random.Range(-currentSpread, currentSpread);
         float spreadY = Random.Range(-currentSpread, currentSpread);
         // Scatter around the shot's local axes, including when aiming up/down.
-        shootDirection = Quaternion.LookRotation(shootDirection) *
-            (Quaternion.Euler(-spreadY, spreadX, 0) * Vector3.forward);
+        shootDirection = AccuracyDirection(shootDirection, spreadX, spreadY);
 
         // 4. สร้างกระสุน
         int count = weaponStat.weaponName == WeaponType.Shotgun ? Mathf.Clamp(weaponStat.pelletCount, 1, 128) : 1;
         float pelletAngle = weaponStat.weaponName == WeaponType.Shotgun ? Mathf.Clamp(weaponStat.pelletSpreadAngle, 0f, 45f) : 0f;
+        int shotId = Bullet.AllocateShotId();
         for (int i = 0; i < count; i++)
         {
             Vector3 pelletDirection = SamplePelletDirection(shootDirection, pelletAngle);
@@ -309,6 +300,7 @@ public class Guns : MonoBehaviour
             if (bulletScript != null)
             {
                 bulletScript.SetDamage(weaponStat.damage);
+                bulletScript.SetImpactShot(shotId, weaponStat.staggerPower);
                 bulletScript.SetSource(playerController != null ? playerController.transform : null);
                 bulletScript.SetDirection(pelletDirection, weaponStat.bulletSpeed);
             }
@@ -317,6 +309,64 @@ public class Guns : MonoBehaviour
 
         // Debug ray
         Debug.DrawRay(weaponStat.firePoint.position, shootDirection * 10f, Color.red, 2f);
+    }
+
+    public static Vector3 AccuracyDirection(Vector3 forward, float yaw, float pitch) =>
+        Quaternion.LookRotation(forward) * (Quaternion.Euler(-pitch, yaw, 0) * Vector3.forward);
+
+    private bool TryGetAimTarget(out Camera camera, out Vector3 target)
+    {
+        camera = aimPosition != null ? aimPosition.AimCamera : Camera.main;
+        target = default;
+        if (camera == null) return false;
+        if (aimPosition != null) { aimPosition.RefreshTarget(); target = aimPosition.TargetPoint; }
+        else
+        {
+            Ray ray = camera.ViewportPointToRay(new Vector3(.5f + aimViewportOffset.x, .5f + aimViewportOffset.y, 0));
+            target = Physics.Raycast(ray, out RaycastHit hit, 1000f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                ? hit.point : ray.GetPoint(1000f);
+        }
+        return true;
+    }
+
+    private void UpdateCrosshairProjection()
+    {
+        if (crosshairUI == null || weaponStat.firePoint == null || weaponStat.weaponName == WeaponType.None || weaponStat.weaponName == WeaponType.Knife) return;
+        if (!TryGetAimTarget(out Camera camera, out Vector3 target)) return;
+        Vector3 offset = target - weaponStat.firePoint.position;
+        if (offset.sqrMagnitude < .0001f || camera.WorldToScreenPoint(target).z <= 0) return;
+        float pellets = weaponStat.weaponName == WeaponType.Shotgun ? Mathf.Clamp(weaponStat.pelletSpreadAngle, 0, 45) : 0;
+        crosshairUI.SetProjectedSpread(camera.WorldToScreenPoint(target),
+            ProjectSpreadBounds(camera, weaponStat.firePoint.position, offset.normalized, offset.magnitude, currentSpread, pellets));
+    }
+
+    // Project the same local yaw/pitch scatter as FireBullet onto the aim plane.
+    // This includes muzzle parallax, camera FOV and the additional pellet cone.
+    public static Rect ProjectSpreadBounds(Camera camera, Vector3 origin, Vector3 forward, float distance, float accuracy, float pelletAngle)
+    {
+        Vector2 min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+        Vector2 max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+        forward.Normalize();
+        accuracy = Mathf.Clamp(accuracy, 0, 80);
+        int samples = pelletAngle > 0 ? 32 : 1;
+        for (int x = -1; x <= 1; x++)
+        for (int y = -1; y <= 1; y++)
+        {
+            Vector3 axis = AccuracyDirection(forward, x * accuracy, y * accuracy);
+            Quaternion rotation = Quaternion.LookRotation(axis);
+            float sine = Mathf.Sin(pelletAngle * Mathf.Deg2Rad), cosine = Mathf.Cos(pelletAngle * Mathf.Deg2Rad);
+            for (int i = 0; i < samples; i++)
+            {
+                float angle = i * Mathf.PI * 2 / samples;
+                Vector3 direction = pelletAngle > 0 ? rotation * new Vector3(sine * Mathf.Cos(angle), sine * Mathf.Sin(angle), cosine) : axis;
+                float dot = Vector3.Dot(direction, forward);
+                if (dot <= .001f) continue;
+                Vector3 point = camera.WorldToScreenPoint(origin + direction * (distance / dot));
+                if (point.z <= 0) continue;
+                min = Vector2.Min(min, point); max = Vector2.Max(max, point);
+            }
+        }
+        return float.IsInfinity(min.x) ? new Rect(camera.WorldToScreenPoint(origin + forward * distance), Vector2.zero) : Rect.MinMaxRect(min.x, min.y, max.x, max.y);
     }
 
     public static Vector3 SamplePelletDirection(Vector3 forward, float halfAngle)

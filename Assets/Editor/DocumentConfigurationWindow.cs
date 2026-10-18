@@ -43,6 +43,12 @@ public class DocumentConfigurationWindow : EditorWindow
     private void ReleasePreview() { if (preview != null) DestroyImmediate(preview); preview = null; previewSource = null; }
     private void OnGUI()
     {
+        minSize = Vector2.Max(minSize, new Vector2(720, 500));
+        using (new ModificationGUI.WindowScope(this, "Item Lab", "Documents & evidence", "Write catalog records, preview models and configure world pickups.", ModificationGUI.Item, document))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             if (GUILayout.Button("สร้างเอกสาร", EditorStyles.toolbarButton)) CreateDocument(false);
@@ -64,7 +70,7 @@ public class DocumentConfigurationWindow : EditorWindow
                 var selected = (DocumentSO)EditorGUILayout.ObjectField("Document", document, typeof(DocumentSO), false);
                 if (selected != document) Select(selected);
                 if (document == null) { EditorGUILayout.HelpBox("เลือกเอกสารจากรายการ หรือสร้าง DocumentSO ใหม่ เอกสารไม่ใช้ช่อง Inventory", MessageType.Info); return; }
-                tab = GUILayout.Toolbar(tab, new[] { "Information", document.IsEvidence ? "Details / Images" : "Pages", "3D Model", "Scene / UI" });
+                tab = ModificationGUI.Tabs(tab, new[] { "Information", document.IsEvidence ? "Details / Images" : "Pages", "3D Model", "Scene / UI" }, ModificationGUI.Item, position.width - 290);
                 scroll = EditorGUILayout.BeginScrollView(scroll);
                 var data = new SerializedObject(document); data.Update();
                 switch (tab)
@@ -115,7 +121,7 @@ public class DocumentConfigurationWindow : EditorWindow
                 if (category == 1 && asset.IsEvidence || category == 2 && !asset.IsEvidence) continue;
                 string label = string.IsNullOrWhiteSpace(asset.title) ? asset.name : asset.title;
                 if (!string.IsNullOrWhiteSpace(search) && (label + " " + asset.name + " " + asset.author).IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) continue;
-                if (GUILayout.Toggle(document == asset, label, "Button") && document != asset) Select(asset);
+                if (ModificationGUI.ListRow(document == asset, label, AssetDatabase.GetAssetPath(asset), ModificationGUI.Item) && document != asset) Select(asset);
             }
             EditorGUILayout.EndScrollView();
             if (GUILayout.Button("รีเฟรชรายการ")) RefreshLibrary();

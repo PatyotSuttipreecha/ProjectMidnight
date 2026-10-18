@@ -4,6 +4,8 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "EnemyDataSO", menuName = "Scriptable Objects/EnemyDataSO")]
 public class EnemyDataSO : ScriptableObject
 {
+    [Tooltip("Individual charge ability: distances, timing and optional Animator states. Shared Combat only governs encounter scheduling.")]
+    public EnemyChargeSettings charge = new EnemyChargeSettings();
    [Header("Detection Settings")]
     [Range(1f, 50f)] public float detectionRadius = 12f;
     [Range(0f, 180f)] public float fieldOfView = 90f;
@@ -56,9 +58,9 @@ public class EnemyDataSO : ScriptableObject
     [Header("Chase Movement")]
     [Tooltip("Maximum pursuit speed while the player is visible and outside the slowdown zone.")]
     [Min(0f)] public float chaseSpeed = 2.5f;
-    [Tooltip("Target pursuit speed near attack range. The enemy stops during attack preparation.")]
+    [Tooltip("With Shared Combat, granted attackers keep this speed throughout the slowdown zone until attack preparation stops them. Independent of Patrol Walk Speed. Legacy chase blends toward this near attack range.")]
     [Min(0f)] public float closeApproachSpeed = .5f;
-    [Tooltip("Distance in world units where pursuit starts slowing down. Set above Attack Range.")]
+    [Tooltip("With Shared Combat, granted runners switch from boosted chase to constant Close Approach Speed at this distance. Set above attack reach. Legacy chase uses this as its blend boundary.")]
     [Min(0f)] public float chaseSlowdownDistance = 4f;
     [Tooltip("Rate of change of the requested movement speed, in units per second squared. Agent acceleration also limits actual velocity.")]
     [Min(.1f)] public float speedChangeRate = 5f;
@@ -122,7 +124,7 @@ public class EnemyDataSO : ScriptableObject
     public bool coordinateAttacks = true;
     [Tooltip("Maximum simultaneous reserved attackers for the same target. Use consistent limits for profiles in the same encounter.")]
     [Min(1)] public int maxConcurrentAttackers = 2;
-    [Tooltip("Distance from the player at which an enemy can request an attack turn.")]
+    [Tooltip("Base distance for requesting an attack turn. Shared pressure owners automatically cover the pressure/slowdown ring plus 0.5 m so a short value cannot strand them in Pressure.")]
     [Min(.5f)] public float engagementDistance = 6f;
     [Tooltip("Distance from the player's center while circling without an attack turn. Independent of weapon reach; body clearance is still enforced.")]
     [Min(.5f)] public float pressureRingRadius = 1.8f;
@@ -177,10 +179,14 @@ public class EnemyDataSO : ScriptableObject
     [Range(1f, 5f)] public float attackRange = 2f;
 
     [Header("Attack - Timing")]
-    [Tooltip("Stopped Idle time before starting the attack animation. Moving out of range cancels preparation.")]
+    [Tooltip("Base preparation time before windup. Legacy attacks stop; Lost melee may close during preparation when Advance During Preparation is enabled.")]
     [Min(0f)] public float attackPreparationTime = .25f;
+    [Tooltip("Lost melee may continue closing at Close Approach Speed during preparation, then commits direction at windup. Stones always prepare stationary.")]
+    public bool advanceDuringPreparation;
     [Tooltip("Seconds from starting the attack animation to checking range and applying damage.")]
     [Min(0f)] public float attackWindup = 0.5f;
+    [Tooltip("Small fixed-direction NavMesh step during Lost melee windup. Does not home after commitment. Zero disables the step; stones never step.")]
+    [Range(0, 1)] public float meleeAttackStep;
     [Tooltip("Minimum time between attack attempts, measured from preparation start. Cannot be shorter than preparation plus hit delay.")]
     [Range(0.5f, 5f)] public float attackCooldown = 2f;
 
@@ -215,11 +221,12 @@ public class EnemyDataSO : ScriptableObject
     [Min(0f)] public float ragdollAngularDamping = 1.5f;
     [Min(0f)] public float deathPushImpulse = 3f;
     [Header("Bullet Hit Reaction")]
-    [Tooltip("Maximum root displacement away from a bullet hit. NavMesh walls and edges limit movement.")]
+    public EnemyStaggerSettings actionBreak = new EnemyStaggerSettings();
+    [Tooltip("Root knockback only on Action Break. Ordinary hits do not displace the NavMesh root.")]
     [Min(0f)] public float hitKnockbackDistance = .15f;
     [Tooltip("Duration of root knockback in seconds. Repeated hits refresh rather than accumulate displacement.")]
     [Min(.02f)] public float hitKnockbackDuration = .12f;
-    [Tooltip("Time movement and attacks are interrupted after a bullet hit. Zero disables stagger.")]
+    [Tooltip("Interruption duration on Action Break, not on every bullet hit.")]
     [Min(0f)] public float hitStaggerDuration = .3f;
      public bool enableHitReaction = true;
     [Min(0f)] public float hitPushImpulse = 0.8f;
@@ -253,4 +260,33 @@ public class EnemyDataSO : ScriptableObject
         }
         return null;
     }
+}
+
+[System.Serializable]
+public class EnemyChargeSettings
+{
+    [Tooltip("Chance per decision to choose Charge instead of ordinary approach. Decisions are cached; not rolled every frame.")]
+    [Range(0, 1)] public float selectionChance = .3f;
+    [Tooltip("Seconds between charge decisions, with individual random staggering.")]
+    [Min(.1f)] public float decisionInterval = 3f;
+    [HideInInspector, Tooltip("Legacy setting retained for asset compatibility. Charge is now chosen after receiving the shared engagement turn; movement ownership does not modify its chance.")]
+    public bool reserveForMidRange = true;
+    [Tooltip("Enable this profile's individual charge ability. Shared Combat has a separate global master switch.")]
+    public bool enabled = true;
+    [Tooltip("Start outside normal melee reach and at least this far from the target.")]
+    [Min(0)] public float minDistance = 2.5f;
+    [Tooltip("Maximum distance to request a charge attack turn, independently of pressure ownership.")]
+    [Min(.1f)] public float maxDistance = 6f;
+    [Tooltip("Telegraph duration before committing to a fixed target position.")]
+    [Min(.1f)] public float preparation = .45f;
+    [Tooltip("Maximum running time; missed charges stop and recover instead of chasing forever.")]
+    [Min(.1f)] public float duration = 1.2f;
+    [Tooltip("NavMesh charge speed in metres per second.")]
+    [Min(.1f)] public float speed = 4f;
+    [Tooltip("Stopped recovery after a missed or blocked charge.")]
+    [Min(0)] public float recovery = .8f;
+    [Tooltip("Minimum time between this enemy’s charge attempts.")]
+    [Min(0)] public float cooldown = 5f;
+    [Tooltip("Optional layer-0 Animator state names. Empty uses existing Idle / locomotion / module attack.")]
+    public string preparationAnimation, runAnimation, attackAnimation;
 }

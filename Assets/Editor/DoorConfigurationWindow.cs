@@ -17,6 +17,13 @@ public class DoorConfigurationWindow : EditorWindow
     private void OnDisable() { if (inspector != null) DestroyImmediate(inspector); }
     private void OnGUI()
     {
+        using (new ModificationGUI.WindowScope(this, "Scene Configuration", "Door configuration", "Configure hinges, keys and interaction for single or double doors.", ModificationGUI.Scene, door))
+            DrawContent();
+    }
+    private void DrawContent()
+    {
+        using (new ModificationGUI.Card("Door target", "Select an existing door or create a complete scene example."))
+        {
         EditorGUILayout.HelpBox("เล็งประตูแล้วกด F จากระยะที่กำหนด กุญแจใช้ ItemSO ชนิด Key ใน Inventory", MessageType.Info);
         door = (DoorController)EditorGUILayout.ObjectField("Door", door, typeof(DoorController), true);
         using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
@@ -24,10 +31,11 @@ public class DoorConfigurationWindow : EditorWindow
             if (GUILayout.Button("สร้างประตูบานเดียว + กุญแจตัวอย่างในฉาก")) CreateExample(false);
             if (GUILayout.Button("สร้างประตูสองบาน + กุญแจตัวอย่างในฉาก")) CreateExample(true);
         }
+        }
         if (door == null) return;
         scroll = EditorGUILayout.BeginScrollView(scroll);
         Editor.CreateCachedEditor(door, null, ref inspector);
-        inspector.OnInspectorGUI();
+        using (new ModificationGUI.Card("Door settings")) inspector.OnInspectorGUI();
         if (door.startsLocked && (door.requiredKey == null || door.requiredKey.itemType != ItemType.Key))
             EditorGUILayout.HelpBox("ประตูล็อกต้องกำหนด Required Key เป็น ItemSO ชนิด Key", MessageType.Warning);
         EditorGUILayout.HelpBox("ประตูหลายบาน: เพิ่ม Leaves แล้วกำหนด Hinge และ Open Rotation ของแต่ละบาน เช่น Y 90 / -90 รายการ Leaves จะใช้แทน Hinge เดิม", MessageType.Info);

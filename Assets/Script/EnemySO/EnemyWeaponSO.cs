@@ -17,7 +17,7 @@ public class EnemyWeaponSO : ScriptableObject
     [Tooltip("Melee hit cone around the facing locked at windup start. Does not affect Stone.")]
     [Range(1, 180)] public float hitArc = 110f;
     [Min(0)] public float minDamage = 12, maxDamage = 18;
-    [Tooltip("Stopped anticipation before playing the attack animation.")]
+    [Tooltip("Anticipation before windup. Melee may advance when its Enemy Profile enables Advance During Preparation; stones remain stationary.")]
     [Min(0)] public float preparation = .45f;
     [Tooltip("Delay from attack animation start to the damage check or stone release.")]
     [Min(0)] public float windup = .5f;
