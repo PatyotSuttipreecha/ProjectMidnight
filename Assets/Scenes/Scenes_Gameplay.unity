@@ -14,19 +14,19 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
-  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Fog: 1
+  m_FogColor: {r: 0.25, g: 0.3, b: 0.38, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
-  m_LinearFogStart: 0
-  m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
-  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
-  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_FogDensity: 0.008
+  m_LinearFogStart: 20
+  m_LinearFogEnd: 120
+  m_AmbientSkyColor: {r: 0.25, g: 0.3, b: 0.38, a: 1}
+  m_AmbientEquatorColor: {r: 0.15, g: 0.18, b: 0.228, a: 1}
+  m_AmbientGroundColor: {r: 0.075, g: 0.09, b: 0.114, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: aa78c8d403a8547fe86d1f74239e6b03, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: c09419e05ae89d447a379d0473e876b3, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1636192639}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -505,6 +505,53 @@ MonoBehaviour:
   onSpawningFinished:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &127419116
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 127419117}
+  - component: {fileID: 127419118}
+  m_Layer: 0
+  m_Name: Lighting Cue - Dusk
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &127419117
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127419116}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1764252950}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &127419118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127419116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cd12d8fd58fba04d8dbb853fb2a29f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightingCue
+  controller: {fileID: 1764252951}
+  preset: {fileID: 11400000, guid: 211dbba112ac04b4e900c2506bbf44fa, type: 2}
+  durationOverride: -1
 --- !u!1 &136800571
 GameObject:
   m_ObjectHideFlags: 0
@@ -1735,11 +1782,11 @@ Transform:
   m_GameObject: {fileID: 201847305}
   serializedVersion: 2
   m_LocalRotation: {x: -0.00051604415, y: -0.7071064, z: 0.00051617844, w: 0.7071069}
-  m_LocalPosition: {x: 9.111292, y: -21.65, z: 222.4}
+  m_LocalPosition: {x: 7.4832335, y: -21.650099, z: 219.30402}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1043677240}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0.084}
 --- !u!1 &209209198
 GameObject:
@@ -2159,7 +2206,19 @@ MonoBehaviour:
   allowWhileGameplayBlocked: 0
   onPlayerEnter:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1449709173}
+        m_TargetAssemblyTypeName: LightingCue, Assembly-CSharp
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onTriggered:
     m_PersistentCalls:
       m_Calls: []
@@ -3962,6 +4021,53 @@ Transform:
   - {fileID: 1043677240}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &713664289
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 713664290}
+  - component: {fileID: 713664291}
+  m_Layer: 0
+  m_Name: Lighting Cue - Night
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &713664290
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713664289}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1764252950}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &713664291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713664289}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cd12d8fd58fba04d8dbb853fb2a29f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightingCue
+  controller: {fileID: 1764252951}
+  preset: {fileID: 11400000, guid: 5be877a5caec5a540a934afad841fa78, type: 2}
+  durationOverride: -1
 --- !u!1 &721759765
 GameObject:
   m_ObjectHideFlags: 0
@@ -9065,6 +9171,7 @@ Transform:
   - {fileID: 121054562}
   - {fileID: 1027177656}
   - {fileID: 227403116}
+  - {fileID: 201847311}
   m_Father: {fileID: 704213728}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1090727873
@@ -11064,6 +11171,53 @@ MonoBehaviour:
   markerColor: {r: 0, g: 1, b: 1, a: 1}
   labelBackground: {r: 0.08, g: 0.1, b: 0.12, a: 0.95}
   labelTextColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!1 &1393397325
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1393397326}
+  - component: {fileID: 1393397327}
+  m_Layer: 0
+  m_Name: Lighting Cue - Dawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1393397326
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1393397325}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1764252950}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1393397327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1393397325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cd12d8fd58fba04d8dbb853fb2a29f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightingCue
+  controller: {fileID: 1764252951}
+  preset: {fileID: 11400000, guid: e13f04e6d678a3742a348b6a31e22ae1, type: 2}
+  durationOverride: -1
 --- !u!1 &1419035458
 GameObject:
   m_ObjectHideFlags: 0
@@ -11654,6 +11808,53 @@ Transform:
   - {fileID: 721759771}
   m_Father: {fileID: 1043677240}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1449709171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1449709172}
+  - component: {fileID: 1449709173}
+  m_Layer: 0
+  m_Name: Lighting Cue - Evening
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1449709172
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449709171}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1764252950}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1449709173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449709171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cd12d8fd58fba04d8dbb853fb2a29f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightingCue
+  controller: {fileID: 1764252951}
+  preset: {fileID: 11400000, guid: 8226c18687e3c524d97af6f0b733972d, type: 2}
+  durationOverride: -1
 --- !u!1 &1486672367
 GameObject:
   m_ObjectHideFlags: 0
@@ -11919,6 +12120,7 @@ Transform:
   m_Children:
   - {fileID: 1636192637}
   - {fileID: 1173686740}
+  - {fileID: 1764252950}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1534911058
@@ -12826,7 +13028,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1636192636}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: -0.14919424, y: 0.2970037, z: -0.04704078, w: -0.9419751}
   m_LocalPosition: {x: -0.000000022351742, y: 3, z: 0.000000033527613}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -12872,8 +13074,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 11
   m_Type: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 1, g: 0.78, b: 0.57, a: 1}
+  m_Intensity: 0.85
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -15996,6 +16198,84 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!1 &1764252949
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1764252950}
+  - component: {fileID: 1764252951}
+  - component: {fileID: 1764252952}
+  m_Layer: 0
+  m_Name: Scene Lighting System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1764252950
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764252949}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1449709172}
+  - {fileID: 127419117}
+  - {fileID: 713664290}
+  - {fileID: 1393397326}
+  m_Father: {fileID: 1524200564}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1764252951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764252949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e26558192727d59479ede8b94f054039, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLightingController
+  mainLight: {fileID: 1636192639}
+  atmosphereVolume: {fileID: 1764252952}
+  initialPreset: {fileID: 11400000, guid: 8226c18687e3c524d97af6f0b733972d, type: 2}
+  applyOnStart: 1
+  useUnscaledTime: 1
+  restoreOnDisable: 1
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1764252952
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764252949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 10
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: da47188dbc97f7c44a6434dc6e431b14, type: 2}
 --- !u!1 &1773985850
 GameObject:
   m_ObjectHideFlags: 0
@@ -16495,15 +16775,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7626085453314481098, guid: 3f5fe8d1e58d84643b663649e0a40d3b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 15.050841
+      value: 10.715198
       objectReference: {fileID: 0}
     - target: {fileID: 7626085453314481098, guid: 3f5fe8d1e58d84643b663649e0a40d3b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -21.718231
+      value: -5.2801857
       objectReference: {fileID: 0}
     - target: {fileID: 7626085453314481098, guid: 3f5fe8d1e58d84643b663649e0a40d3b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 142.98076
+      value: -1.2998428
       objectReference: {fileID: 0}
     - target: {fileID: 7626085453314481098, guid: 3f5fe8d1e58d84643b663649e0a40d3b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -17871,7 +18151,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 89560743179960105, guid: 6d2ccd87663277749a7cad3572c026c6, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 753789617756431763, guid: 6d2ccd87663277749a7cad3572c026c6, type: 3}
       propertyPath: m_LocalPosition.x
@@ -19980,7 +20260,6 @@ SceneRoots:
   - {fileID: 1524200564}
   - {fileID: 704213728}
   - {fileID: 473128566}
-  - {fileID: 1729354848}
   - {fileID: 1721638381}
   - {fileID: 1145077959}
-  - {fileID: 201847311}
+  - {fileID: 1729354848}

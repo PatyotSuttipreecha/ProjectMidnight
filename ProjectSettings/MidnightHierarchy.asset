@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3481051123d83cc4d8977ad9bd33c1a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Midnight.Hierarchy.Editor::Midnight.Hierarchy.HierarchyData
+  enabled: 1
+  colors: 1
+  icons: 1
+  lines: 1
+  stripes: 1
+  components: 1
+  activeToggle: 1
+  shortcuts: 1
+  minimal: 0
+  autoGroupColors: 1
+  colorStrength: 0.65
+  gradientColors: 1
+  gradientEndOpacity: 0.08
+  childColorStrength: 0.5
+  decorations:
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1721638380-0
+    color: {r: 0.65, g: 0.3, b: 0.5, a: 1}
+    icon: builtin:Folder Icon
+    divider: 1
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1524200563-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: builtin:Folder Icon
+    divider: 1
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1636192636-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: builtin:Light Icon
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1173686739-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: builtin:SettingsIcon
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1764252949-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: 
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1449709171-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: 
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-127419116-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: 
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-713664289-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: 
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-1393397325-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: 
+    divider: 0
+  - id: GlobalObjectId_V1-2-9dba2fb51f61f454293ebc7b904b0cba-28699748-0
+    color: {r: 0.65, g: 0.58, b: 0.18, a: 1}
+    icon: 
+    divider: 0
+  objects: []
+  scenes: []
+  palette:
+  - name: Systems
+    color: {r: 0.25, g: 0.55, b: 0.9, a: 0.2}
+    icon: builtin:SettingsIcon
+  - name: Gameplay
+    color: {r: 0.2, g: 0.8, b: 0.4, a: 0.2}
+    icon: builtin:GameObject Icon
+  - name: UI
+    color: {r: 0.8, g: 0.4, b: 0.8, a: 0.2}
+    icon: builtin:Canvas Icon

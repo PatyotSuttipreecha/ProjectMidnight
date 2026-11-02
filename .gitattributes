@@ -1,0 +1,5 @@
+# Large editable art sources. Existing history is not migrated.
+ArtSource/**/*.blend filter=lfs diff=lfs merge=lfs -text
+ArtSource/**/*.spp filter=lfs diff=lfs merge=lfs -text
+ArtSource/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+ArtSource/**/*.assbin filter=lfs diff=lfs merge=lfs -text

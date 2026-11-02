@@ -1,0 +1,10 @@
+{
+  "name": "com.midnight.hierarchy",
+  "version": "0.2.0",
+  "displayName": "Midnight Hierarchy",
+  "description": "Editor-only hierarchy decoration, component inspection and navigation tools.",
+  "unity": "6000.2",
+  "author": {
+    "name": "Project Midnight"
+  }
+}

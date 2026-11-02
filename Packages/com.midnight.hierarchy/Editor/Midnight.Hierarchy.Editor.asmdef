@@ -1,0 +1,6 @@
+{
+  "name": "Midnight.Hierarchy.Editor",
+  "rootNamespace": "Midnight.Hierarchy",
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

@@ -1,0 +1,23 @@
+[
+  "resource://project0/Ambient Occlusion Map from Mesh Mat_Character_Mintra_Body?version=26f7815a226d9f1d73650ee765c7d59ec2f9bf4f",
+  "resource://project0/Ambient Occlusion Map from Mesh Mat_Character_Mintra_Cloth?version=f5fd6bd1ff059252d0b42deaa3ea476b3fb12fac",
+  "resource://project0/Ambient Occlusion Map from Mesh Mat_Character_Mintra_Head?version=33bc163bb0f65d5cae5ee26d24016df13137c9f7",
+  "resource://project0/Color Map from Mesh Mat_Character_Mintra_Body?version=a3693bd71a61c79a5fe3f3a0d4164334b9415f5f",
+  "resource://project0/Color Map from Mesh Mat_Character_Mintra_Cloth?version=cd4de91e0e412cb6a523c713ed8f27e896ca7a8f",
+  "resource://project0/Color Map from Mesh Mat_Character_Mintra_Head?version=b0fe9957f744b0cf66e32db792bfd72cdb260227",
+  "resource://project0/Curvature Map from Mesh Mat_Character_Mintra_Body?version=be1019e12d8fde88e3735e4df8138b05ef1ce034",
+  "resource://project0/Curvature Map from Mesh Mat_Character_Mintra_Cloth?version=cd95e79852c7dc820ba5f9784926d7de940a3a90",
+  "resource://project0/Curvature Map from Mesh Mat_Character_Mintra_Head?version=baa5d0b258863f94b3b3c7aac028e835468713ac",
+  "resource://project0/Normal Map from Mesh Mat_Character_Mintra_Body?version=4c2ffa955d6021666bfc3adde1bfa2b41e63cf9c",
+  "resource://project0/Normal Map from Mesh Mat_Character_Mintra_Cloth?version=b7e165d5179dd65fc3a7b985fc8a9b1ed1dcc743",
+  "resource://project0/Normal Map from Mesh Mat_Character_Mintra_Head?version=86cb6463adb6f9ebd851dbd1678adee2c4ca08ed",
+  "resource://project0/Position Mat_Character_Mintra_Body?version=2dc6431270839f57afe9d565760fd09e6a86a8a5",
+  "resource://project0/Position Mat_Character_Mintra_Cloth?version=77b9f6d683934785cd8b22a6e2fe8d21d865bc44",
+  "resource://project0/Position Mat_Character_Mintra_Head?version=3fbe6e734b2896d466d3900b87395d6943bd85a7",
+  "resource://project0/Thickness Map from Mesh Mat_Character_Mintra_Body?version=dfc9285170cd07f918ca51e27d678407a55a58ca",
+  "resource://project0/Thickness Map from Mesh Mat_Character_Mintra_Cloth?version=9af32a3aa2c53c014b2f10a57839f9128992c272",
+  "resource://project0/Thickness Map from Mesh Mat_Character_Mintra_Head?version=0f7aceed8d578bb40c57033312de84fdfbd26b69",
+  "resource://project0/World Space Normals Mat_Character_Mintra_Body?version=14c9f1c0645d06e30118b211aa454975c57d462d",
+  "resource://project0/World Space Normals Mat_Character_Mintra_Cloth?version=b401f31eff56215892ae5f2f22d8461f94da0466",
+  "resource://project0/World Space Normals Mat_Character_Mintra_Head?version=43aa840fafb9ad2029c095e6bd1207ee5d9cd044"
+]
